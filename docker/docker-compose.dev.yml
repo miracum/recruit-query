@@ -1,0 +1,72 @@
+version: "3.7"
+
+services:
+  fhir:
+    image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:latest
+    restart: always
+    ports:
+      - "8082:8080"
+    environment:
+      FHIR_VERSION: R4
+      SERVER_URL: http://localhost:8082/fhir
+      POSTGRES_HOST: fhir_db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fhir
+    depends_on:
+      - fhir_db
+
+  fhir_db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fhir
+
+  omopdb:
+    image: docker.miracum.org/ohdsi-omop-v5/omop-db-v5:1.0.0
+    volumes:
+      - volume-pg:/var/lib/postgresql/data
+      - ./index/indexes.sql:/tmp/indexes.sql:ro
+
+  broadsea-methods-library:
+    image: docker.miracum.org/ohdsi-omop-v5/broadsea-methods:1.0.0
+    ## Rstudio needs initial password
+    environment:
+      - PASSWORD=${R_PASSWORD:-123456}
+    ports:
+      - "8787:8787"
+      - "6311:6311"
+
+  broadsea-webtools:
+    image: docker.miracum.org/ohdsi-omop-v5/broadsea-webtools:1.0.0
+    ports:
+      - "8081:8080"
+    volumes:
+      - .:/tmp/drivers/:ro
+      - ./config-local.js:/usr/local/tomcat/webapps/atlas/js/config-local.js:ro
+
+    environment:
+      - WEBAPI_URL=localhost:8081
+      - env=webapi-postgresql
+      - datasource_driverClassName=org.postgresql.Driver
+      - datasource_url=jdbc:postgresql://omopdb:5432/OHDSI
+      - datasource.cdm.schema=synpuf_cdm
+      - datasource.ohdsi.schema=ohdsi
+      - datasource_username=${DATASOURCE_USERNAME:-ohdsi_admin_user}
+      - datasource_password=${DATASOURCE_PASSWORD:-admin1}
+      - spring.jpa.properties.hibernate.default_schema=ohdsi
+      - spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+      - spring.batch.repository.tableprefix=ohdsi.BATCH_
+      - flyway_datasource_driverClassName=org.postgresql.Driver
+      - flyway_datasource_url=jdbc:postgresql://omopdb:5432/OHDSI
+      - flyway_schemas=ohdsi
+      - flyway.placeholders.ohdsiSchema=ohdsi
+      - flyway_datasource_username=${DATASOURCE_USERNAME:-ohdsi_admin_user}
+      - flyway_datasource_password=${DATASOURCE_PASSWORD:-admin1}
+      - flyway.locations=classpath:db/migration/postgresql
+
+volumes:
+  volume-pg:
+    external: true
