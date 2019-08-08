@@ -14,6 +14,7 @@ stages:
   - lint
   - version
   - build
+  - test
   - release
   - deploy
 
@@ -46,6 +47,14 @@ build:
     - export DOCKER_BUILDKIT=1
     - docker build -t $IMAGE_PATH:$CI_COMMIT_SHORT_SHA --build-arg VERSION=$VERSION .
     - docker push $IMAGE_PATH:$CI_COMMIT_SHORT_SHA
+  except:
+    - tags
+
+unit tests:
+  stage: test
+  script:
+    - export DOCKER_BUILDKIT=1
+    - docker build -f tests.Dockerfile .
   except:
     - tags
 
