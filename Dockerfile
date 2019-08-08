@@ -3,7 +3,7 @@ WORKDIR /src
 COPY ["Query/Query.csproj", "Query/"]
 RUN dotnet restore "Query/Query.csproj"
 COPY . .
-WORKDIR "/src/Query"
+WORKDIR /src/Query
 RUN dotnet build "Query.csproj" -c Release -o /app
 
 FROM build AS publish
