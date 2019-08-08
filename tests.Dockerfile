@@ -5,11 +5,3 @@ RUN dotnet restore "Query.Tests/Query.Tests.csproj"
 COPY . .
 WORKDIR /src/Query.Tests
 RUN dotnet test
-
-# FROM build AS publish
-# RUN dotnet publish "Query.csproj" -c Release -o /app
-
-# FROM mcr.microsoft.com/dotnet/core/aspnet:3.0 AS deploy
-# WORKDIR /app
-# COPY --from=publish /app .
-# ENTRYPOINT ["dotnet", "Query.dll"]
