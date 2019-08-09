@@ -12,6 +12,15 @@ docker-compose -f docker/docker-compose.dev.yml up
 
 The default port-mappings start a FHIR-Server on localhost:8082, the OMOP WebAPI on localhost:8081/WebAPI, and ATLAS on localhost:8081/atlas.
 
+## Contributing
+
+### Setup commitlint
+This sets up a pre-commit hook checking if the commit message follows the [conventional commit spec](https://www.conventionalcommits.org/en/v1.0.0-beta.4/).
+```
+npm install
+```
+
+
 ## Build
 
 Non-docker builds requires .NET Core 3.0 to be installed on your machine.
