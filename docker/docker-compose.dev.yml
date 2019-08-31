@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   fhir:
-    image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:latest
+    image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:v2.4.0
     restart: always
     ports:
       - "8082:8080"
@@ -18,7 +18,7 @@ services:
       - fhir_db
 
   fhir_db:
-    image: postgres:latest
+    image: postgres:11.5-alpine
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
@@ -46,7 +46,6 @@ services:
     volumes:
       - .:/tmp/drivers/:ro
       - ./config-local.js:/usr/local/tomcat/webapps/atlas/js/config-local.js:ro
-
     environment:
       - WEBAPI_URL=localhost:8081
       - env=webapi-postgresql
