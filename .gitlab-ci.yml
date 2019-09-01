@@ -44,7 +44,6 @@ build:
   extends: .docker_registry
   script:
     - export VERSION=$(cat .VERSION)
-    - export DOCKER_BUILDKIT=1
     - docker build -t $IMAGE_PATH:$CI_COMMIT_SHORT_SHA --build-arg VERSION=$VERSION .
     - docker push $IMAGE_PATH:$CI_COMMIT_SHORT_SHA
   except:
