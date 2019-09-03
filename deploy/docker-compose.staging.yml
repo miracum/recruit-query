@@ -1,0 +1,23 @@
+version: "3.7"
+
+services:
+  list:
+    image: docker.miracum.org/uc1-recruit/query:${IMAGE_TAG}
+    restart: always
+    environment:
+      - FhirUrl=http://fhir:8080/fhir
+      - AtlasWebApiUrl=http://broadsea-webtools:8080/WebAPI
+    labels:
+      - traefik.docker.network=traefik
+      - traefik.frontend.rule=Host:recruit.miracum.org;PathPrefixStrip:/query
+      - traefik.enable=true
+      - traefik.port=80
+    networks:
+      - traefik
+      - recruit-staging
+
+networks:
+  recruit-staging:
+    external: true
+  traefik:
+    external: true
