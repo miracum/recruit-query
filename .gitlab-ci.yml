@@ -52,7 +52,6 @@ build:
 unit tests:
   stage: test
   script:
-    - export DOCKER_BUILDKIT=1
     - docker build -f tests.Dockerfile .
   except:
     - tags
@@ -78,3 +77,24 @@ git release:
     - npx semantic-release
   only:
     - master
+
+staging:
+  image:
+    name: docker/compose:1.24.1
+    entrypoint: ["/bin/sh", "-c"]
+  stage: deploy
+  extends: .docker_registry
+  script:
+    - export IMAGE_TAG=v$(cat .VERSION)
+    - docker-compose -p staging-$CI_PROJECT_NAME -f deploy/docker-compose.staging.yml --verbose pull
+    - docker-compose -p staging-$CI_PROJECT_NAME -f deploy/docker-compose.staging.yml --verbose up -d
+  environment:
+    name: staging
+    url: https://recruit.miracum.org/query
+  only:
+    - master
+  tags:
+    - ume
+    - uc1
+    - recruit
+    - staging
