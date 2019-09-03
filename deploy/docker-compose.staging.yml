@@ -1,7 +1,7 @@
 version: "3.7"
 
 services:
-  list:
+  query:
     image: docker.miracum.org/uc1-recruit/query:${IMAGE_TAG}
     restart: always
     environment:
