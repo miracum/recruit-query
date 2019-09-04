@@ -1,4 +1,6 @@
-﻿
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 
 namespace Query
@@ -22,9 +24,9 @@ namespace Query
         /// </summary>
         /// <param string="cohortId"> Id of the requested cohort </param>
         /// <returns> ArrayList of Ids</returns>
-        public static ArrayList<string> getIdsFromCohort(string cohortId)
+        public static ArrayList getIdsFromCohort(string cohortId)
         {
-            return new ArrayList<string>();
+            return new ArrayList();
         }
 
 
