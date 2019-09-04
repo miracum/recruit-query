@@ -9,7 +9,7 @@ namespace Query
         /// Checks if database configurations specified in app.config are valid and database is of OMOP schema
         /// </summary>
         /// <returns> true if valid, false if not </returns>
-        public static boolean checkConnection()
+        public static bool checkConnection()
         {
             return true;
         }
