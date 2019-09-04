@@ -1,4 +1,4 @@
-﻿
+
 
 
 namespace Query
@@ -11,7 +11,7 @@ namespace Query
         /// <returns> true if valid, false if not </returns>
         public static boolean checkConnection()
         {
-
+            return true;
         }
 
 
