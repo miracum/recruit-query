@@ -1,19 +1,19 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Query
 {
-    public class OmopConnector
+    public class OmopConnector : IOmopDatabaseClient
     {
         public static bool CheckConnection()
         {
             return true;
         }
 
-        public static ArrayList GetIdsFromCohort(string cohortId)
+        public Task<List<string>> GetIdsFromCohort(string id)
         {
-            return new ArrayList();
+            throw new NotImplementedException();
         }
     }
 }
