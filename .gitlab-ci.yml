@@ -23,6 +23,10 @@ lint dockerfile:
   image: hadolint/hadolint:latest-debian
   script:
     - hadolint Dockerfile
+    - hadolint tests.Dockerfile
+  only:
+    changes:
+      - *Dockerfile
   except:
     - tags
 
