@@ -26,7 +26,7 @@ lint dockerfile:
     - hadolint tests.Dockerfile
   only:
     changes:
-      - *Dockerfile
+      - "*Dockerfile"
   except:
     - tags
 
