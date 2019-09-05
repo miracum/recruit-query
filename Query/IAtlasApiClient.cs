@@ -2,9 +2,15 @@
 
 namespace Query
 {
+    /// <summary>
+    /// The client to the OHDSI Atlas API.
+    /// </summary>
     public interface IAtlasApiClient
     {
-        // returns/completes only after the cohort has been completely generated.
+        /// <summary>
+        /// Generates the cohort in the OMOP database.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous generation operation.</returns>
         Task GenerateCohortAsync();
     }
 }
