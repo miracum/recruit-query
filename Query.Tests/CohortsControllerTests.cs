@@ -19,7 +19,7 @@ namespace Query.Tests
             A.CallTo(() => provider.GetAsync(A<string>.Ignored))
                 .Returns(Task.FromResult(cohort));
 
-            var sut = new CohortsController(provider);
+            var sut = new CohortsController(provider, A.Fake<IScreeningListService>());
 
             // Act
             var result = await sut.Get("1");
