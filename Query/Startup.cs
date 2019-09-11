@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Hl7.Fhir.Rest;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,16 @@ namespace Query
             services.AddTransient<ICohortProvider, OmopCohortProvider>();
             services.AddTransient<IAtlasApiClient, AtlasApiClient>();
             services.AddTransient<IOmopDatabaseClient, OmopConnector>();
+            services.AddSingleton<IFhirClient, FhirClient>(sp =>
+            {
+                var config = sp.GetService<IConfiguration>();
+                var client = new FhirClient(config.GetValue<string>("FhirServerUrl"))
+                {
+                    PreferredFormat = ResourceFormat.Json,
+                };
+                return client;
+            });
+            services.AddTransient<IScreeningListService, FhirScreeningListService>();
             services.AddControllers();
         }
 
