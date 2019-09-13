@@ -1,0 +1,1 @@
+﻿{"ContextClassName":"Cohort_Inclusion","DefaultDacpacSchema":null,"IdReplace":false,"IncludeConnectionString":false,"OutputPath":"Models","ProjectRootNamespace":"Query","SelectedToBeGenerated":2,"Tables":[{"HasPrimaryKey":true,"Name":"synpuf_results.cohort_inclusion"}],"UseDatabaseNames":true,"UseFluentApiOnly":false,"UseHandleBars":false,"UseInflector":false}
