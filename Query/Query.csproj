@@ -6,6 +6,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <DocumentationFile></DocumentationFile>
+    <StartupObject>Query.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
