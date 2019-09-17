@@ -7,8 +7,14 @@ using Xunit;
 
 namespace Query.Tests
 {
+    /// <summary>
+    /// Placeholder.
+    /// </summary>
     public class CohortsControllerTests
     {
+        /// <summary>
+        /// Placeholder.
+        /// </summary>
         [Fact]
         public async void Get_WithAnyId_ReturnsListOfPatients()
         {
