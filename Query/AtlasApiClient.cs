@@ -15,6 +15,7 @@ namespace Query
         private readonly string generateCohortRequestTemplate = "cohortdefinition/{cohortId}/generate/OHDSI-CDMV5";
         private readonly string cohortStatusRequestTemplate = "cohortdefinition/{cohortId}/info";
         private readonly string complete = "COMPLETE";
+        private readonly string pending = "PENDING";
         private readonly int waitTime = 10;
         private readonly IRestClient ohdsiClient;
 
@@ -35,15 +36,27 @@ namespace Query
         /// <returns>Return a boolean for the creation status.</returns>
         public async Task<bool> GenerateCohortAsync(string cohortId)
         {
+            if (StartCohortGeneration(cohortId))
+            {
+                return await QueryChohortGenerationStatus(cohortId);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private bool StartCohortGeneration(string cohortId)
+        {
             var generateCohortRequest = new RestRequest(generateCohortRequestTemplate, Method.GET);
             generateCohortRequest.AddUrlSegment("cohortId", cohortId);
             var generateResponse = ohdsiClient.Execute(generateCohortRequest);
             HttpStatusCode statusCode = generateResponse.StatusCode;
-            if (statusCode != HttpStatusCode.OK)
-            {
-                return false;
-            }
+            return statusCode == HttpStatusCode.OK;
+        }
 
+        private async Task<bool> QueryChohortGenerationStatus(string cohortId)
+        {
             var cohortStatusRequest = new RestRequest(cohortStatusRequestTemplate, Method.GET);
             cohortStatusRequest.AddUrlSegment("cohortId", cohortId);
             while (true)
@@ -51,14 +64,21 @@ namespace Query
                 var cohortStatusResponse = ohdsiClient.Execute(cohortStatusRequest);
                 var jsonResponse = JsonConvert.DeserializeObject<dynamic>(cohortStatusResponse.Content);
                 HttpStatusCode httpStatusCode = cohortStatusResponse.StatusCode;
-                string generationStatus = jsonResponse[0].status;
-                if (httpStatusCode == HttpStatusCode.OK && generationStatus.Equals(complete))
+                if (httpStatusCode == HttpStatusCode.OK)
                 {
-                    return true;
+                    string generationStatus = jsonResponse[0].status;
+                    if (!generationStatus.Equals(pending))
+                    {
+                        return generationStatus.Equals(complete);
+                    }
+                    else
+                    {
+                        await Task.Delay(waitTime);
+                    }
                 }
                 else
                 {
-                    await Task.Delay(waitTime);
+                    return false;
                 }
             }
         }
