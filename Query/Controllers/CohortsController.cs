@@ -36,8 +36,8 @@ namespace Query.Controllers
         public async Task<IEnumerable<string>> Get(string id)
         {
             var cohort = await Cohorts.GetAsync(id);
-            //await ScreeningList.CreateScreeningListAsync(id, cohort);
 
+            // await ScreeningList.CreateScreeningListAsync(id, cohort);
             return cohort;
         }
     }

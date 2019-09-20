@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 namespace Query.Models.DB
 {
@@ -21,7 +22,10 @@ namespace Query.Models.DB
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseNpgsql("Server=imipvri-datastorage.med.uni-giessen.de;Port=5432;User id=blrom1;Password=hallo123;Database=OHDSI;");
+                System.Configuration.Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                ConnectionStringsSection csSection = config.ConnectionStrings;
+                ConnectionStringSettings settings = csSection.ConnectionStrings["OmopConnectionString"];
+                optionsBuilder.UseNpgsql(settings.ConnectionString);
             }
         }
 

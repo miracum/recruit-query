@@ -1,9 +1,11 @@
 ﻿using Hl7.Fhir.Rest;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Query.Models.DB;
 
 #pragma warning disable CS1591, SA1600
 
@@ -23,6 +25,7 @@ namespace Query
         {
             services.AddTransient<ICohortProvider, OmopCohortProvider>();
             services.AddTransient<IAtlasApiClient, AtlasApiClient>();
+            services.AddDbContext<OHDSIContext>(options => options.UseNpgsql(Configuration.GetConnectionString("OHDSIDatabase")));
             services.AddTransient<IOmopDatabaseClient, OmopConnector>();
             services.AddSingleton<IFhirClient, FhirClient>(sp =>
             {
