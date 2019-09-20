@@ -37,7 +37,8 @@ namespace Query.Controllers
         {
             var cohort = await Cohorts.GetAsync(id);
 
-            // await ScreeningList.CreateScreeningListAsync(id, cohort);
+            await ScreeningList.CreateScreeningListAsync(id, cohort);
+
             return cohort;
         }
     }
