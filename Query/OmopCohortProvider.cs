@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Query
@@ -25,8 +24,9 @@ namespace Query
         /// <inheritdoc />
         public async Task<List<string>> GetAsync(string id)
         {
-            await ApiClient.GenerateCohortAsync();
+            // await ApiClient.GenerateCohortAsync();
 
+            // return null;
             return await DbClient.GetIdsFromCohort(id);
         }
     }

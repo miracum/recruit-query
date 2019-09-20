@@ -47,8 +47,4 @@
     <PackageReference Include="System.CodeDom" Version="4.6.0-preview9.19421.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
 </Project>
