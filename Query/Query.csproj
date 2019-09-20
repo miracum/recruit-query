@@ -10,7 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="app.config.example" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AdditionalFiles Include="..\.stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="app.config.example" />
   </ItemGroup>
 
   <ItemGroup>

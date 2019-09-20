@@ -1,0 +1,12 @@
+<configuration>
+  <connectionStrings>
+    <add name="OmopConnectionString"
+         connectionString=";
+         Port=;
+         User id=;
+         Password=;
+         Database=;"
+         providerName="Npgsql.EntityFrameworkCore.PostgreSQL"
+  />
+  </connectionStrings>
+</configuration>
