@@ -1,7 +1,11 @@
 <configuration>
   <connectionStrings>
     <add name="OmopConnectionString"
-         connectionString="server=imipvri-datastorage.med.uni-giessen.de;Port=5432;User id=blrom1;Password=hallo123;Database=OHDSI;"
+         connectionString=";
+         Port=;
+         User id=;
+         Password=;
+         Database=;"
          providerName="Npgsql.EntityFrameworkCore.PostgreSQL"
   />
   </connectionStrings>

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,6 +36,7 @@ namespace Query.Controllers
         public async Task<IEnumerable<string>> Get(string id)
         {
             var cohort = await Cohorts.GetAsync(id);
+
             await ScreeningList.CreateScreeningListAsync(id, cohort);
 
             return cohort;

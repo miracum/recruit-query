@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -16,7 +17,7 @@ namespace Query
         private readonly string cohortStatusRequestTemplate = "cohortdefinition/{cohortId}/info";
         private readonly string complete = "COMPLETE";
         private readonly string pending = "PENDING";
-        private readonly int waitTime = 10;
+        private readonly TimeSpan waitTime = TimeSpan.FromSeconds(10);
         private readonly IRestClient ohdsiClient;
 
         /// <summary>
@@ -29,7 +30,7 @@ namespace Query
         }
 
         /// <summary>
-        /// Request the ohdsi API to create a cohort.
+        /// Request the OHDSI API to create a cohort.
         /// The task finishes if the cohort creation is completed.
         /// </summary>
         /// <param name="cohortId">The id from the cohort.</param>

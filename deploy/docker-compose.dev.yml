@@ -26,6 +26,8 @@ services:
 
   omopdb:
     image: docker.miracum.org/ohdsi-omop-v5/omop-db-v5:1.0.0
+    ports:
+      - "5432:5432"
     volumes:
       - volume-pg:/var/lib/postgresql/data
       - ./index/indexes.sql:/tmp/indexes.sql:ro
