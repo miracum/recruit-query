@@ -25,20 +25,17 @@ namespace Query
         /// Requests all Patient IDs connected to the given cohort.
         /// </summary>
         /// <param name="cohortId"> Id of the requested cohort.</param>
-        /// <returns> ArrayList of Ids.</returns>
+        /// <returns> A list of Ids.</returns>
         public async Task<List<string>> GetIdsFromCohort(string cohortId)
         {
             var id = Convert.ToInt32(cohortId);
-            var subjects = await context.Cohort.Where(i => i.CohortDefinitionId.Equals(id)).ToListAsync();
-            var subjectIds = new List<string>();
-            var subjectsArray = subjects.ToArray();
+            var subjects = await context.Cohort
+                .Where(i => i.CohortDefinitionId == id)
+                .ToListAsync();
 
-            for (int i = 0; i < subjectsArray.Count(); i++)
-            {
-                subjectIds.Add(subjectsArray[i].SubjectId.ToString());
-            }
-
-            return subjectIds;
+            return subjects
+                .Select(subject => subject.SubjectId.ToString())
+                .ToList();
         }
     }
 }
