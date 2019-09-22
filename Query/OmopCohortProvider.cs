@@ -24,9 +24,7 @@ namespace Query
         /// <inheritdoc />
         public async Task<List<string>> GetAsync(string id)
         {
-            // await ApiClient.GenerateCohortAsync();
-
-            // return null;
+            await ApiClient.GenerateCohortAsync(id);
             return await DbClient.GetIdsFromCohort(id);
         }
     }
