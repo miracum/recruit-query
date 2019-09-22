@@ -7,9 +7,10 @@ services:
     environment:
       - FhirUrl=http://fhir:8080/fhir
       - AtlasWebApiUrl=http://broadsea-webtools:8080/WebAPI
+      - ConnectionStrings__OmopDatabase=Server=omopdb;Port=5432;User id=ohdsi_admin_user;Password=admin1;Database=OHDSI;
     labels:
       - traefik.docker.network=traefik
-      - traefik.frontend.rule=Host:recruit.miracum.org;PathPrefixStrip:/query
+      - traefik.frontend.rule=Host:query.recruit.miracum.org;PathPrefix:/api
       - traefik.enable=true
       - traefik.port=80
     networks:
