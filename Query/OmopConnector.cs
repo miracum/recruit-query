@@ -10,15 +10,15 @@ namespace Query
     /// <inheritdoc />
     public class OmopConnector : IOmopDatabaseClient
     {
-        private OmopContext context;
+        private readonly OmopContext context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OmopConnector"/> class.
         /// Creates new Object of OmopConnector.
         /// </summary>
-        public OmopConnector()
+        public OmopConnector(OmopContext context)
         {
-            this.context = new OmopContext();
+            this.context = context;
         }
 
         /// <summary>
