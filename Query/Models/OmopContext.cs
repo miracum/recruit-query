@@ -93,10 +93,6 @@ namespace Query.Models.Omop
 
                 entity.Property(e => e.YearOfBirth).HasColumnName("year_of_birth");
             });
-
-            OnModelCreatingPartial(modelBuilder);
         }
-
-        partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     }
 }
