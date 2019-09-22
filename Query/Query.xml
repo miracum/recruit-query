@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Query</name>
+    </assembly>
+    <members>
+        <member name="T:Query.AtlasApiClient">
+            <inheritdoc />
+        </member>
+        <member name="M:Query.AtlasApiClient.GenerateCohortAsync">
+            <inheritdoc />
+        </member>
+        <member name="T:Query.Controllers.CohortsController">
+            <summary>
+            Implements the cohort REST endpoint.
+            </summary>
+        </member>
+        <member name="M:Query.Controllers.CohortsController.#ctor(Query.ICohortProvider,Query.IScreeningListService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Query.Controllers.CohortsController"/> class.
+            </summary>
+            <param name="cohortProvider">The cohort provider to use.</param>
+            <param name="screeningList">The screening list creation service.</param>
+        </member>
+        <member name="M:Query.Controllers.CohortsController.Get(System.String)">
+            <summary>
+            Returns a list of patient identifiers included in the cohort identified by <paramref name="id"/>.
+            </summary>
+            <param name="id">Atlas cohort identifier.</param>
+            <returns>A list of patient identifiers included in the cohort.</returns>
+        </member>
+        <member name="T:Query.FhirScreeningListService">
+            <inheritdoc />
+        </member>
+        <member name="M:Query.FhirScreeningListService.#ctor(Hl7.Fhir.Rest.IFhirClient)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Query.FhirScreeningListService"/> class.
+            </summary>
+            <param name="fhirClient">The FHIR client for communication with a FHIR server.</param>
+        </member>
+        <member name="M:Query.FhirScreeningListService.CreateScreeningListAsync(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <inheritdoc />
+        </member>
+        <member name="T:Query.FhirSystems">
+            <summary>
+            FHIR URL systems.
+            </summary>
+        </member>
+        <member name="F:Query.FhirSystems.OmopSubjectIdentifier">
+            <summary>
+            System for patient identifiers retrieved from the OMOP database.
+            </summary>
+        </member>
+        <member name="F:Query.FhirSystems.ScreeningListCohortIdentifier">
+            <summary>
+            System for the cohort identifier as part of the screening list.
+            </summary>
+        </member>
+        <member name="F:Query.FhirSystems.ScreeningListCodingSystem">
+            <summary>
+            System for coding a List resource as a screening list.
+            </summary>
+        </member>
+        <member name="T:Query.IAtlasApiClient">
+            <summary>
+            The client to the OHDSI Atlas API.
+            </summary>
+        </member>
+        <member name="M:Query.IAtlasApiClient.GenerateCohortAsync">
+            <summary>
+            Generates the cohort in the OMOP database.
+            </summary>
+            <returns>A task that represents the asynchronous generation operation.</returns>
+        </member>
+        <member name="T:Query.ICohortProvider">
+            <summary>
+            Allows for querying patient records.
+            </summary>
+        </member>
+        <member name="M:Query.ICohortProvider.GetAsync(System.String)">
+            <summary>
+            Returns a list of patient identifiers included in the cohort identified by <paramref name="id"/>.
+            </summary>
+            <param name="id">Cohort identifier.</param>
+            <returns>A list of patient identifiers included in the cohort.</returns>
+        </member>
+        <member name="T:Query.IOmopDatabaseClient">
+            <summary>
+            Interface to the OMOP database.
+            </summary>
+        </member>
+        <member name="M:Query.IOmopDatabaseClient.GetIdsFromCohort(System.String)">
+            <summary>
+            Gets the list of patient ids belonging to a given cohort.
+            </summary>
+            <param name="id">Internal identifier of the cohort.</param>
+            <returns>A list of patient identifiers belonging to the given cohort.</returns>
+        </member>
+        <member name="T:Query.IScreeningListService">
+            <summary>
+            Service to generate screening lists from the given patient ids.
+            </summary>
+        </member>
+        <member name="M:Query.IScreeningListService.CreateScreeningListAsync(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Creates and stores a screening list for the given cohort.
+            </summary>
+            <param name="cohortId">The identifier of the cohort for which to create the screening list.</param>
+            <param name="patients">The members of the cohort as patient identifiers.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the result of the asynchronous operation.</returns>
+        </member>
+        <member name="T:Query.OmopCohortProvider">
+            <inheritdoc />
+        </member>
+        <member name="M:Query.OmopCohortProvider.#ctor(Query.IAtlasApiClient,Query.IOmopDatabaseClient)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Query.OmopCohortProvider"/> class.
+            </summary>
+            <param name="apiClient">The <see cref="T:Query.IAtlasApiClient"/> to use.</param>
+            <param name="dbClient">The <see cref="T:Query.IOmopDatabaseClient"/> to use.</param>
+        </member>
+        <member name="M:Query.OmopCohortProvider.GetAsync(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Query.OmopConnector">
+            <inheritdoc />
+        </member>
+        <member name="M:Query.OmopConnector.CheckConnection">
+            <summary>
+            Checks if database configurations specified in app.config are valid and database is of OMOP schema.
+            </summary>
+            <returns> true if valid, false if not.</returns>
+        </member>
+        <member name="M:Query.OmopConnector.GetIdsFromCohort(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Query.OMOP_connector">
+            <summary>
+            TODO: Beschreibung.
+            </summary>
+        </member>
+        <member name="M:Query.OMOP_connector.CheckConnection">
+            <summary>
+            Checks if database configurations specified in app.config are valid and database is of OMOP schema.
+            </summary>
+            <returns> true if valid, false if not.</returns>
+        </member>
+        <member name="M:Query.OMOP_connector.GetIdsFromCohort(System.String)">
+            <summary>
+            Requests all Patient IDs connected to the given cohort.
+            </summary>
+            <param name="cohortId"> Id of the requested cohort.</param>
+            <returns> ArrayList of Ids.</returns>
+        </member>
+    </members>
+</doc>
