@@ -2,6 +2,7 @@
 
 namespace Query.Models.DB
 {
+#pragma warning disable CS1591
     public partial class OHDSIContext : DbContext
     {
         public OHDSIContext()
