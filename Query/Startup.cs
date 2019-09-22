@@ -29,7 +29,7 @@ namespace Query
 
             services.AddTransient<ICohortProvider, OmopCohortProvider>();
             services.AddTransient<IAtlasApiClient, AtlasApiClient>();
-            services.AddTransient<IOmopDatabaseClient, OmopConnector>();
+            services.AddTransient<IOmopDatabaseClient, OmopDatabaseClient>();
             services.AddSingleton<IFhirClient>(sp =>
             {
                 var config = sp.GetService<IConfiguration>();
