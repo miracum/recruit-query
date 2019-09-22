@@ -3,14 +3,17 @@
 namespace Query
 {
     /// <summary>
-    /// The client to the OHDSI Atlas API.
+    /// Handles REST calls to the ohdsi api to generate a new cohort.
+    /// The task finishes if the cohort creation is completed.
     /// </summary>
     public interface IAtlasApiClient
     {
         /// <summary>
-        /// Generates the cohort in the OMOP database.
+        /// Request the ohdsi API to create a cohort.
+        /// The task finishes if the cohort creation is completed.
         /// </summary>
-        /// <returns>A task that represents the asynchronous generation operation.</returns>
-        Task GenerateCohortAsync();
+        /// <param name="cohortId">The id from the cohort.</param>
+        /// <returns>Return a boolean for the creation status.</returns>
+        Task<bool> GenerateCohortAsync(string cohortId);
     }
 }
