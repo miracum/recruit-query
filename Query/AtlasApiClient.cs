@@ -29,7 +29,7 @@ namespace Query
         }
 
         /// <summary>
-        /// Request the ohdsi API to create a cohort.
+        /// Request the OHDSI API to create a cohort.
         /// The task finishes if the cohort creation is completed.
         /// </summary>
         /// <param name="cohortId">The id from the cohort.</param>
