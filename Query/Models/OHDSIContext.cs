@@ -1,5 +1,4 @@
-﻿using System.Configuration;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Query.Models.DB
 {
@@ -17,17 +16,6 @@ namespace Query.Models.DB
         public virtual DbSet<Cohort> Cohort { get; set; }
 
         public virtual DbSet<Person> Person { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                System.Configuration.Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                ConnectionStringsSection csSection = config.ConnectionStrings;
-                ConnectionStringSettings settings = csSection.ConnectionStrings["OmopConnectionString"];
-                optionsBuilder.UseNpgsql(settings.ConnectionString);
-            }
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
