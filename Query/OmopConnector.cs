@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Query.Models.DB;
+using Query.Models.Omop;
 
 namespace Query
 {
     /// <inheritdoc />
     public class OmopConnector : IOmopDatabaseClient
     {
-        private OHDSIContext context;
+        private OmopContext context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OmopConnector"/> class.
@@ -18,7 +18,7 @@ namespace Query
         /// </summary>
         public OmopConnector()
         {
-            this.context = new OHDSIContext();
+            this.context = new OmopContext();
         }
 
         /// <summary>
@@ -41,7 +41,6 @@ namespace Query
             var subjects = await context.Cohort.Where(i => i.CohortDefinitionId.Equals(id)).ToListAsync();
             var subjectIds = new List<string>();
             var subjectsArray = subjects.ToArray();
-            Console.WriteLine("------------------------------------------------2----------------------------------------------------");
 
             for (int i = 0; i < subjectsArray.Count(); i++)
             {

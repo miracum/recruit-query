@@ -1,15 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Query.Models.DB
+namespace Query.Models.Omop
 {
 #pragma warning disable CS1591
-    public partial class OHDSIContext : DbContext
+    public partial class OmopContext : DbContext
     {
-        public OHDSIContext()
+        public OmopContext()
         {
         }
 
-        public OHDSIContext(DbContextOptions<OHDSIContext> options)
+        public OmopContext(DbContextOptions<OmopContext> options)
             : base(options)
         {
         }

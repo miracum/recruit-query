@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Query.Models.DB
+namespace Query.Models.Omop
 {
 #pragma warning disable CS1591
     public partial class Cohort

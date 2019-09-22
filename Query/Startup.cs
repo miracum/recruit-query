@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Query.Models.DB;
+using Query.Models.Omop;
 
 #pragma warning disable CS1591, SA1600
 
@@ -25,7 +25,7 @@ namespace Query
         {
             services.AddTransient<ICohortProvider, OmopCohortProvider>();
             services.AddTransient<IAtlasApiClient, AtlasApiClient>();
-            services.AddDbContext<OHDSIContext>(options => options.UseNpgsql(Configuration.GetConnectionString("OHDSIDatabase")));
+            services.AddDbContext<OmopContext>(options => options.UseNpgsql(Configuration.GetConnectionString("OHDSIDatabase")));
             services.AddTransient<IOmopDatabaseClient, OmopConnector>();
             services.AddSingleton<IFhirClient, FhirClient>(sp =>
             {
