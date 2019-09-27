@@ -26,11 +26,10 @@ namespace Query
         /// </summary>
         /// <param name="cohortId"> Id of the requested cohort.</param>
         /// <returns> A list of Ids.</returns>
-        public async Task<List<string>> GetIdsFromCohort(string cohortId)
+        public async Task<List<string>> GetIdsFromCohort(int cohortId)
         {
-            var id = Convert.ToInt32(cohortId);
             var subjects = await context.Cohort
-                .Where(i => i.CohortDefinitionId == id)
+                .Where(c => c.CohortDefinitionId == cohortId)
                 .ToListAsync();
 
             return subjects

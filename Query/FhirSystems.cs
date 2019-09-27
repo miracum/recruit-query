@@ -11,6 +11,11 @@ namespace Query
         public static readonly string OmopSubjectIdentifier = "http://ohdsi.org/omop/fhir/patient-identifier";
 
         /// <summary>
+        /// System for identifying cohorts within OMOP.
+        /// </summary>
+        public static readonly string OmopCohortIdentifier = "http://ohdsi.org/omop/fhir/cohort-identifier";
+
+        /// <summary>
         /// System for the cohort identifier as part of the screening list.
         /// </summary>
         public static readonly string ScreeningListCohortIdentifier = "http://miracum.org/fhir/screening-list-cohort-identifier";
@@ -19,5 +24,10 @@ namespace Query
         /// System for coding a List resource as a screening list.
         /// </summary>
         public static readonly string ScreeningListCodingSystem = "http://miracum.org/fhir/CodeSystem/screening-list";
+
+        /// <summary>
+        /// Extension system for referencing a researchstudy from a screening list.
+        /// </summary>
+        public static readonly string ScreeningListStudyReference = "http://miracum.org/fhir/recommendation-list-study-reference";
     }
 }

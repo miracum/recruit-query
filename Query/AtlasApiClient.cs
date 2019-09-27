@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Query.Models.Api;
 using RestSharp;
 
 namespace Query
@@ -15,6 +17,7 @@ namespace Query
     {
         private readonly string generateCohortRequestTemplate = "cohortdefinition/{cohortId}/generate/OHDSI-CDMV5";
         private readonly string cohortStatusRequestTemplate = "cohortdefinition/{cohortId}/info";
+        private readonly string cohortDefinitionTemplate = "cohortdefinition";
         private readonly string complete = "COMPLETE";
         private readonly string pending = "PENDING";
         private readonly TimeSpan waitTime = TimeSpan.FromSeconds(10);
@@ -29,34 +32,39 @@ namespace Query
             this.ohdsiClient = ohdsiClient;
         }
 
-        /// <summary>
-        /// Request the OHDSI API to create a cohort.
-        /// The task finishes if the cohort creation is completed.
-        /// </summary>
-        /// <param name="cohortId">The id from the cohort.</param>
-        /// <returns>Return a boolean for the creation status.</returns>
-        public async Task<bool> GenerateCohortAsync(string cohortId)
+        /// <inheritdoc />
+        public List<CohortDefinition> GetCohortDefinitions()
         {
-            if (StartCohortGeneration(cohortId))
+            var cohortDefinitionRequest = new RestRequest(cohortDefinitionTemplate, Method.GET);
+            var response = ohdsiClient.Execute(cohortDefinitionRequest);
+
+            if (response.StatusCode != HttpStatusCode.OK)
             {
-                return await QueryChohortGenerationStatus(cohortId);
+                throw new ApplicationException($"Error retrieving list of cohort definitions.",
+                    response.ErrorException);
             }
-            else
+            return JsonConvert.DeserializeObject<List<CohortDefinition>>(response.Content);
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> GenerateCohortAsync(int cohortId)
+        {
+            if (!StartCohortGeneration(cohortId))
             {
                 return false;
             }
+            return await QueryChohortGenerationStatus(cohortId);
         }
 
-        private bool StartCohortGeneration(string cohortId)
+        private bool StartCohortGeneration(int cohortId)
         {
             var generateCohortRequest = new RestRequest(generateCohortRequestTemplate, Method.GET);
             generateCohortRequest.AddUrlSegment("cohortId", cohortId);
             var generateResponse = ohdsiClient.Execute(generateCohortRequest);
-            HttpStatusCode statusCode = generateResponse.StatusCode;
-            return statusCode == HttpStatusCode.OK;
+            return generateResponse.StatusCode == HttpStatusCode.OK;
         }
 
-        private async Task<bool> QueryChohortGenerationStatus(string cohortId)
+        private async Task<bool> QueryChohortGenerationStatus(int cohortId)
         {
             var cohortStatusRequest = new RestRequest(cohortStatusRequestTemplate, Method.GET);
             cohortStatusRequest.AddUrlSegment("cohortId", cohortId);

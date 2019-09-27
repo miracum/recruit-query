@@ -13,6 +13,6 @@ namespace Query
         /// </summary>
         /// <param name="id">Internal identifier of the cohort.</param>
         /// <returns>A list of patient identifiers belonging to the given cohort.</returns>
-        Task<List<string>> GetIdsFromCohort(string id);
+        Task<List<string>> GetIdsFromCohort(int id);
     }
 }

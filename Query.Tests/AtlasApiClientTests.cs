@@ -17,7 +17,7 @@ namespace Query.Tests
         public async void GenerateCohortAsync_Scuccesfull()
         {
             // Arrange
-            string cohortId = "1";
+            int cohortId = 1;
             var ohdsiClientFake = A.Fake<IRestClient>();
             var okResponse = new RestResponse
             {
@@ -50,7 +50,7 @@ namespace Query.Tests
         public async void GenerateCohortAsync_Failed()
         {
             // Arrange
-            string cohortId = "1";
+            int cohortId = 1;
             var ohdsiClientFake = A.Fake<IRestClient>();
             var requestFake = A.Fake<IRestRequest>();
             var errorResponse = new RestResponse()
