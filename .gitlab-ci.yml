@@ -67,14 +67,12 @@ push to registry:
   script:
     - export IMAGE_TAG=v$(cat .VERSION)
     - docker pull $IMAGE_PATH:$CI_COMMIT_SHORT_SHA
-    - docker tag $IMAGE_PATH:$CI_COMMIT_SHORT_SHA $IMAGE_PATH:latest
     - docker tag $IMAGE_PATH:$CI_COMMIT_SHORT_SHA $IMAGE_PATH:$IMAGE_TAG
-    - docker push $IMAGE_PATH:latest
     - docker push $IMAGE_PATH:$IMAGE_TAG
   only:
     - master
 
-git release:
+gitlab release:
   image: docker.miracum.org/miracum-devops/semantic-release
   stage: release
   script:
