@@ -16,11 +16,11 @@ namespace Query
         /// <summary>
         /// Initializes a new instance of the <see cref="BackgroundWorker"/> class.
         /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="apiClient"></param>
-        /// <param name="cohortProvider"></param>
-        /// <param name="screeningList"></param>
-        /// <param name="config"></param>
+        /// <param name="logger">The <see cref="ILogger"/>  to use.</param>
+        /// <param name="apiClient">The <see cref="IAtlasApiClient"/>  to use.</param>
+        /// <param name="cohortProvider">The <see cref="ICohortProvider"/>  to use.</param>
+        /// <param name="screeningList">The <see cref="IScreeningListService"/>  to use.</param>
+        /// <param name="config">The <see cref="IConfiguration"/>  to use.</param>
         public BackgroundWorker(
             ILogger<BackgroundWorker> logger,
             IAtlasApiClient apiClient,

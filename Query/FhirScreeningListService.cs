@@ -54,7 +54,7 @@ namespace Query
                 Description = new Markdown(cohortMeta.Description),
                 Identifier = new List<Identifier>()
                 {
-                    new Identifier { System = FhirSystems.OmopCohortIdentifier, Value = cohortId }
+                    new Identifier { System = FhirSystems.OmopCohortIdentifier, Value = cohortId, },
                 },
             };
 
@@ -70,7 +70,7 @@ namespace Query
             screeningList.Extension.Add(new Extension
             {
                 Url = FhirSystems.ScreeningListStudyReference,
-                Value = new ResourceReference(researchStudyId)
+                Value = new ResourceReference(researchStudyId),
             });
             screeningList.Entry.AddRange(entries);
 

@@ -40,9 +40,11 @@ namespace Query
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                throw new ApplicationException($"Error retrieving list of cohort definitions.",
+                throw new ApplicationException(
+                    $"Error retrieving list of cohort definitions.",
                     response.ErrorException);
             }
+
             return JsonConvert.DeserializeObject<List<CohortDefinition>>(response.Content);
         }
 
@@ -53,6 +55,7 @@ namespace Query
             {
                 return false;
             }
+
             return await QueryChohortGenerationStatus(cohortId);
         }
 
