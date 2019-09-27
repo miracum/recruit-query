@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Polly;
 
 namespace Query
 {
@@ -49,7 +50,22 @@ namespace Query
             {
                 logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
-                try
+                // retry with exponential backoff
+                var retryPolicy = Policy
+                    .Handle<ApplicationException>()
+                    .Or<Npgsql.PostgresException>()
+                    .Or<Npgsql.NpgsqlException>()
+                    .WaitAndRetryForeverAsync(
+                        retryAttempt => TimeSpan.FromSeconds(5 * retryAttempt),
+                        (exception, timespan) =>
+                        {
+                            logger.LogWarning(
+                                exception,
+                                "Failed to poll for cohort and create screening list.. Retrying in {retryTimeSeconds}",
+                                timespan.TotalSeconds);
+                        });
+
+                await retryPolicy.ExecuteAsync(async () =>
                 {
                     var cohortDefinitions = AtlasApi.GetCohortDefinitions();
 
@@ -62,14 +78,11 @@ namespace Query
                         var cohort = await Cohorts.GetAsync(cohortDefinition.Id);
                         await ScreeningList.CreateScreeningListAsync(cohortDefinition, cohort);
                     }
-                }
-                catch (Exception exc)
-                {
-                    logger.LogError(exc, "Failed to poll for and create screening list.");
-                    continue;
-                }
+                });
 
-                await Task.Delay(TimeSpan.FromMinutes(Config.GetValue<int>("OmopPollTimeMinutes")), stoppingToken);
+                var nextRunAfterMinutes = Config.GetValue<int>("OmopPollTimeMinutes");
+                logger.LogInformation("Done generating screening lists for all cohorts. Next run in {nextRunAfterMinutes}", nextRunAfterMinutes);
+                await Task.Delay(TimeSpan.FromMinutes(nextRunAfterMinutes), stoppingToken);
             }
         }
     }
