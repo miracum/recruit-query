@@ -19,6 +19,7 @@ namespace Query
         /// <param name="apiClient"></param>
         /// <param name="cohortProvider"></param>
         /// <param name="screeningList"></param>
+        /// <param name="config"></param>
         public BackgroundWorker(
             ILogger<BackgroundWorker> logger,
             IAtlasApiClient apiClient,
