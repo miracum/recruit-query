@@ -28,6 +28,6 @@ namespace Query
         /// <summary>
         /// Extension system for referencing a researchstudy from a screening list.
         /// </summary>
-        public static readonly string ScreeningListStudyReference = "http://miracum.org/fhir/recommendation-list-study-reference";
+        public static readonly string ScreeningListStudyReference = "http://miracum.org/fhir/screening-list-study-reference";
     }
 }
