@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Rest;
+using Query.Models.Api;
 
 namespace Query
 {
@@ -22,8 +23,10 @@ namespace Query
         private IFhirClient FhirClient { get; }
 
         /// <inheritdoc />
-        public async Task<List> CreateScreeningListAsync(string cohortId, IEnumerable<string> patientIds)
+        public async Task<List> CreateScreeningListAsync(CohortDefinition cohortMeta, IEnumerable<string> patientIds)
         {
+            var cohortId = cohortMeta.Id.ToString();
+
             var trxBuilder = new TransactionBuilder(FhirClient.Endpoint);
 
             foreach (var id in patientIds)
@@ -45,21 +48,43 @@ namespace Query
                 return entry;
             });
 
+            var researchStudy = new ResearchStudy
+            {
+                Title = cohortMeta.Name,
+                Description = new Markdown(cohortMeta.Description),
+                Identifier = new List<Identifier>()
+                {
+                    new Identifier { System = FhirSystems.OmopCohortIdentifier, Value = cohortId }
+                },
+            };
+
+            var studyUpdateCondition = new SearchParams();
+            studyUpdateCondition.Add("identifier", $"{FhirSystems.OmopCohortIdentifier}|{cohortId}");
+            trxBuilder.Update(studyUpdateCondition, researchStudy);
+
+            var researchStudyId = $"urn:uuid:{Guid.NewGuid()}";
             var screeningList = new List();
             screeningList.Identifier.Add(new Identifier(FhirSystems.ScreeningListCohortIdentifier, cohortId));
             screeningList.Mode = ListMode.Working;
             screeningList.Code = new CodeableConcept(FhirSystems.ScreeningListCodingSystem, "screening-recommendations");
+            screeningList.Extension.Add(new Extension
+            {
+                Url = FhirSystems.ScreeningListStudyReference,
+                Value = new ResourceReference(researchStudyId)
+            });
             screeningList.Entry.AddRange(entries);
 
-            var listCondition = new SearchParams();
-            listCondition.Add("identifier", $"{FhirSystems.ScreeningListCohortIdentifier}|{cohortId}");
-            trxBuilder.Update(listCondition, screeningList);
+            var listUpdateCondition = new SearchParams();
+            listUpdateCondition.Add("identifier", $"{FhirSystems.ScreeningListCohortIdentifier}|{cohortId}");
+            trxBuilder.Update(listUpdateCondition, screeningList);
 
-            var patientBundle = trxBuilder.ToBundle();
-            patientBundle.Type = Bundle.BundleType.Transaction;
-            var created = await FhirClient.TransactionAsync(patientBundle);
+            var bundle = trxBuilder.ToBundle();
+            bundle.Type = Bundle.BundleType.Transaction;
+            var rsEntry = bundle.Entry.First(entry => entry.Resource.ResourceType == ResourceType.ResearchStudy);
+            rsEntry.FullUrl = researchStudyId;
+            var created = await FhirClient.TransactionAsync(bundle);
 
-            var listResults = await FhirClient.SearchAsync<List>(listCondition);
+            var listResults = await FhirClient.SearchAsync<List>(listUpdateCondition);
             return listResults.Entry.FirstOrDefault().Resource as List;
         }
     }

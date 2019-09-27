@@ -2,13 +2,13 @@ version: "3.7"
 
 services:
   fhir:
-    image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:v2.4.0
+    image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:v3.0.0
     restart: always
     ports:
-      - "8082:8080"
+      - "8083:8080"
     environment:
       FHIR_VERSION: R4
-      SERVER_URL: http://localhost:8082/fhir
+      SERVER_URL: http://fhir:8080/fhir
       POSTGRES_HOST: fhir_db
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
@@ -30,26 +30,15 @@ services:
       - "5432:5432"
     volumes:
       - volume-pg:/var/lib/postgresql/data
-      - ./index/indexes.sql:/tmp/indexes.sql:ro
-
-  broadsea-methods-library:
-    image: docker.miracum.org/ohdsi-omop-v5/broadsea-methods:1.0.0
-    ## Rstudio needs initial password
-    environment:
-      - PASSWORD=${R_PASSWORD:-123456}
-    ports:
-      - "8787:8787"
-      - "6311:6311"
 
   broadsea-webtools:
     image: docker.miracum.org/ohdsi-omop-v5/broadsea-webtools:1.0.0
     ports:
-      - "8081:8080"
+      - "8082:8080"
     volumes:
-      - .:/tmp/drivers/:ro
       - ./config-local.js:/usr/local/tomcat/webapps/atlas/js/config-local.js:ro
     environment:
-      - WEBAPI_URL=localhost:8081
+      - WEBAPI_URL=localhost:8082
       - env=webapi-postgresql
       - datasource_driverClassName=org.postgresql.Driver
       - datasource_url=jdbc:postgresql://omopdb:5432/OHDSI
