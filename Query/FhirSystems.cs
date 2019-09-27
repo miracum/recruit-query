@@ -6,9 +6,9 @@ namespace Query
     public static class FhirSystems
     {
         /// <summary>
-        /// System for patient identifiers retrieved from the OMOP database.
+        /// System for subject identifiers retrieved from the OMOP database.
         /// </summary>
-        public static readonly string OmopSubjectIdentifier = "http://ohdsi.org/omop/fhir/patient-identifier";
+        public static readonly string OmopSubjectIdentifier = "http://ohdsi.org/omop/fhir/subject-identifier";
 
         /// <summary>
         /// System for identifying cohorts within OMOP.
