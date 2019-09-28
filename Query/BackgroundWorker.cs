@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -50,7 +50,7 @@ namespace Query
             {
                 logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
-                // retry with exponential backoff
+                // retry with exponential back-off
                 var retryPolicy = Policy
                     .Handle<ApplicationException>()
                     .Or<Npgsql.PostgresException>()

@@ -3,13 +3,10 @@
 namespace Query.Models.Omop
 {
 #pragma warning disable CS1591
-    public partial class OmopContext : DbContext
+    public class OmopContext : DbContext
     {
-        public OmopContext()
-        {
-        }
 
-        public OmopContext(DbContextOptions<OmopContext> options)
+        public OmopContext(DbContextOptions options)
             : base(options)
         {
         }

@@ -3,7 +3,7 @@
 namespace Query.Models.Omop
 {
 #pragma warning disable CS1591
-    public partial class Cohort
+    public class Cohort
     {
         public int CohortDefinitionId { get; set; }
 

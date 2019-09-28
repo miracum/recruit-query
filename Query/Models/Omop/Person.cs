@@ -3,7 +3,7 @@
 namespace Query.Models.Omop
 {
 #pragma warning disable CS1591
-    public partial class Person
+    public class Person
     {
         public int PersonId { get; set; }
 

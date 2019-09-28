@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,7 +29,9 @@ namespace Query
 
             var trxBuilder = new TransactionBuilder(FhirClient.Endpoint);
 
-            foreach (var id in patientIds)
+            var ids = patientIds.ToArray();
+
+            foreach (var id in ids)
             {
                 var patient = new Patient();
                 patient.Identifier.Add(new Identifier(FhirSystems.OmopSubjectIdentifier, id));
@@ -41,10 +43,9 @@ namespace Query
                 trxBuilder.Create(patient, patientCondition);
             }
 
-            var entries = patientIds.Select(id =>
+            var entries = ids.Select(id =>
             {
-                var entry = new List.EntryComponent();
-                entry.Item = new ResourceReference($"Patient/{id}");
+                var entry = new List.EntryComponent { Item = new ResourceReference($"Patient/{id}") };
                 return entry;
             });
 
@@ -82,10 +83,10 @@ namespace Query
             bundle.Type = Bundle.BundleType.Transaction;
             var rsEntry = bundle.Entry.First(entry => entry.Resource.ResourceType == ResourceType.ResearchStudy);
             rsEntry.FullUrl = researchStudyId;
-            var created = await FhirClient.TransactionAsync(bundle);
-
+            await FhirClient.TransactionAsync(bundle);
             var listResults = await FhirClient.SearchAsync<List>(listUpdateCondition);
-            return listResults.Entry.FirstOrDefault().Resource as List;
+
+            return listResults.Entry.FirstOrDefault()?.Resource as List;
         }
     }
 }

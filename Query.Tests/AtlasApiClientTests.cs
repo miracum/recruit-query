@@ -52,7 +52,6 @@ namespace Query.Tests
             // Arrange
             const int cohortId = 1;
             var ohdsiClientFake = A.Fake<IRestClient>();
-            var requestFake = A.Fake<IRestRequest>();
             var errorResponse = new RestResponse()
             {
                 StatusCode = HttpStatusCode.InternalServerError,

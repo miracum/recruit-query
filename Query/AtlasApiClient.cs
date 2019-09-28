@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -10,16 +9,16 @@ using RestSharp;
 namespace Query
 {
     /// <summary>
-    /// Handles REST calls to the ohdsi api to generate a new cohort.
+    /// Handles REST calls to the OHDSI api to generate a new cohort.
     /// The task finishes if the cohort creation is completed.
     /// </summary>
     public class AtlasApiClient : IAtlasApiClient
     {
-        private readonly string generateCohortRequestTemplate = "cohortdefinition/{cohortId}/generate/OHDSI-CDMV5";
-        private readonly string cohortStatusRequestTemplate = "cohortdefinition/{cohortId}/info";
-        private readonly string cohortDefinitionTemplate = "cohortdefinition";
-        private readonly string complete = "COMPLETE";
-        private readonly string pending = "PENDING";
+        private const string GenerateCohortRequestTemplate = "cohortdefinition/{cohortId}/generate/OHDSI-CDMV5";
+        private const string CohortStatusRequestTemplate = "cohortdefinition/{cohortId}/info";
+        private const string CohortDefinitionTemplate = "cohortdefinition";
+        private const string Complete = "COMPLETE";
+        private const string Pending = "PENDING";
         private readonly TimeSpan waitTime = TimeSpan.FromSeconds(10);
         private readonly IRestClient ohdsiClient;
 
@@ -35,13 +34,13 @@ namespace Query
         /// <inheritdoc />
         public List<CohortDefinition> GetCohortDefinitions()
         {
-            var cohortDefinitionRequest = new RestRequest(cohortDefinitionTemplate, Method.GET);
+            var cohortDefinitionRequest = new RestRequest(CohortDefinitionTemplate, Method.GET);
             var response = ohdsiClient.Execute(cohortDefinitionRequest);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new ApplicationException(
-                    $"Error retrieving list of cohort definitions.",
+                    "Error retrieving list of cohort definitions.",
                     response.ErrorException);
             }
 
@@ -56,20 +55,20 @@ namespace Query
                 return false;
             }
 
-            return await QueryChohortGenerationStatus(cohortId);
+            return await QueryCohortGenerationStatus(cohortId);
         }
 
         private bool StartCohortGeneration(int cohortId)
         {
-            var generateCohortRequest = new RestRequest(generateCohortRequestTemplate, Method.GET);
+            var generateCohortRequest = new RestRequest(GenerateCohortRequestTemplate, Method.GET);
             generateCohortRequest.AddUrlSegment("cohortId", cohortId);
             var generateResponse = ohdsiClient.Execute(generateCohortRequest);
             return generateResponse.StatusCode == HttpStatusCode.OK;
         }
 
-        private async Task<bool> QueryChohortGenerationStatus(int cohortId)
+        private async Task<bool> QueryCohortGenerationStatus(int cohortId)
         {
-            var cohortStatusRequest = new RestRequest(cohortStatusRequestTemplate, Method.GET);
+            var cohortStatusRequest = new RestRequest(CohortStatusRequestTemplate, Method.GET);
             cohortStatusRequest.AddUrlSegment("cohortId", cohortId);
             while (true)
             {
@@ -79,9 +78,9 @@ namespace Query
                 if (httpStatusCode == HttpStatusCode.OK)
                 {
                     string generationStatus = jsonResponse[0].status;
-                    if (!generationStatus.Equals(pending))
+                    if (!generationStatus.Equals(Pending))
                     {
-                        return generationStatus.Equals(complete);
+                        return generationStatus.Equals(Complete);
                     }
                     else
                     {
