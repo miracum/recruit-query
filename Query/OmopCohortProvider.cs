@@ -22,7 +22,7 @@ namespace Query
         private IOmopDatabaseClient DbClient { get; }
 
         /// <inheritdoc />
-        public async Task<List<string>> GetAsync(int id)
+        public async Task<List<long>> GetAsync(int id)
         {
             await ApiClient.GenerateCohortAsync(id);
             return await DbClient.GetIdsFromCohort(id);

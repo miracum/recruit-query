@@ -38,7 +38,7 @@
             </summary>
             <param name="fhirClient">The FHIR client for communication with a FHIR server.</param>
         </member>
-        <member name="M:Query.FhirScreeningListService.CreateScreeningListAsync(System.String,System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:Query.FhirScreeningListService.CreateAsync(System.String,System.Collections.Generic.IEnumerable{System.String})">
             <inheritdoc />
         </member>
         <member name="T:Query.FhirSystems">
@@ -101,7 +101,7 @@
             Service to generate screening lists from the given patient ids.
             </summary>
         </member>
-        <member name="M:Query.IScreeningListService.CreateScreeningListAsync(System.String,System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:Query.IScreeningListService.CreateAsync(System.String,System.Collections.Generic.IEnumerable{System.String})">
             <summary>
             Creates and stores a screening list for the given cohort.
             </summary>

@@ -13,6 +13,6 @@ namespace Query
         /// </summary>
         /// <param name="id">Cohort identifier.</param>
         /// <returns>A list of patient identifiers included in the cohort.</returns>
-        Task<List<string>> GetAsync(int id);
+        Task<List<long>> GetAsync(int id);
     }
 }

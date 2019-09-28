@@ -5,7 +5,6 @@ namespace Query.Models.Omop
 #pragma warning disable CS1591
     public class OmopContext : DbContext
     {
-
         public OmopContext(DbContextOptions options)
             : base(options)
         {

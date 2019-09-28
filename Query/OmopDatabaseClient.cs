@@ -25,14 +25,14 @@ namespace Query
         /// </summary>
         /// <param name="cohortId"> Id of the requested cohort.</param>
         /// <returns> A list of Ids.</returns>
-        public async Task<List<string>> GetIdsFromCohort(int cohortId)
+        public async Task<List<long>> GetIdsFromCohort(int cohortId)
         {
             var subjects = await context.Cohort
                 .Where(c => c.CohortDefinitionId == cohortId)
                 .ToListAsync();
 
             return subjects
-                .Select(subject => subject.SubjectId.ToString())
+                .Select(subject => subject.SubjectId)
                 .ToList();
         }
     }

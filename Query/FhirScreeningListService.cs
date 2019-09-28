@@ -23,7 +23,7 @@ namespace Query
         private IFhirClient FhirClient { get; }
 
         /// <inheritdoc />
-        public async Task<List> CreateScreeningListAsync(CohortDefinition cohortMeta, IEnumerable<string> patientIds)
+        public async Task<List> CreateAsync(CohortDefinition cohortMeta, IEnumerable<long> patientIds)
         {
             var cohortId = cohortMeta.Id.ToString();
 
@@ -34,8 +34,8 @@ namespace Query
             foreach (var id in ids)
             {
                 var patient = new Patient();
-                patient.Identifier.Add(new Identifier(FhirSystems.OmopSubjectIdentifier, id));
-                patient.Id = id;
+                patient.Identifier.Add(new Identifier(FhirSystems.OmopSubjectIdentifier, id.ToString()));
+                patient.Id = id.ToString();
 
                 // create the patients if they don't already exist
                 var patientCondition = new SearchParams();

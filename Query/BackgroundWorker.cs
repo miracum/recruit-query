@@ -61,7 +61,7 @@ namespace Query
                         {
                             logger.LogWarning(
                                 exception,
-                                "Failed to poll for cohort and create screening list.. Retrying in {retryTimeSeconds}",
+                                "Failed to poll for cohort and create screening list. Retrying in {retryTimeSeconds} s",
                                 timespan.TotalSeconds);
                         });
 
@@ -76,12 +76,12 @@ namespace Query
                         logger.LogDebug("Generating screening list for {cohortId}.", cohortDefinition.Id);
 
                         var cohort = await Cohorts.GetAsync(cohortDefinition.Id);
-                        await ScreeningList.CreateScreeningListAsync(cohortDefinition, cohort);
+                        await ScreeningList.CreateAsync(cohortDefinition, cohort);
                     }
                 });
 
                 var nextRunAfterMinutes = Config.GetValue<int>("OmopPollTimeMinutes");
-                logger.LogInformation("Done generating screening lists for all cohorts. Next run in {nextRunAfterMinutes}", nextRunAfterMinutes);
+                logger.LogInformation("Done generating screening lists for all cohorts. Next run in {nextRunAfterMinutes} minutes.", nextRunAfterMinutes);
                 await Task.Delay(TimeSpan.FromMinutes(nextRunAfterMinutes), stoppingToken);
             }
         }

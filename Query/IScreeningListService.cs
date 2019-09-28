@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Query.Models.Api;
 using Fhir = Hl7.Fhir.Model;
@@ -11,11 +11,11 @@ namespace Query
     public interface IScreeningListService
     {
         /// <summary>
-        /// Creates and stores a screening list for the given cohort.
+        /// Creates and stores patients in a screening list for the given cohort.
         /// </summary>
-        /// <param name="cohortMeta">The defintion for the cohort of the cohort for which to create the screening list.</param>
+        /// <param name="cohortMeta">The cohort definition for which to create the screening list.</param>
         /// <param name="patients">The members of the cohort as patient identifiers.</param>
         /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
-        Task<Fhir.List> CreateScreeningListAsync(CohortDefinition cohortMeta, IEnumerable<string> patients);
+        Task<Fhir.List> CreateAsync(CohortDefinition cohortMeta, IEnumerable<long> patients);
     }
 }
