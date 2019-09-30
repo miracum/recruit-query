@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Query.Models.Omop;
 using RestSharp;
 
@@ -50,7 +51,7 @@ namespace Query
 
             services.AddHostedService<BackgroundWorker>();
         }
-        
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -58,6 +59,5 @@ namespace Query
                 app.UseDeveloperExceptionPage();
             }
         }
-
     }
 }
