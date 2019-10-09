@@ -10,7 +10,7 @@ Expects a docker volume "volume-pg" to be generated and filled with OMOP data ac
 docker-compose -f docker/docker-compose.dev.yml up
 ```
 
-The default port-mappings start a FHIR-Server on localhost:8082, the OMOP WebAPI on localhost:8081/WebAPI, and ATLAS on localhost:8081/atlas.
+The default port-mappings start a FHIR-Server on http://localhost:8083/fhir, the OMOP WebAPI on http://localhost:8082/WebAPI, and ATLAS on http://localhost:8082/atlas.
 
 ## Contributing
 
