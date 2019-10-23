@@ -1,4 +1,4 @@
-image: docker:stable
+image: docker:git
 
 variables:
   DOCKER_REGISTRY: docker.miracum.org
@@ -14,32 +14,44 @@ stages:
   - lint
   - version
   - build
-  - test
   - release
   - deploy
+
+determine next version:
+  image: docker.miracum.org/miracum-devops/semantic-release:latest
+  stage: version
+  script:
+    - npx semantic-release --dry-run
+    - test -e .VERSION || (echo $(git describe --abbrev=0 --tags | tr -d v) > .VERSION && touch .NORELEASE)
+  artifacts:
+    paths:
+      - .VERSION
+      - .NORELEASE
+    expire_in: 1 hour
+  except:
+    - tags
 
 lint dockerfile:
   stage: lint
   image: hadolint/hadolint:latest-debian
   script:
     - hadolint Dockerfile
-    - hadolint tests.Dockerfile
   only:
     changes:
       - "*Dockerfile"
   except:
     - tags
 
-determine next version:
-  image: docker.miracum.org/miracum-devops/semantic-release
-  stage: version
+lint compose:
+  stage: lint
+  image:
+    name: cytopia/yamllint:latest
+    entrypoint: ["/bin/sh", "-c"]
   script:
-    - npx semantic-release --dry-run
-    - test -e .VERSION || echo $(git describe --abbrev=0 --tags | tr -d v) > .VERSION
-  artifacts:
-    paths:
-      - .VERSION
-    expire_in: 1 hour
+    - yamllint deploy/docker-compose*.yml
+  only:
+    changes:
+      - "deploy/*"
   except:
     - tags
 
@@ -53,15 +65,7 @@ build:
   except:
     - tags
 
-unit tests:
-  stage: test
-  script:
-    - docker build -f tests.Dockerfile .
-  except:
-    - tags
-
-push to registry:
-  image: docker:git
+push to harbor:
   stage: release
   extends: .docker_registry
   script:

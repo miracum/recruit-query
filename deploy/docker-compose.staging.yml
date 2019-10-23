@@ -5,9 +5,9 @@ services:
     image: docker.miracum.org/uc1-recruit/query:${IMAGE_TAG}
     restart: always
     environment:
-      - FhirUrl=http://fhir:8080/fhir
-      - AtlasWebApiUrl=http://broadsea-webtools:8080/WebAPI
-      - ConnectionStrings__OmopDatabase=Server=omopdb;Port=5432;User id=ohdsi_admin_user;Password=admin1;Database=OHDSI;
+      - FHIR_BASE_URL=http://fhir:8080/fhir
+      - ATLAS_WEBAPI_URL=http://broadsea-webtools:8080/WebAPI
+      - OMOP_JDBC_URL=jdbc:postgresql://omopdb:5432/OHDSI?user=ohdsi_admin_user&password=admin1
     labels:
       - traefik.docker.network=traefik
       - traefik.frontend.rule=Host:query.recruit.miracum.org;PathPrefix:/api

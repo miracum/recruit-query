@@ -23,22 +23,28 @@ npm install
 
 ## Build
 
-Non-docker builds requires .NET Core 3.0 to be installed on your machine.
+Non-docker builds requires a Oracle or OpenJDK and Maven-Runtime to be installed on your machine.
 
-### Build
+### Build from cmd
 ```sh
-dotnet restore
-dotnet build
+mvn -DskipTests=true assembly:assembly -P production
 ```
+this is with skipping tests.
+Jar will be in target-folder of project
+
+### Build in eclipse/intelliJ
+No need of installing maven, it's included.
+Eclipse automatically selects the maven-profile which has the "activeByDefault=true".
+Add a new profile in the pom.xml to fit your development environment.
 
 ### Run Test
 ```sh
-dotnet test
+mvn -P test install
 ```
 
 ### Docker
 
-#### Build Image
+#### Build Image (TODO)
 ```sh
 docker build -t query:test -f Dockerfile .
 ```
