@@ -1,15 +1,11 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.0 AS build
+FROM maven:3.6.2-jdk-11-slim AS build
 WORKDIR /src
-COPY ["Query/Query.csproj", "Query/"]
-RUN dotnet restore "Query/Query.csproj"
 COPY . .
-WORKDIR /src/Query
-RUN dotnet build "Query.csproj" -c Release -o /app
+RUN mvn -DskipTests install --batch-mode --errors --fail-at-end --show-version
+RUN mvn -DskipTests assembly:assembly
 
-FROM build AS publish
-RUN dotnet publish "Query.csproj" -c Release -o /app
+FROM openjdk:11-jre-slim
+COPY --from=build /src/target/query-module.jar /opt/query-module.jar
+ENTRYPOINT ["java", "-Dquery.startupDelay=40000", "-jar","/opt/query-module.jar"]
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.0 AS deploy
-WORKDIR /app
-COPY --from=publish /app .
-ENTRYPOINT ["dotnet", "Query.dll"]
+LABEL maintainer="miracum"
