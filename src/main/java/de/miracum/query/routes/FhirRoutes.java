@@ -9,8 +9,14 @@ import org.apache.camel.builder.RouteBuilder;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.hl7.fhir.r4.model.Bundle.HTTPVerb;
+import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.ListResource;
+import org.hl7.fhir.r4.model.ListResource.ListStatus;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.ResearchStudy;
+import org.hl7.fhir.r4.model.ResearchStudy.ResearchStudyStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +42,39 @@ public class FhirRoutes extends RouteBuilder
 				.log(LoggingLevel.DEBUG, logger, "adding ${body.size()} patient(s) for cohort '${header.cohort.id} - ${header.cohort.name}'")
 				.process(ex ->
 				{
+					//Patient
 					List<Long> ids = (List<Long>) ex.getIn().getBody();
-					CohortDefinition cd = (CohortDefinition) ex.getIn().getHeader("cohort");
+					CohortDefinition cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
+					String cohortId = Integer.toString(cohortDefinition.getId());
 					Bundle transaction = new Bundle();
 					transaction.setType(BundleType.TRANSACTION);
+					
+					//ScreeningList
+					ListResource screeninglist = new ListResource();
+					
+					Identifier listIdentifier = new Identifier();
+					listIdentifier.setSystem("{{ATLAS_WEBAPI_URL}}");
+					listIdentifier.setValue(cohortId);
+					screeninglist.addIdentifier(listIdentifier);
+					
+					screeninglist.setStatus(ListStatus.CURRENT);
+					screeninglist.setMode(ListResource.ListMode.WORKING);
+					
+					//TODO: Change from Contained-Reference to Reference to existing Study
+					ResearchStudy study = new ResearchStudy();
+					Identifier studyId = new Identifier();
+					studyId.setSystem("{{ATLAS_WEBAPI_URL}}");
+					studyId.setValue(cohortId);
+					study.addIdentifier(studyId);
+					study.setStatus(ResearchStudyStatus.ACTIVE);
+					study.setDescription(cohortDefinition.toString());
+					//screeninglist.setSubject(new Reference(study));
+					
+					Extension researchStudy = new Extension();
+					researchStudy.setUrl("http://miracum.org/fhir/StructureDefinition/MyExtension");
+					researchStudy.setValue(new Reference(study));
+					screeninglist.addExtension(researchStudy);
+
 
 					for (Long id : ids)
 					{
@@ -50,14 +85,21 @@ public class FhirRoutes extends RouteBuilder
 						patient.addIdentifier(i);
 						// TODO: check if this is correct. Adds patients but don't know if it's
 						// complete
+						/*
 						transaction.addEntry().setResource(patient)
 								.getRequest()
 								.setMethod(HTTPVerb.POST)
 								.setUrl("Patient")
 								.setIfNoneExist("identifier=" + CONFIG.getProperty("fhir.systems.omopSubjectIdentifier") + "|" + id.toString());
+								*/
 
 					}
-					// TODO: researchStudy, screeningList
+				
+					transaction.addEntry().setResource(screeninglist)
+					.getRequest()
+					.setMethod(HTTPVerb.POST)
+					.setUrl("List");
+
 
 					ex.getIn().setBody(transaction);
 				})
