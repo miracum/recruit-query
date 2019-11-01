@@ -60,7 +60,6 @@ public class FhirRoutes extends RouteBuilder
 					screeninglist.setStatus(ListStatus.CURRENT);
 					screeninglist.setMode(ListResource.ListMode.WORKING);
 					
-					//TODO: Change from Contained-Reference to Reference to existing Study
 					ResearchStudy study = new ResearchStudy();
 					Identifier studyId = new Identifier();
 					studyId.setSystem(CONFIG.getProperty("fhir.systems.researchStudyAcronym"));
@@ -81,23 +80,19 @@ public class FhirRoutes extends RouteBuilder
 						i.setSystem(CONFIG.getProperty("fhir.systems.omopSubjectIdentifier"));
 						i.setValue(id.toString());
 						patient.addIdentifier(i);
-						// TODO: check if this is correct. Adds patients but don't know if it's
-						// complete
-						/*
+						
 						transaction.addEntry().setResource(patient)
 								.getRequest()
 								.setMethod(HTTPVerb.POST)
 								.setUrl("Patient")
 								.setIfNoneExist("identifier=" + CONFIG.getProperty("fhir.systems.omopSubjectIdentifier") + "|" + id.toString());
-								*/
-
 					}
 				
+					// TODO: only create a new list if it doesn't already exist, update it if it does.
 					transaction.addEntry().setResource(screeninglist)
-					.getRequest()
-					.setMethod(HTTPVerb.POST)
-					.setUrl("List");
-
+						.getRequest()
+						.setMethod(HTTPVerb.POST)
+						.setUrl("List");
 
 					ex.getIn().setBody(transaction);
 				})
