@@ -9,20 +9,22 @@ services:
     environment:
       FHIR_VERSION: R4
       SERVER_URL: http://fhir:8080/fhir
-      POSTGRES_HOST: fhir_db
+      POSTGRES_HOST: fhir-db
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fhir
     depends_on:
-      - fhir_db
+      - fhir-db
 
-  fhir_db:
-    image: postgres:11.5-alpine
+  fhir-db:
+    image: postgres:12.0-alpine
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fhir
+    tmpfs:
+      - /var/lib/postgresql/data:rw
 
   omopdb:
     image: docker.miracum.org/ohdsi-omop-v5/omop-db-v5:1.0.0
