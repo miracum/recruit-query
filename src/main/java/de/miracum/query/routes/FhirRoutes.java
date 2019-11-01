@@ -53,7 +53,7 @@ public class FhirRoutes extends RouteBuilder
 					ListResource screeninglist = new ListResource();
 					
 					Identifier listIdentifier = new Identifier();
-					listIdentifier.setSystem("{{ATLAS_WEBAPI_URL}}");
+					listIdentifier.setSystem(CONFIG.getProperty("fhir.systems.screeningListIdentifier"));
 					listIdentifier.setValue(cohortId);
 					screeninglist.addIdentifier(listIdentifier);
 					
@@ -63,18 +63,16 @@ public class FhirRoutes extends RouteBuilder
 					//TODO: Change from Contained-Reference to Reference to existing Study
 					ResearchStudy study = new ResearchStudy();
 					Identifier studyId = new Identifier();
-					studyId.setSystem("{{ATLAS_WEBAPI_URL}}");
-					studyId.setValue(cohortId);
+					studyId.setSystem(CONFIG.getProperty("fhir.systems.researchStudyAcronym"));
+					studyId.setValue(cohortDefinition.getName());
 					study.addIdentifier(studyId);
 					study.setStatus(ResearchStudyStatus.ACTIVE);
-					study.setDescription(cohortDefinition.toString());
-					//screeninglist.setSubject(new Reference(study));
+					study.setDescription(cohortDefinition.getDescription());
 					
-					Extension researchStudy = new Extension();
-					researchStudy.setUrl("http://miracum.org/fhir/StructureDefinition/MyExtension");
-					researchStudy.setValue(new Reference(study));
-					screeninglist.addExtension(researchStudy);
-
+					Extension studyReference = new Extension();
+					studyReference.setUrl(CONFIG.getProperty("fhir.systems.screeningListStudyReferenceExtension"));
+					studyReference.setValue(new Reference(study));
+					screeninglist.addExtension(studyReference);
 
 					for (Long id : ids)
 					{
