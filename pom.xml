@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>de.miracum</groupId>
-	<artifactId>query-module</artifactId>
+	<groupId>org.miracum.recruit</groupId>
+	<artifactId>query</artifactId>
 	<version>1.7.0-SNAPSHOT</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -139,7 +139,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>de.miracum.query.MainApp</mainClass>
+							<mainClass>org.miracum.recruit.query.MainApp</mainClass>
 						</manifest>
 					</archive>
 					<finalName>${project.artifactId}</finalName>

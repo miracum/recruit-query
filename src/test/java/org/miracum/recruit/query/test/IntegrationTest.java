@@ -1,6 +1,4 @@
-package de.miracum.query.test;
-
-import java.util.Properties;
+package org.miracum.recruit.query.test;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.EndpointInject;
@@ -10,38 +8,35 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.junit.Test;
+import org.miracum.recruit.query.routes.MainRoutes;
+import org.miracum.recruit.query.util.InitUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.miracum.query.routes.MainRoutes;
-import de.miracum.query.util.InitUtils;
+import java.util.Objects;
+import java.util.Properties;
 
 /**
- *
  * @author penndorfp
  * @date 11.10.2019
  */
-public class IntegrationTest extends CamelTestSupport
-{
+public class IntegrationTest extends CamelTestSupport {
+	private static final Properties CONFIG_PROPERTIES = new Properties();
 	private static final Logger logger = LoggerFactory.getLogger(IntegrationTest.class);
-	static final Properties CONFIG_PROPERTIES = new Properties();
 	@EndpointInject(uri = "mock:result")
-	protected MockEndpoint resultEndpoint;
+	private MockEndpoint resultEndpoint;
 
 	@Produce(uri = "direct:testStart")
-	protected ProducerTemplate template;
+	private ProducerTemplate template;
 
 	@Override
-	protected CamelContext createCamelContext() throws Exception
-	{
+	protected CamelContext createCamelContext() throws Exception {
 		System.setProperty("query.testing", "true");
-		CONFIG_PROPERTIES.load(IntegrationTest.class.getClassLoader().getResourceAsStream("config.properties"));
+		CONFIG_PROPERTIES.load(Objects.requireNonNull(IntegrationTest.class.getClassLoader().getResourceAsStream("config.properties")));
 		CamelContext context = InitUtils.getContext(CONFIG_PROPERTIES);
-		context.addRoutes(new RouteBuilder()
-		{
+		context.addRoutes(new RouteBuilder() {
 			@Override
-			public void configure() throws Exception
-			{
+			public void configure() {
 				from("direct:testStart").to(MainRoutes.START_COHORT_GENERATION).log("got mock message").to("mock:result");
 			}
 		});
@@ -50,8 +45,7 @@ public class IntegrationTest extends CamelTestSupport
 
 	//TODO: just an example whicht works but it's not a real test. real integrationtest need to have a pre-filled omop-db with test-data
 	@Test
-	public void test() throws InterruptedException
-	{
+	public void test() throws InterruptedException {
 		resultEndpoint.expectedBodyReceived().body().contains("test1");
 		resultEndpoint.expectedBodyReceived().body().contains("test3");
 		template.sendBody(null);
