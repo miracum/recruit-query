@@ -16,10 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 import java.util.Properties;
 
-/**
- * @author penndorfp
- * @date 11.10.2019
- */
 public class IntegrationTest extends CamelTestSupport {
 	private static final Properties CONFIG_PROPERTIES = new Properties();
 	private static final Logger logger = LoggerFactory.getLogger(IntegrationTest.class);
@@ -33,7 +29,7 @@ public class IntegrationTest extends CamelTestSupport {
 	protected CamelContext createCamelContext() throws Exception {
 		System.setProperty("query.testing", "true");
 		CONFIG_PROPERTIES.load(Objects.requireNonNull(IntegrationTest.class.getClassLoader().getResourceAsStream("config.properties")));
-		CamelContext context = InitUtils.getContext(CONFIG_PROPERTIES);
+		var context = InitUtils.getContext(CONFIG_PROPERTIES);
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() {

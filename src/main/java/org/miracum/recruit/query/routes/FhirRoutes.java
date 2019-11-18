@@ -5,6 +5,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.hl7.fhir.r4.model.Bundle.HTTPVerb;
+import org.hl7.fhir.r4.model.ListResource.ListEntryComponent;
 import org.hl7.fhir.r4.model.ListResource.ListStatus;
 import org.hl7.fhir.r4.model.ResearchStudy.ResearchStudyStatus;
 import org.miracum.recruit.query.model.atlas.CohortDefinition;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.miracum.recruit.query.util.InitUtils.CONFIG;
 
@@ -30,60 +32,83 @@ public class FhirRoutes extends RouteBuilder {
                 .log(LoggingLevel.DEBUG, logger, "adding ${body.size()} patient(s) for cohort '${header.cohort.id} - ${header.cohort.name}'")
                 .process(ex ->
                 {
+                    // get data from omop db and save it in variables
+                    @SuppressWarnings("unchecked")
                     var ids = (List<Long>) ex.getIn().getBody();
                     var cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
                     var cohortId = Integer.toString(cohortDefinition.getId());
+                    var listId = "example-" + cohortId;
 
+
+                    // create FHIR bundle
                     var transaction = new Bundle()
                             .setType(BundleType.TRANSACTION);
 
-                    var listIdentifier = new Identifier()
-                            .setSystem(CONFIG.getProperty("fhir.systems.screeningListIdentifier"))
-                            .setValue(cohortId);
-
+                    // create ScreeningList
                     var screeningList = new ListResource()
                             .setStatus(ListStatus.CURRENT)
                             .setMode(ListResource.ListMode.WORKING)
-                            .addIdentifier(listIdentifier);
+                            .addIdentifier(new Identifier()
+                                    .setSystem(CONFIG.getProperty("fhir.systems.screeningListIdentifier"))
+                                    .setValue(listId)
+                            );
 
-                    var studyId = new Identifier()
-                            .setSystem(CONFIG.getProperty("fhir.systems.researchStudyAcronym"))
-                            .setValue(cohortDefinition.getName());
 
+                    // create ResearchStudy and add it as an Extension
                     var study = new ResearchStudy()
                             .setStatus(ResearchStudyStatus.ACTIVE)
+                            .setTitle(cohortDefinition.getName())
                             .setDescription(cohortDefinition.getDescription())
-                            .addIdentifier(studyId);
+                            .addIdentifier(new Identifier()
+                                    .setSystem(CONFIG.getProperty("fhir.systems.omopCohortIdentifier"))
+                                    .setValue(cohortId)
+                            );
+                    var studyUuid = UUID.randomUUID();
 
-                    var studyReference = new Extension()
+
+                    // add study to bundle
+                    transaction.addEntry().setResource(study)
+                            .setFullUrl("urn:uuid:" + studyUuid)
+                            .getRequest()
+                            .setMethod(HTTPVerb.PUT)
+                            .setUrl("ResearchStudy?identifier=" + CONFIG.getProperty("fhir.systems.omopCohortIdentifier") + "|" + cohortId);
+
+                    // add Study to screeninglist as an extension
+                    screeningList.addExtension(new Extension()
                             .setUrl(CONFIG.getProperty("fhir.systems.screeningListStudyReferenceExtension"))
-                            .setValue(new Reference(study));
+                            .setValue(new Reference("urn:uuid:" + studyUuid))
+                    );
 
-                    screeningList.addExtension(studyReference);
-
+                    // iterate over all found Patient ID's in this cohort
                     for (var id : ids) {
-                        var patientId = new Identifier()
+
+                        // create Patient with OMOP ID as an Identifier and nothing else
+                        var patient = new Patient().addIdentifier(new Identifier()
                                 .setSystem(CONFIG.getProperty("fhir.systems.omopSubjectIdentifier"))
-                                .setValue(id.toString());
+                                .setValue(id.toString())
+                        );
 
-                        var patient = new Patient()
-                                .addIdentifier(patientId);
+                        // create an temporary ID for each patient and add it to the screening list as a reference
+                        var patientUuid = UUID.randomUUID();
+                        screeningList.addEntry(new ListEntryComponent()
+                                .setItem(new Reference("urn:uuid:" + patientUuid)));
 
-                        transaction.addEntry()
-                                .setResource(patient)
+                        // add patient to bundle
+                        transaction.addEntry().setResource(patient)
+                                .setFullUrl("urn:uuid:" + patientUuid)
                                 .getRequest()
                                 .setMethod(HTTPVerb.POST)
                                 .setUrl("Patient")
                                 .setIfNoneExist("identifier=" + CONFIG.getProperty("fhir.systems.omopSubjectIdentifier") + "|" + id.toString());
                     }
 
-                    // TODO: only create a new list if it doesn't already exist, update it if it does.
-                    transaction.addEntry()
-                            .setResource(screeningList)
+                    // add screening list to bundle
+                    transaction.addEntry().setResource(screeningList)
                             .getRequest()
-                            .setMethod(HTTPVerb.POST)
-                            .setUrl("List");
+                            .setMethod(HTTPVerb.PUT)
+                            .setUrl("List?identifier=" + CONFIG.getProperty("fhir.systems.screeningListIdentifier") + "|" + listId);
 
+                    // set bundle as http body
                     ex.getIn().setBody(transaction);
                 })
                 .to("fhir:transaction/withBundle?log={{FHIR_LOG_ENABLED}}&serverUrl={{FHIR_BASE_URL}}&inBody=bundle&fhirVersion=R4");

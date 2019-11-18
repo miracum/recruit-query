@@ -14,6 +14,10 @@ import java.util.Properties;
 class MainApp {
     private static final Logger logger = LoggerFactory.getLogger(MainApp.class);
 
+    private MainApp() {
+
+    }
+
     public static void main(final String... args) throws Exception {
         // Camel initialization
         final Main main = new Main();
