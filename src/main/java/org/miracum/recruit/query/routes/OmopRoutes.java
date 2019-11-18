@@ -33,16 +33,18 @@ public class OmopRoutes extends RouteBuilder {
     public void configure() {
         //@// @formatter:off
 
-        //gets the CohortDefinition in the body
+        // gets the CohortDefinition in the body
         from(GET_PATIENT_IDS)
                 .to("sql:select subject_id from synpuf_results.cohort where cohort_definition_id=:#${body.id}?dataSource={{OMOP_DSNAME}}")//https://camel.apache.org/components/latest/sql-component.html
                 .process(ex -> {
-                    List<Map<String, Object>> result = (List<Map<String, Object>>) ex.getIn().getBody();
+                    @SuppressWarnings("unchecked")
+                    var result = (List<Map<String, Object>>) ex.getIn().getBody();
                     ex.getIn().setBody(
-                            //convert result to List<Long>
-                            result.stream().map(
-                                    e -> Long.parseLong(Objects.nonNull(e.get("subject_id")) ? e.get("subject_id").toString() : null)
-                            )
+                            // convert result to List<Long>
+                            result.stream()
+                                    .map(e -> e.get("subject_id"))
+                                    .filter(Objects::nonNull)
+                                    .map(e -> Long.parseLong(e.toString()))
                                     .collect(Collectors.toList())
                     );
                 })

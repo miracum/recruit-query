@@ -17,6 +17,10 @@ import java.util.Properties;
 public class InitUtils {
     public static Properties CONFIG = new Properties();
 
+    private InitUtils() {
+
+    }
+
     public static CamelContext getContext(Properties props) throws Exception {
         CONFIG = props;
         //override all config params with the ones from environment
