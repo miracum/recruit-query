@@ -2,6 +2,7 @@ package org.miracum.recruit.query.routes;
 
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
+import org.hl7.fhir.r4.formats.JsonParser;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.hl7.fhir.r4.model.Bundle.HTTPVerb;
@@ -11,6 +12,9 @@ import org.hl7.fhir.r4.model.ResearchStudy.ResearchStudyStatus;
 import org.miracum.recruit.query.model.atlas.CohortDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,17 +39,17 @@ public class FhirRoutes extends RouteBuilder {
                     // get data from omop db and save it in variables
                     @SuppressWarnings("unchecked")
                     var ids = (List<Long>) ex.getIn().getBody();
-                    var cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
-                    var cohortId = Integer.toString(cohortDefinition.getId());
-                    var listId = "example-" + cohortId;
+                    CohortDefinition cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
+                    String cohortId = Integer.toString(cohortDefinition.getId());
+                    String listId = "screeninglist-" + cohortId;
 
 
                     // create FHIR bundle
-                    var transaction = new Bundle()
+                    Bundle transaction = new Bundle()
                             .setType(BundleType.TRANSACTION);
 
                     // create ScreeningList
-                    var screeningList = new ListResource()
+                    ListResource screeningList = new ListResource()
                             .setStatus(ListStatus.CURRENT)
                             .setMode(ListResource.ListMode.WORKING)
                             .setCode(new CodeableConcept()
@@ -54,12 +58,11 @@ public class FhirRoutes extends RouteBuilder {
                                             .setCode("screening-recommendations")))
                             .addIdentifier(new Identifier()
                                     .setSystem(CONFIG.getProperty("fhir.systems.screeningListIdentifier"))
-                                    .setValue(listId)
-                            );
+                                    .setValue(listId));
 
 
                     // create ResearchStudy and add it as an Extension
-                    var study = new ResearchStudy()
+                    ResearchStudy study = new ResearchStudy()
                             .setStatus(ResearchStudyStatus.ACTIVE)
                             .setTitle(cohortDefinition.getName())
                             .setDescription(cohortDefinition.getDescription())
@@ -67,7 +70,7 @@ public class FhirRoutes extends RouteBuilder {
                                     .setSystem(CONFIG.getProperty("fhir.systems.omopCohortIdentifier"))
                                     .setValue(cohortId)
                             );
-                    var studyUuid = UUID.randomUUID();
+                    UUID studyUuid = UUID.randomUUID();
 
 
                     // add study to bundle
@@ -87,13 +90,13 @@ public class FhirRoutes extends RouteBuilder {
                     for (var id : ids) {
 
                         // create Patient with OMOP ID as an Identifier and nothing else
-                        var patient = new Patient().addIdentifier(new Identifier()
+                    	Patient patient = new Patient().addIdentifier(new Identifier()
                                 .setSystem(CONFIG.getProperty("fhir.systems.omopSubjectIdentifier"))
                                 .setValue(id.toString())
                         );
 
                         // create an temporary ID for each patient and add it to the screening list as a reference
-                        var patientUuid = UUID.randomUUID();
+                        UUID patientUuid = UUID.randomUUID();
                         screeningList.addEntry(new ListEntryComponent()
                                 .setItem(new Reference("urn:uuid:" + patientUuid)));
 
@@ -107,14 +110,20 @@ public class FhirRoutes extends RouteBuilder {
                     }
 
                     // add screening list to bundle
+                   
                     transaction.addEntry().setResource(screeningList)
+                    		.setFullUrl("urn:uuid:" + UUID.randomUUID())
                             .getRequest()
                             .setMethod(HTTPVerb.PUT)
                             .setUrl("List?identifier=" + CONFIG.getProperty("fhir.systems.screeningListIdentifier") + "|" + listId);
-
+					
+                    
+                    IParser jsonParser = FhirContext.forR4().newJsonParser();
+            		jsonParser.setPrettyPrint(true);
+            		System.out.println(jsonParser.encodeResourceToString(transaction));
                     // set bundle as http body
                     ex.getIn().setBody(transaction);
                 })
-                .to("fhir:transaction/withBundle?log={{FHIR_LOG_ENABLED}}&serverUrl={{FHIR_BASE_URL}}&inBody=bundle&fhirVersion=R4");
+                .to("fhir:transaction/withBundle?log=" + CONFIG.getProperty("FHIR_LOG_ENABLED") + "&serverUrl=" + CONFIG.getProperty("FHIR_BASE_URL") + "&inBody=bundle&fhirVersion=R4");
     }
 }

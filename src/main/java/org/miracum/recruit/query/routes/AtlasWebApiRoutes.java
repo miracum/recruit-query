@@ -8,6 +8,8 @@ import org.miracum.recruit.query.model.atlas.CohortDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.miracum.recruit.query.util.InitUtils.CONFIG;
+
 /**
  * All routes for the Atlas WebAPI
  */
@@ -17,13 +19,15 @@ public class AtlasWebApiRoutes extends RouteBuilder {
     static final String GET_COHORT_DEFINITIONS = "direct:atlas.getCohortDefinitions";
     private static final String HEADER_GENERATION_STATUS = "generationStatus";
     private static final Logger logger = LoggerFactory.getLogger(AtlasWebApiRoutes.class);
+    String ATLAS_WEBAPI = CONFIG.getProperty("ATLAS_WEBAPI_URL")+"/cohortdefinition";
 
     @Override
     public void configure() {
         //@// @formatter:off
 
         from(GET_COHORT_DEFINITIONS)
-                .to("{{ATLAS_WEBAPI_URL}}/cohortdefinition")// https://camel.apache.org/components/latest/http-component.html
+        
+                .to(ATLAS_WEBAPI)// https://camel.apache.org/components/latest/http-component.html
                 .convertBodyTo(String.class)
                 .log(LoggingLevel.DEBUG, logger, "response from webapi: ${body}")
                 .split().jsonpathWriteAsString("$[*]")// foreach cohort. https://camel.apache.org/components/latest/jsonpath-component.html
@@ -33,11 +37,11 @@ public class AtlasWebApiRoutes extends RouteBuilder {
                 // needed otherwise ConvertException
                 .setHeader("cohort", body())
                 .setBody(constant(null))
-                .toD("{{ATLAS_WEBAPI_URL}}/cohortdefinition/${header.cohort.id}/generate/OHDSI-CDMV5")
+                .toD(ATLAS_WEBAPI + "/${header.cohort.id}/generate/OHDSI-CDMV5")
                 .setHeader(HEADER_GENERATION_STATUS, constant("PENDING"))
                 // Check Status of generation and loop while still running
                 .loopDoWhile(header(HEADER_GENERATION_STATUS).regex("PENDING|RUNNING"))
-                .toD("{{ATLAS_WEBAPI_URL}}/cohortdefinition/${header.cohort.id}/info")
+                .toD(ATLAS_WEBAPI + "/${header.cohort.id}/info")
                 .convertBodyTo(String.class)
                 .setHeader(HEADER_GENERATION_STATUS, jsonpath("$.[0].status"))
                 .log("current status: ${header.generationStatus}")
