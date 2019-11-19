@@ -83,7 +83,7 @@ public class FhirRoutes extends RouteBuilder {
                     // add Study to screeninglist as an extension
                     screeningList.addExtension(new Extension()
                             .setUrl(CONFIG.getProperty("fhir.systems.screeningListStudyReferenceExtension"))
-                            .setValue(new Reference("urn:uuid:" + studyUuid))
+                            .setValue(new Reference("urn:uuid:" + studyUuid).setDisplay(cohortDefinition.getName()))
                     );
 
                     // iterate over all found Patient ID's in this cohort
