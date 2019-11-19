@@ -120,10 +120,12 @@ public class FhirRoutes extends RouteBuilder {
                     
                     IParser jsonParser = FhirContext.forR4().newJsonParser();
             		jsonParser.setPrettyPrint(true);
-            		System.out.println(jsonParser.encodeResourceToString(transaction));
+
+                    logger.debug(jsonParser.encodeResourceToString(transaction));
+
                     // set bundle as http body
                     ex.getIn().setBody(transaction);
                 })
-                .to("fhir:transaction/withBundle?log=" + CONFIG.getProperty("FHIR_LOG_ENABLED") + "&serverUrl=" + CONFIG.getProperty("FHIR_BASE_URL") + "&inBody=bundle&fhirVersion=R4");
+                .to("fhir:transaction/withBundle?log={{FHIR_LOG_ENABLED}}&serverUrl={{FHIR_BASE_URL}}&inBody=bundle&fhirVersion=R4");
     }
 }
