@@ -1,0 +1,37 @@
+plugins {
+	id "org.springframework.boot" version "2.1.11.BUILD-SNAPSHOT"
+	id "io.spring.dependency-management" version "1.0.8.RELEASE"
+	id "java"
+}
+
+group = "org.miracum.recruit"
+version = "0.0.1-SNAPSHOT"
+sourceCompatibility = "11"
+
+ext {
+	fhirVersion = "4.1.0"
+	camelVersion = "2.24.2"
+}
+
+repositories {
+	mavenCentral()
+	maven { url "https://repo.spring.io/milestone" }
+	maven { url "https://repo.spring.io/snapshot" }
+}
+
+dependencies {
+	implementation "org.apache.camel:camel-spring-boot-starter:$camelVersion"
+	implementation "org.apache.camel:camel-http:$camelVersion"
+	implementation "ca.uhn.hapi.fhir:hapi-fhir-base:$fhirVersion"
+	implementation "ca.uhn.hapi.fhir:hapi-fhir-client:$fhirVersion"
+	implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$fhirVersion"
+	implementation "com.fasterxml.jackson.core:jackson-annotations:2.10.1"
+	implementation "org.postgresql:postgresql:42.2.8"
+	implementation "javax.activation:activation:1.1.1"
+	implementation "javax.xml.bind:jaxb-api:2.3.1"
+	implementation "org.apache.camel:camel-sql:$camelVersion"
+	implementation "org.apache.camel:camel-jackson:$camelVersion"
+	implementation "org.apache.camel:camel-jsonpath:$camelVersion"
+	implementation "org.apache.camel:camel-fhir:$camelVersion"
+	testImplementation "org.springframework.boot:spring-boot-starter-test"
+}

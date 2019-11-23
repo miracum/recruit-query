@@ -1,0 +1,42 @@
+query:
+  getCohortsInterval: 60000
+  startupDelay: 1000
+
+atlas:
+  url: "http://localhost:8082/WebAPI"
+  cohortStatusCheckBackoffTime: 10000
+
+omop:
+  jdbcUrl: "jdbc:postgresql://localhost:5432/OHDSI?user=postgres&password=postgres"
+
+fhir:
+  url: "http://localhost:8083/fhir"
+  logEnabled: false
+  systems:
+    omopSubjectIdentifier: "http://ohdsi.org/omop/fhir/subject-identifier"
+    omopCohortIdentifier: "http://ohdsi.org/omop/fhir/cohort-identifier"
+    screeningListIdentifier: "http://miracum.org/fhir/screening-list-cohort-identifier"
+    screeningListStudyReferenceExtension: "http://miracum.org/fhir/screening-list-study-reference"
+    researchStudyAcronym: "http://miracum.org/fhir/study-acronym"
+    screeningListCoding: "http://miracum.org/fhir/CodeSystem/screening-list"
+
+camel:
+  springboot:
+    name: Query
+    jmx-enabled: false
+    main-run-controller: true
+
+
+# to configure logging levels
+logging:
+  level:
+    org:
+      springframework: "INFO"
+      apache:
+        camel:
+          spring:
+            boot: "INFO"
+          impl: "DEBUG"
+      miracum:
+        recruit:
+          query: "DEBUG"

@@ -4,7 +4,10 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -12,30 +15,28 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.miracum.recruit.query.util.InitUtils.CONFIG;
-
-/**
- * All routes for communication with the OMOP database
- */
-public class OmopRoutes extends RouteBuilder {
+@Component
+public class OmopRoute extends RouteBuilder {
     static final String GET_PATIENT_IDS = "direct:omop.getPatientIds";
-    private static final Logger logger = LoggerFactory.getLogger(OmopRoutes.class);
+    private static final Logger logger = LoggerFactory.getLogger(OmopRoute.class);
 
-    public static DataSource setupDataSource() {
-        var url = CONFIG.getProperty("OMOP_JDBC_URL");
-        var ds = new DriverManagerDataSource(url);
+    @Bean
+    public static DataSource dataSource(@Value("${omop.jdbcUrl}") String jdbcUrl) {
+        var ds = new DriverManagerDataSource(jdbcUrl);
         ds.setDriverClassName("org.postgresql.Driver");
-        ds.setUrl(url);
+        ds.setUrl(jdbcUrl);
         return ds;
     }
 
     @Override
     public void configure() {
+
         //@// @formatter:off
 
         // gets the CohortDefinition in the body
         from(GET_PATIENT_IDS)
-                .to("sql:select subject_id from synpuf_results.cohort where cohort_definition_id=:#${body.id}?dataSource={{OMOP_DSNAME}}")//https://camel.apache.org/components/latest/sql-component.html
+                //https://camel.apache.org/components/latest/sql-component.html
+                .to("sql:SELECT subject_id FROM synpuf_results.cohort WHERE cohort_definition_id=:#${body.id}?dataSource=dataSource")
                 .process(ex -> {
                     @SuppressWarnings("unchecked")
                     var result = (List<Map<String, Object>>) ex.getIn().getBody();
@@ -50,7 +51,8 @@ public class OmopRoutes extends RouteBuilder {
                 })
                 .to("log:?level=INFO&showBody=true")
                 .log(LoggingLevel.DEBUG, logger, "found ${body.size()} patient(s) for cohort id ${header.cohort.id}")
-                .to(MainRoutes.DONE_GET_PATIENTS);
+                .to(Router.DONE_GET_PATIENTS);
         // @formatter:on
     }
 }
+

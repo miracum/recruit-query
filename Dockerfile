@@ -1,12 +1,13 @@
-FROM maven:3.6.2-jdk-11-slim AS build
-WORKDIR /src
-COPY . .
-RUN mvn -DskipTests install --batch-mode --errors --fail-at-end --show-version
-RUN mvn -DskipTests assembly:assembly
+FROM gradle:6.0.1-jdk11 AS build
+WORKDIR /home/gradle/src
+COPY --chown=gradle:gradle . .
+RUN gradle build --no-daemon --info
 
 FROM openjdk:11-jre-slim
-COPY --from=build /src/target/query.jar /opt/query.jar
-ENTRYPOINT ["java", "-Dquery.startupDelay=40000", "-jar","/opt/query.jar"]
+COPY --from=build /home/gradle/src/build/libs/*.jar /opt/query.jar
+ARG VERSION=0.0.0
+ENV app.version=${VERSION}
+ENTRYPOINT ["java", "-jar", "/opt/query.jar"]
 
 LABEL maintainer="miracum.org" \
     org.label-schema.schema-version="1.0" \
