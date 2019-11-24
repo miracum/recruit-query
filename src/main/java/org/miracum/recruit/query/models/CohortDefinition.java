@@ -1,4 +1,4 @@
-package org.miracum.recruit.query.model.atlas;
+package org.miracum.recruit.query.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -104,3 +104,4 @@ public class CohortDefinition {
                 '}';
     }
 }
+
