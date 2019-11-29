@@ -1,5 +1,5 @@
 plugins {
-	id "org.springframework.boot" version "2.1.11.BUILD-SNAPSHOT"
+	id "org.springframework.boot" version "2.2.1.RELEASE"
 	id "io.spring.dependency-management" version "1.0.8.RELEASE"
 	id "java"
 }
@@ -10,7 +10,7 @@ sourceCompatibility = "11"
 
 ext {
 	fhirVersion = "4.1.0"
-	camelVersion = "2.24.2"
+	camelVersion = "3.0.0"
 }
 
 repositories {
@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-	implementation "org.apache.camel:camel-spring-boot-starter:$camelVersion"
+	implementation "org.apache.camel:camel-spring-boot-starter:3.0.0-RC3"
 	implementation "org.apache.camel:camel-http:$camelVersion"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-base:$fhirVersion"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-client:$fhirVersion"
