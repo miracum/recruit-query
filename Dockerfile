@@ -3,7 +3,7 @@ WORKDIR /home/gradle/src
 COPY --chown=gradle:gradle . .
 RUN gradle build --no-daemon --info
 
-FROM openjdk:11-jre-slim
+FROM adoptopenjdk/openjdk11-openj9:debian-jre
 COPY --from=build /home/gradle/src/build/libs/*.jar /opt/query.jar
 ARG VERSION=0.0.0
 ENV app.version=${VERSION}
