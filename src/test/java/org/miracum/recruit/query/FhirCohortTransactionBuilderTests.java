@@ -1,5 +1,6 @@
 package org.miracum.recruit.query;
 
+import ca.uhn.fhir.context.FhirContext;
 import org.junit.Test;
 import org.miracum.recruit.query.models.CohortDefinition;
 import java.util.List;
@@ -18,6 +19,6 @@ public class FhirCohortTransactionBuilderTests {
         var fhirTrx = sut.buildFromOmopCohort(cohort, ids);
 
         // create a subject for each id and create one List and one ResearchStudy resource
-        assertThat(fhirTrx.getEntry()).hasSize(ids.size() + 1 + 1);
+        assertThat(fhirTrx.getEntry()).hasSize(2*ids.size() + 1 + 1);
     }
 }
