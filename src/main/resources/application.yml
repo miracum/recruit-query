@@ -26,7 +26,6 @@ camel:
     jmx-enabled: false
     main-run-controller: true
 
-
 # to configure logging levels
 logging:
   level:
