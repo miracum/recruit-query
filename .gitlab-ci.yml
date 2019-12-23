@@ -2,7 +2,8 @@ image: docker:git
 
 variables:
   DOCKER_REGISTRY: docker.miracum.org
-  IMAGE_PATH: $DOCKER_REGISTRY/uc1-recruit/query
+  PROJECT_PATH: /uc1-recruit/query
+  IMAGE_PATH: $DOCKER_REGISTRY$PROJECT_PATH
 
 .docker_registry:
   before_script:
@@ -10,7 +11,27 @@ variables:
   after_script:
     - docker logout $DOCKER_REGISTRY
 
+.job_defaults:
+  only:
+    - merge_requests
+    - master
+
+include:
+  - project: "devops/ci-templates"
+    file: "/preflight/.tidy-files.yml"
+  - project: "devops/ci-templates"
+    file: "/linting/.yamllint.yml"
+  - project: "devops/ci-templates"
+    file: "/linting/.hadolint.yml"
+  - project: "devops/ci-templates"
+    file: "/linting/.markdownlint.yml"
+  - project: "devops/ci-templates"
+    file: "/versioning/.semantic-release-get-version.yml"
+  - project: "devops/ci-templates"
+    file: "/image-scanning/.trivy-scan.yml"
+
 stages:
+  - preflight
   - lint
   - version
   - build
@@ -18,72 +39,36 @@ stages:
   - release
   - deploy
 
-determine next version:
-  image: docker.miracum.org/miracum-devops/semantic-release:latest
-  stage: version
-  script:
-    - npx semantic-release --dry-run
-    - test -e .VERSION || (echo $(git describe --abbrev=0 --tags | tr -d v) > .VERSION && touch .NORELEASE)
-  artifacts:
-    paths:
-      - .VERSION
-      - .NORELEASE
-    expire_in: 1 hour
-  except:
-    - tags
+check file tidiness:
+  extends: .job_defaults
 
-lint dockerfile:
-  stage: lint
-  image: hadolint/hadolint:latest-debian
-  script:
-    - hadolint Dockerfile
-  only:
-    changes:
-      - "*Dockerfile"
-  except:
-    - tags
+hadolint:
+  extends: .job_defaults
 
-lint compose:
-  stage: lint
-  image:
-    name: cytopia/yamllint:latest
-    entrypoint: ["/bin/sh", "-c"]
-  script:
-    - yamllint deploy/docker-compose*.yml
-  only:
-    changes:
-      - "deploy/*"
-  except:
-    - tags
+yamllint:
+  extends: .job_defaults
+
+markdownlint:
+  extends: .job_defaults
+
+get next version:
+  extends: .job_defaults
 
 build:
   stage: build
-  extends: .docker_registry
+  extends:
+    - .docker_registry
+    - .job_defaults
   script:
     - export VERSION=$(cat .VERSION)
     - docker build -t $IMAGE_PATH:$CI_COMMIT_SHORT_SHA --build-arg VERSION=$VERSION .
     - docker push $IMAGE_PATH:$CI_COMMIT_SHORT_SHA
-  except:
-    - tags
 
-scan with trivy:
-  stage: test
-  before_script:
-    - apk add --no-cache curl
-    - export VERSION=$(curl --silent "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-    - echo $VERSION
-    - wget https://github.com/aquasecurity/trivy/releases/download/v${VERSION}/trivy_${VERSION}_Linux-64bit.tar.gz
-    - tar zxvf trivy_${VERSION}_Linux-64bit.tar.gz
+trivy:
+  extends: .job_defaults
   allow_failure: true
-  script:
-    - ./trivy --exit-code 0 --severity HIGH --no-progress $IMAGE_PATH:$CI_COMMIT_SHORT_SHA
-    - ./trivy --exit-code 1 --severity CRITICAL --no-progress $IMAGE_PATH:$CI_COMMIT_SHORT_SHA
-  cache:
-    paths:
-      - $CI_PROJECT_DIR/.trivycache/
-  except:
-    - tags
-
+  variables:
+    IMAGE_FQN: $DOCKER_REGISTRY$PROJECT_PATH:$CI_COMMIT_SHORT_SHA
 
 push to harbor:
   stage: release
