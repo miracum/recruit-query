@@ -5,9 +5,11 @@ query:
 atlas:
   url: "http://localhost:8082/WebAPI"
   cohortStatusCheckBackoffTime: 10000
+  dataSource: "OHDSI-CDMV5"
 
 omop:
   jdbcUrl: "jdbc:postgresql://localhost:5432/OHDSI?user=postgres&password=postgres"
+  cohortResultsTable: "synpuf_results.cohort"
 
 fhir:
   url: "http://localhost:8083/fhir"

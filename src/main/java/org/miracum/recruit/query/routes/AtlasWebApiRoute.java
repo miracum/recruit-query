@@ -17,13 +17,16 @@ public class AtlasWebApiRoute extends RouteBuilder {
     private static final String HEADER_GENERATION_STATUS = "generationStatus";
 
     @Value("${atlas.url}")
-    private String atlasBaseUrl;
+    private String baseUrl;
+
+    @Value("${atlas.dataSource}")
+    private String dataSourceName;
 
     @Override
     public void configure() {
         //@// @formatter:off
 
-        from(GET_COHORT_DEFINITIONS).to(atlasBaseUrl + "/cohortdefinition")// https://camel.apache.org/components/latest/http-component.html
+        from(GET_COHORT_DEFINITIONS).to(baseUrl + "/cohortdefinition")// https://camel.apache.org/components/latest/http-component.html
                 .convertBodyTo(String.class)
                 .log(LoggingLevel.DEBUG, LOG, "response from webapi: ${body}")
                 .split().jsonpathWriteAsString("$[*]")// foreach cohort. https://camel.apache.org/components/latest/jsonpath-component.html
@@ -33,11 +36,11 @@ public class AtlasWebApiRoute extends RouteBuilder {
                     // needed otherwise ConvertException
                     .setHeader("cohort", body())
                     .setBody(constant(null))
-                    .toD(atlasBaseUrl + "/cohortdefinition/${header.cohort.id}/generate/OHDSI-CDMV5")
+                    .toD(baseUrl + "/cohortdefinition/${header.cohort.id}/generate/" + dataSourceName)
                     .setHeader(HEADER_GENERATION_STATUS, constant("PENDING"))
                     // Check Status of generation and loop while still running
                     .loopDoWhile(header(HEADER_GENERATION_STATUS).regex("PENDING|RUNNING"))
-                        .toD(atlasBaseUrl + "/cohortdefinition/${header.cohort.id}/info")
+                        .toD(baseUrl + "/cohortdefinition/${header.cohort.id}/info")
                         .convertBodyTo(String.class)
                         .setHeader(HEADER_GENERATION_STATUS, jsonpath("$.[0].status"))
                         .log("current status: ${header.generationStatus}")

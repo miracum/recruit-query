@@ -20,6 +20,9 @@ public class OmopRoute extends RouteBuilder {
     static final String GET_PATIENT_IDS = "direct:omop.getPatientIds";
     private static final Logger logger = LoggerFactory.getLogger(OmopRoute.class);
 
+    @Value("${omop.cohortResultsTable}")
+    private String cohortResultsTable;
+
     @Bean
     public static DataSource dataSource(@Value("${omop.jdbcUrl}") String jdbcUrl) {
         var ds = new DriverManagerDataSource(jdbcUrl);
@@ -36,7 +39,7 @@ public class OmopRoute extends RouteBuilder {
         // gets the CohortDefinition in the body
         from(GET_PATIENT_IDS)
                 //https://camel.apache.org/components/latest/sql-component.html
-                .to("sql:SELECT subject_id FROM synpuf_results.cohort WHERE cohort_definition_id=:#${body.id}?dataSource=dataSource")
+                .to("sql:SELECT subject_id FROM " + cohortResultsTable + " WHERE cohort_definition_id=:#${body.id}?dataSource=dataSource")
                 .process(ex -> {
                     @SuppressWarnings("unchecked")
                     var result = (List<Map<String, Object>>) ex.getIn().getBody();
