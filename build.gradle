@@ -25,7 +25,7 @@ dependencies {
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-base:$fhirVersion"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-client:$fhirVersion"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$fhirVersion"
-	implementation "com.fasterxml.jackson.core:jackson-annotations:2.10.1"
+	implementation "com.fasterxml.jackson.core:jackson-annotations:2.10.2"
 	implementation "org.postgresql:postgresql:42.2.9"
 	implementation "javax.activation:activation:1.1.1"
 	implementation "javax.xml.bind:jaxb-api:2.3.1"
