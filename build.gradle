@@ -9,7 +9,7 @@ version = "0.0.1-SNAPSHOT"
 sourceCompatibility = "11"
 
 ext {
-	fhirVersion = "4.1.0"
+	fhirVersion = "4.2.0"
 	camelVersion = "3.0.1"
 }
 
