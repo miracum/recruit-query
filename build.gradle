@@ -1,5 +1,5 @@
 plugins {
-	id "org.springframework.boot" version "2.2.4.RELEASE"
+	id "org.springframework.boot" version "2.2.5.RELEASE"
 	id "io.spring.dependency-management" version "1.0.9.RELEASE"
 	id "java"
 }
@@ -10,7 +10,7 @@ sourceCompatibility = "11"
 
 ext {
 	fhirVersion = "4.2.0"
-	camelVersion = "3.0.1"
+	camelVersion = "3.1.0"
 }
 
 repositories {
