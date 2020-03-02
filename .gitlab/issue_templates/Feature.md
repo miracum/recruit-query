@@ -1,13 +1,13 @@
 <!--- Provide a general summary of the issue in the Title above -->
 
-### Describe your Problem
+### Beschreibung des Problems
 <!--- Tell us what happens instead of the expected behavior -->
 
-### Desired Solution
+### Gewünschte Lösung
 <!--- Tell us what should happen -->
 
-### Detailed Description
+### Detaillierte Beschreibung
 <!--- Provide a detailed description of the change or addition you are proposing -->
 
-### Possible Implementation
+### Mögliche Implementierung
 <!--- Not obligatory, but suggest an idea for implementing addition or change -->
