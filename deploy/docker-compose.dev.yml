@@ -8,8 +8,6 @@ services:
       - "8083:8080"
     environment:
       server.address: http://localhost:8083/fhir
-    depends_on:
-      - fhir-db
 
   omopdb:
     image: docker.miracum.org/ohdsi-omop-v5/omop-db-v5:1.0.0
