@@ -5,8 +5,8 @@ services:
     image: docker.miracum.org/uc1-recruit/query:${IMAGE_TAG}
     restart: always
     environment:
-      - FHIR_BASE_URL=http://fhir:8080/fhir
-      - ATLAS_WEBAPI_URL=http://broadsea-webtools:8080/WebAPI
+      - FHIR_URL=http://fhir:8080/fhir
+      - ATLAS_URL=http://broadsea-webtools:8080/WebAPI
       - OMOP_JDBC_URL=jdbc:postgresql://omopdb:5432/OHDSI?user=ohdsi_admin_user&password=admin1
     networks:
       - default

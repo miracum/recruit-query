@@ -1,5 +1,5 @@
 plugins {
-	id "org.springframework.boot" version "2.2.4.RELEASE"
+	id "org.springframework.boot" version "2.2.5.RELEASE"
 	id "io.spring.dependency-management" version "1.0.9.RELEASE"
 	id "java"
 }
@@ -9,8 +9,8 @@ version = "0.0.1-SNAPSHOT"
 sourceCompatibility = "11"
 
 ext {
-	fhirVersion = "4.1.0"
-	camelVersion = "3.0.1"
+	fhirVersion = "4.2.0"
+	camelVersion = "3.1.0"
 }
 
 repositories {
@@ -25,8 +25,8 @@ dependencies {
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-base:$fhirVersion"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-client:$fhirVersion"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$fhirVersion"
-	implementation "com.fasterxml.jackson.core:jackson-annotations:2.10.2"
-	implementation "org.postgresql:postgresql:42.2.9"
+	implementation "com.fasterxml.jackson.core:jackson-annotations:2.10.3"
+	implementation "org.postgresql:postgresql:42.2.10"
 	implementation "javax.activation:activation:1.1.1"
 	implementation "javax.xml.bind:jaxb-api:2.3.1"
 	implementation "org.apache.camel:camel-sql:$camelVersion"
