@@ -2,29 +2,14 @@ version: "3.7"
 
 services:
   fhir:
-    image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:v3.0.0
+    image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:v7.1.3
     restart: always
     ports:
       - "8083:8080"
     environment:
-      FHIR_VERSION: R4
-      SERVER_URL: http://fhir:8080/fhir
-      POSTGRES_HOST: fhir-db
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: fhir
+      server.address: http://localhost:8083/fhir
     depends_on:
       - fhir-db
-
-  fhir-db:
-    image: postgres:12.1-alpine
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: fhir
-    tmpfs:
-      - /var/lib/postgresql/data:rw
 
   omopdb:
     image: docker.miracum.org/ohdsi-omop-v5/omop-db-v5:1.0.0
@@ -40,7 +25,6 @@ services:
     volumes:
       - ./config-local.js:/usr/local/tomcat/webapps/atlas/js/config-local.js:ro
     environment:
-      - WEBAPI_URL=localhost:8082
       - env=webapi-postgresql
       - datasource_driverClassName=org.postgresql.Driver
       - datasource_url=jdbc:postgresql://omopdb:5432/OHDSI
