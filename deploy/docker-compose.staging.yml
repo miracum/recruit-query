@@ -8,12 +8,49 @@ services:
       - FHIR_BASE_URL=http://fhir:8080/fhir
       - ATLAS_WEBAPI_URL=http://broadsea-webtools:8080/WebAPI
       - OMOP_JDBC_URL=jdbc:postgresql://omopdb:5432/OHDSI?user=ohdsi_admin_user&password=admin1
+    networks:
+      - default
+      - recruit-staging
+
+  omopdb:
+    image: docker.miracum.org/ohdsi-omop-v5/omop-db-v5:1.0.0
+    volumes:
+      - omop-pg:/var/lib/postgresql/data
+    networks:
+      - default
+      - recruit-staging
+
+  broadsea-webtools:
+    image: docker.miracum.org/ohdsi-omop-v5/broadsea-webtools:1.0.0
+    volumes:
+      - .:/tmp/drivers/:ro
+      - ./config-local.js:/usr/local/tomcat/webapps/atlas/js/config-local.js:ro
+    environment:
+      - WEBAPI_URL=query.recruit.miracum.org
+      - env=webapi-postgresql
+      - datasource_driverClassName=org.postgresql.Driver
+      - datasource_url=jdbc:postgresql://omopdb:5432/OHDSI
+      - datasource.cdm.schema=synpuf_cdm
+      - datasource.ohdsi.schema=ohdsi
+      - datasource_username=ohdsi_admin_user
+      - datasource_password=admin1
+      - spring.jpa.properties.hibernate.default_schema=ohdsi
+      - spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+      - spring.batch.repository.tableprefix=ohdsi.BATCH_
+      - flyway_datasource_driverClassName=org.postgresql.Driver
+      - flyway_datasource_url=jdbc:postgresql://omopdb:5432/OHDSI
+      - flyway_schemas=ohdsi
+      - flyway.placeholders.ohdsiSchema=ohdsi
+      - flyway_datasource_username=ohdsi_admin_user
+      - flyway_datasource_password=admin1
+      - flyway.locations=classpath:db/migration/postgresql
     labels:
       - traefik.docker.network=traefik
-      - traefik.frontend.rule=Host:query.recruit.miracum.org;PathPrefix:/api
+      - traefik.frontend.rule=Host:query.recruit.miracum.org;PathPrefix:/atlas,/WebAPI
       - traefik.enable=true
-      - traefik.port=80
+      - traefik.port=8080
     networks:
+      - default
       - traefik
       - recruit-staging
 
@@ -21,4 +58,8 @@ networks:
   recruit-staging:
     external: true
   traefik:
+    external: true
+
+volumes:
+  omop-pg:
     external: true
