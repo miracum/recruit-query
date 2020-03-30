@@ -37,7 +37,7 @@ logging:
         camel:
           spring:
             boot: "INFO"
-          impl: "DEBUG"
+          impl: "INFO"
       miracum:
         recruit:
-          query: "DEBUG"
+          query: "INFO"

@@ -8,11 +8,6 @@ group = "org.miracum.recruit"
 version = "0.0.1-SNAPSHOT"
 sourceCompatibility = "11"
 
-ext {
-	fhirVersion = "4.2.0"
-	camelVersion = "3.1.0"
-}
-
 repositories {
 	mavenCentral()
 	maven { url "https://repo.spring.io/milestone" }
@@ -20,18 +15,24 @@ repositories {
 }
 
 dependencies {
-	implementation "org.apache.camel:camel-spring-boot-starter:3.0.0-RC3"
-	implementation "org.apache.camel:camel-http:$camelVersion"
-	implementation "ca.uhn.hapi.fhir:hapi-fhir-base:$fhirVersion"
-	implementation "ca.uhn.hapi.fhir:hapi-fhir-client:$fhirVersion"
-	implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:$fhirVersion"
+	implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.1.0"
+	implementation "org.apache.camel:camel-http:3.1.0"
+	implementation "ca.uhn.hapi.fhir:hapi-fhir-base:4.2.0"
+	implementation "ca.uhn.hapi.fhir:hapi-fhir-client:4.2.0"
+	implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:4.2.0"
 	implementation "com.fasterxml.jackson.core:jackson-annotations:2.10.3"
 	implementation "org.postgresql:postgresql:42.2.11"
 	implementation "javax.activation:activation:1.1.1"
 	implementation "javax.xml.bind:jaxb-api:2.3.1"
-	implementation "org.apache.camel:camel-sql:$camelVersion"
-	implementation "org.apache.camel:camel-jackson:$camelVersion"
-	implementation "org.apache.camel:camel-jsonpath:$camelVersion"
-	implementation "org.apache.camel:camel-fhir:$camelVersion"
-	testImplementation "org.springframework.boot:spring-boot-starter-test"
+	implementation "org.apache.camel:camel-sql:3.1.0"
+	implementation "org.apache.camel:camel-jackson:3.1.0"
+	implementation "org.apache.camel:camel-jsonpath:3.1.0"
+	implementation "org.apache.camel:camel-fhir:3.1.0"
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+test {
+    useJUnitPlatform()
 }
