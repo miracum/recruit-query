@@ -1,0 +1,13 @@
+# to configure logging levels
+logging:
+  level:
+    org:
+      springframework: "INFO"
+      apache:
+        camel:
+          spring:
+            boot: "INFO"
+          impl: "DEBUG"
+      miracum:
+        recruit:
+          query: "DEBUG"
