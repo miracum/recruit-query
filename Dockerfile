@@ -3,11 +3,12 @@ WORKDIR /home/gradle/src
 COPY --chown=gradle:gradle . .
 RUN gradle build --no-daemon --info
 
-FROM adoptopenjdk:11-jre-openj9
+FROM gcr.io/distroless/java:11
 COPY --from=build /home/gradle/src/build/libs/*.jar /opt/query.jar
+USER nonroot
 ARG VERSION=0.0.0
 ENV app.version=${VERSION}
-ENTRYPOINT ["java", "-jar", "/opt/query.jar"]
+CMD ["/opt/query.jar"]
 
 ARG GIT_REF=""
 ARG BUILD_TIME=""
