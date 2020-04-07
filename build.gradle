@@ -15,19 +15,19 @@ repositories {
 }
 
 dependencies {
-	implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.1.0"
-	implementation "org.apache.camel:camel-http:3.1.0"
+	implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.2.0"
+	implementation "org.apache.camel:camel-http:3.2.0"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-base:4.2.0"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-client:4.2.0"
 	implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:4.2.0"
 	implementation "com.fasterxml.jackson.core:jackson-annotations:2.10.3"
-	implementation "org.postgresql:postgresql:42.2.11"
+	implementation "org.postgresql:postgresql:42.2.12"
 	implementation "javax.activation:activation:1.1.1"
 	implementation "javax.xml.bind:jaxb-api:2.3.1"
-	implementation "org.apache.camel:camel-sql:3.1.0"
-	implementation "org.apache.camel:camel-jackson:3.1.0"
-	implementation "org.apache.camel:camel-jsonpath:3.1.0"
-	implementation "org.apache.camel:camel-fhir:3.1.0"
+	implementation "org.apache.camel:camel-sql:3.2.0"
+	implementation "org.apache.camel:camel-jackson:3.2.0"
+	implementation "org.apache.camel:camel-jsonpath:3.2.0"
+	implementation "org.apache.camel:camel-fhir:3.2.0"
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
