@@ -8,7 +8,9 @@ atlas:
   dataSource: "OHDSI-CDMV5"
 
 omop:
-  jdbcUrl: "jdbc:postgresql://localhost:5432/OHDSI?user=postgres&password=postgres"
+  jdbcUrl: "jdbc:postgresql://localhost:5432/OHDSI"
+  username: postgres
+  password: postgres
   cohortResultsTable: "synpuf_results.cohort"
 
 fhir:
@@ -17,10 +19,10 @@ fhir:
   systems:
     omopSubjectIdentifier: "http://ohdsi.org/omop/fhir/subject-identifier"
     omopCohortIdentifier: "http://ohdsi.org/omop/fhir/cohort-identifier"
-    screeningListIdentifier: "http://miracum.org/fhir/screening-list-cohort-identifier"
-    screeningListStudyReferenceExtension: "http://miracum.org/fhir/screening-list-study-reference"
-    researchStudyAcronym: "http://miracum.org/fhir/study-acronym"
-    screeningListCoding: "http://miracum.org/fhir/CodeSystem/screening-list"
+    screeningListIdentifier: "https://fhir.miracum.org/uc1/NamingSystem/screeningListId"
+    screeningListStudyReferenceExtension: "https://fhir.miracum.org/uc1/StructureDefinition/belongsToStudy"
+    researchStudyAcronym: "https://fhir.miracum.org/uc1/StructureDefinition/studyAcronym"
+    screeningListCoding: "https://fhir.miracum.org/uc1/CodeSystem/screeningList"
 
 camel:
   springboot:

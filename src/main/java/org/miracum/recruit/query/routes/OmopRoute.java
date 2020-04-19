@@ -24,10 +24,14 @@ public class OmopRoute extends RouteBuilder {
     private String cohortResultsTable;
 
     @Bean
-    public static DataSource dataSource(@Value("${omop.jdbcUrl}") String jdbcUrl) {
+    public static DataSource dataSource(@Value("${omop.jdbcUrl}") String jdbcUrl,
+                                        @Value("${omop.username}") String username,
+                                        @Value("${omop.password}") String password) {
         var ds = new DriverManagerDataSource(jdbcUrl);
         ds.setDriverClassName("org.postgresql.Driver");
         ds.setUrl(jdbcUrl);
+        ds.setUsername(username);
+        ds.setPassword(password);
         return ds;
     }
 
