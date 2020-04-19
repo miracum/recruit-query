@@ -1,7 +1,8 @@
 plugins {
 	id "org.springframework.boot" version "2.2.6.RELEASE"
 	id "io.spring.dependency-management" version "1.0.9.RELEASE"
-	id "java"
+    id "java"
+    id "jacoco"
 }
 
 group = "org.miracum.recruit"
@@ -28,8 +29,22 @@ dependencies {
 	implementation "org.apache.camel:camel-jackson:3.2.0"
 	implementation "org.apache.camel:camel-jsonpath:3.2.0"
 	implementation "org.apache.camel:camel-fhir:3.2.0"
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
-        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    testImplementation("org.springframework.boot:spring-boot-starter-test:2.2.6.RELEASE") {
+        exclude group: "org.junit.vintage", module: "junit-vintage-engine"
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.5"
+    reportsDir = file("$buildDir/jacoco-reports")
+}
+
+jacocoTestReport {
+    reports {
+        html.enabled false
+        xml.enabled false
+        csv.enabled true
+        csv.destination file("${buildDir}/jacoco/coverage.csv")
     }
 }
 

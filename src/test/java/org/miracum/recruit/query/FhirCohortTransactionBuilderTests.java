@@ -1,8 +1,8 @@
 package org.miracum.recruit.query;
 
-import ca.uhn.fhir.context.FhirContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.miracum.recruit.query.models.CohortDefinition;
+
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
