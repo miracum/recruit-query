@@ -1,3 +1,9 @@
+omop:
+  jdbcUrl: "jdbc:postgresql://localhost:5432/OHDSI"
+  user: postgres
+  password: postgres
+  cohortResultsTable: "synpuf_results.cohort"
+
 # to configure logging levels
 logging:
   level:
