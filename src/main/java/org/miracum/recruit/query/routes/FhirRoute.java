@@ -5,6 +5,7 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.miracum.recruit.query.FhirCohortTransactionBuilder;
 import org.miracum.recruit.query.models.CohortDefinition;
+import org.miracum.recruit.query.models.OmopPerson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +35,13 @@ public class FhirRoute extends RouteBuilder {
                 {
                     // get data from omop db and save it in variables
                     @SuppressWarnings("unchecked")
-                    var ids = (List<Long>) ex.getIn().getBody();
+                    var patients = (List<OmopPerson>) ex.getIn().getBody();
                     var cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
 
-                    var transaction = fhirBuilder.buildFromOmopCohort(cohortDefinition, ids);
+                    var transaction = fhirBuilder.buildFromOmopCohort(cohortDefinition, patients);
 
                     var jsonParser = FhirContext.forR4().newJsonParser().setPrettyPrint(true);
+                    System.out.println(jsonParser.encodeResourceToString(transaction));
                     LOG.debug(jsonParser.encodeResourceToString(transaction));
 
                     // set bundle as http body

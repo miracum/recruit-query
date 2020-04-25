@@ -3,18 +3,19 @@ query:
   startupDelay: 1000
 
 atlas:
-  url: "http://localhost:8082/WebAPI"
+  url: "http://localhost:8083/WebAPI"
   cohortStatusCheckBackoffTime: 10000
   dataSource: "OHDSI-CDMV5"
 
 omop:
-  jdbcUrl: "jdbc:postgresql://localhost:5432/OHDSI"
+  jdbcUrl: "jdbc:postgresql://localhost:25432/OHDSI"
   username: postgres
   password: postgres
-  cohortResultsTable: "synpuf_results.cohort"
+  resultsSchema: "synpuf_results"
+  cdmSchema: "synpuf_cdm"
 
 fhir:
-  url: "http://localhost:8083/fhir"
+  url: "http://localhost:8082/fhir"
   logEnabled: false
   systems:
     omopSubjectIdentifier: "http://ohdsi.org/omop/fhir/subject-identifier"
