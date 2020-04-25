@@ -1,20 +1,29 @@
-# query - The OMOP/ATLAS-based Query Module
+# query
 
-## Project setup
+> The OMOP and ATLAS-based Query Module
 
-Start OMOP, ATLAS, and a FHIR server as external development services:
+## Development Setup
 
-Expects a docker volume "volume-pg" to be generated and filled with OMOP data according to step 1 of the [ohdsi-omop-v5 README](https://gitlab.miracum.org/miracum/etl/ohdsi-omop-v5).
+Start OMOP DB, ATLAS, a FHIR server, and the screening list module as external development services:
+
+> ℹ Expects a docker volume "volume-pg" to be generated and filled with synthetic data according to step 1 of the [ohdsi-omop-v5 README](https://gitlab.miracum.org/miracum/etl/ohdsi-omop-v5).
 
 ```sh
 docker-compose -f deploy/docker-compose.dev.yml up
 ```
 
-The default port-mappings start a FHIR-Server on <http://localhost:8083/fhir>, the OMOP WebAPI on <http://localhost:8082/WebAPI>, and ATLAS on <http://localhost:8082/atlas>.
+This starts the services on the following localhost ports:
+
+| Service        | Port  | URL                                     |
+| -------------- | ----- | --------------------------------------- |
+| FHIR Server    | 8082  | <http://localhost:8082/>                |
+| OHDSI ATLAS    | 8083  | <http://localhost:8083/atlas>           |
+| Screening List | 8084  | <http://localhost:8084/>                |
+| OMOP Database  | 25432 | jdbc:postgresql://localhost:25432/OHDSI |
 
 ## Build
 
-Non-docker builds requires a Oracle or OpenJDK to be installed on your machine.
+Non-docker builds require JDK 11+ to be installed on your machine.
 
 ### Build from commandline
 
@@ -22,12 +31,12 @@ Non-docker builds requires a Oracle or OpenJDK to be installed on your machine.
 ./gradlew build
 ```
 
-The generated .jar file will be located in the build/libs directory.
+The generated .jar file will be located in the `build/libs` directory.
 
 ### Docker
 
 ```sh
-docker build -t query:test -f Dockerfile .
+docker build -t query:test  .
 ```
 
 ## Contributing

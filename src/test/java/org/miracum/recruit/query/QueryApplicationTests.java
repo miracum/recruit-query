@@ -12,4 +12,5 @@ public class QueryApplicationTests {
     @Test
     public void contextLoads() {
     }
+
 }
