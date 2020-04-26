@@ -41,7 +41,6 @@ public class FhirRoute extends RouteBuilder {
                     var transaction = fhirBuilder.buildFromOmopCohort(cohortDefinition, patients);
 
                     var jsonParser = FhirContext.forR4().newJsonParser().setPrettyPrint(true);
-                    System.out.println(jsonParser.encodeResourceToString(transaction));
                     LOG.debug(jsonParser.encodeResourceToString(transaction));
 
                     // set bundle as http body
