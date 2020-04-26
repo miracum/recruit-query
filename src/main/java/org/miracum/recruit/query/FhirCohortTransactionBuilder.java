@@ -88,6 +88,10 @@ public class FhirCohortTransactionBuilder {
                         .setValue(cohortId)
                 );
 
+        if (cohort.getName() != null) {
+            study.addExtension(systems.getResearchStudyAcronym(), new StringType(cohort.getName()));
+        }
+
         //SCREENINGLIST
         // create
         ListResource screeningList = new ListResource()

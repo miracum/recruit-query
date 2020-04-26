@@ -2,10 +2,7 @@ package org.miracum.recruit.query;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.util.BundleUtil;
-import org.hl7.fhir.r4.model.ListResource;
-import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.ResearchStudy;
-import org.hl7.fhir.r4.model.ResearchSubject;
+import org.hl7.fhir.r4.model.*;
 import org.junit.jupiter.api.Test;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.OmopPerson;
@@ -20,6 +17,10 @@ public class FhirCohortTransactionBuilderTests {
 
     private final FhirSystems systems = new FhirSystems();
     private final FhirContext fhirContext = FhirContext.forR4();
+
+    public FhirCohortTransactionBuilderTests() {
+        systems.setResearchStudyAcronym("https://fhir.miracum.org/uc1/StructureDefinition/studyAcronym");
+    }
 
     @Test
     public void buildFromOmopCohort_withGivenPersons_shouldCreateExpectedNumberOfResourcesInTransaction() {
@@ -101,6 +102,36 @@ public class FhirCohortTransactionBuilderTests {
 
         var patient = patients.get(0);
 
-        // assertThat(patient.getBirthDateElement().getYear()).isEqualTo(1976);
+        // 1975-12-31T00:00:00
+        assertThat(patient.getBirthDateElement().getYear()).isEqualTo(1975);
+        assertThat(patient.getBirthDateElement().getMonth()).isEqualTo(11);
+        assertThat(patient.getBirthDateElement().getDay()).isEqualTo(31);
+        assertThat(patient.getBirthDateElement().getHour()).isEqualTo(0);
+        assertThat(patient.getBirthDateElement().getMinute()).isEqualTo(0);
+    }
+
+    @Test
+    public void buildFromOmopCohort_withCohortDefinitionWithName_shouldSetStudyAcronymToCohortDefinitionName() {
+        var cohort = new CohortDefinition();
+        cohort.setId(4);
+        cohort.setName("Testcohort");
+
+        var person = new OmopPerson()
+                .setPersonId(2);
+
+        var sut = new FhirCohortTransactionBuilder(systems);
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person));
+
+        var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+
+        assertThat(studies).hasSize(1);
+
+        var study = studies.get(0);
+
+        assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isTrue();
+
+        var acronym = (StringType)study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
+
+        assertThat(acronym.getValue()).isEqualTo(cohort.getName());
     }
 }
