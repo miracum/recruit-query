@@ -1,5 +1,10 @@
+query:
+  selector:
+    matchLabels:
+      - "UC1"
+
 omop:
-  jdbcUrl: "jdbc:postgresql://localhost:5432/OHDSI"
+  jdbcUrl: "jdbc:postgresql://localhost:25432/OHDSI"
   user: postgres
   password: postgres
   cohortResultsTable: "synpuf_results.cohort"

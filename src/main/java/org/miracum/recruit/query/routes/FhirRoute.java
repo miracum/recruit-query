@@ -1,6 +1,7 @@
 package org.miracum.recruit.query.routes;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.miracum.recruit.query.FhirCohortTransactionBuilder;
@@ -19,10 +20,12 @@ public class FhirRoute extends RouteBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(FhirRoute.class);
 
     private final FhirCohortTransactionBuilder fhirBuilder;
+    private final IParser fhirParser;
 
     @Autowired
-    public FhirRoute(FhirCohortTransactionBuilder fhirBuilder) {
+    public FhirRoute(FhirCohortTransactionBuilder fhirBuilder, FhirContext fhirContext) {
         this.fhirBuilder = fhirBuilder;
+        this.fhirParser = fhirContext.newJsonParser().setPrettyPrint(true);
     }
 
     @Override
@@ -40,8 +43,7 @@ public class FhirRoute extends RouteBuilder {
 
                     var transaction = fhirBuilder.buildFromOmopCohort(cohortDefinition, patients);
 
-                    var jsonParser = FhirContext.forR4().newJsonParser().setPrettyPrint(true);
-                    LOG.debug(jsonParser.encodeResourceToString(transaction));
+                    LOG.debug(fhirParser.encodeResourceToString(transaction));
 
                     // set bundle as http body
                     ex.getIn().setBody(transaction);

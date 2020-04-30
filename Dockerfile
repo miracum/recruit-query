@@ -8,17 +8,15 @@ RUN gradle --no-daemon jacocoTestReport && \
     awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions,\
     " instructions covered"; print 100*covered/instructions, "% covered" }' build/jacoco/coverage.csv
 
-
 FROM gcr.io/distroless/java:11
 COPY --from=build /home/gradle/src/build/libs/*.jar /opt/query.jar
 USER nonroot
-ARG VERSION=0.0.0
-ENV app.version=${VERSION}
+ENV SPRING_PROFILES_ACTIVE=prod
 CMD ["/opt/query.jar"]
 
+ARG VERSION=0.0.0
 ARG GIT_REF=""
 ARG BUILD_TIME=""
-
 LABEL org.opencontainers.image.created=${BUILD_TIME} \
     org.opencontainers.image.authors="miracum.org" \
     org.opencontainers.image.source="https://gitlab.miracum.org/miracum/uc1/recruit/query" \
