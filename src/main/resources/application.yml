@@ -1,6 +1,8 @@
 query:
   getCohortsInterval: 60000
   startupDelay: 1000
+  selector:
+    matchLabels: []
 
 atlas:
   url: "http://localhost:8083/WebAPI"
@@ -44,3 +46,6 @@ logging:
       miracum:
         recruit:
           query: "INFO"
+spring:
+  profiles:
+    active: dev

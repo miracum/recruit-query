@@ -39,8 +39,7 @@ public class OmopRoute extends RouteBuilder {
     @Override
     public void configure() {
 
-        //@// @formatter:off
-
+        // @formatter:off
         // gets the CohortDefinition in the body
         from(GET_PATIENTS)
                 //https://camel.apache.org/components/latest/sql-component.html
@@ -55,7 +54,6 @@ public class OmopRoute extends RouteBuilder {
                         + " INNER JOIN {{omop.cdmSchema}}.person ON {{omop.resultsSchema}}.cohort.subject_id={{omop.cdmSchema}}.person.person_id"
                         + " LEFT JOIN {{omop.cdmSchema}}.concept ON {{omop.cdmSchema}}.concept.concept_id={{omop.cdmSchema}}.person.gender_concept_id"
                         + " WHERE {{omop.resultsSchema}}.cohort.cohort_definition_id=:#${body.id};")
-                //.to("sql:SELECT * FROM " + personTable + ";")
                 .process(ex -> {
                     @SuppressWarnings("unchecked")
                     var result = (List<Map<String, Object>>) ex.getIn().getBody();
@@ -86,8 +84,6 @@ public class OmopRoute extends RouteBuilder {
                 })
                 .to("log:?level=INFO&showBody=true")
                 .log(LoggingLevel.DEBUG, logger, "found ${body.size()} patient(s) for cohort id ${header.cohort.id}")
-//                .loop(Integer.parseInt("${body.size()}"))
-//                	.to("sql:SELECT year_of_birth FROM " + personTable + " WHERE person_id=" + LOOP_INDEX)
                 .to(Router.DONE_GET_PATIENTS);
         // @formatter:on
     }

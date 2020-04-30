@@ -1,6 +1,6 @@
 {
   "name": "Sample Cohort",
-  "description": "This is a sample cohort/study.",
+  "description": "[UC1] This is a sample cohort/study.",
   "expressionType": "SIMPLE_EXPRESSION",
   "expression": "{\"ConceptSets\":[],\"PrimaryCriteria\":{\"CriteriaList\":[{\"VisitOccurrence\":{}}],\"ObservationWindow\":{\"PriorDays\":0,\"PostDays\":0},\"PrimaryCriteriaLimit\":{\"Type\":\"First\"}},\"QualifiedLimit\":{\"Type\":\"First\"},\"ExpressionLimit\":{\"Type\":\"First\"},\"InclusionRules\":[{\"name\":\"Demographics\",\"description\":\"females older than 89\",\"expression\":{\"Type\":\"ALL\",\"CriteriaList\":[],\"DemographicCriteriaList\":[{\"Age\":{\"Value\":89,\"Op\":\"gt\"},\"Gender\":[{\"CONCEPT_CODE\":\"F\",\"CONCEPT_ID\":8532,\"CONCEPT_NAME\":\"FEMALE\",\"DOMAIN_ID\":\"Gender\",\"VOCABULARY_ID\":\"Gender\"}]}],\"Groups\":[]}}],\"CensoringCriteria\":[],\"CollapseSettings\":{\"CollapseType\":\"ERA\",\"EraPad\":0},\"CensorWindow\":{}}"
 }

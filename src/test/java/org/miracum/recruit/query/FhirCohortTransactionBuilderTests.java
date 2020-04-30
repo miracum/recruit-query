@@ -130,7 +130,7 @@ public class FhirCohortTransactionBuilderTests {
 
         assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isTrue();
 
-        var acronym = (StringType)study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
+        var acronym = (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
 
         assertThat(acronym.getValue()).isEqualTo(cohort.getName());
     }
