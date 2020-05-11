@@ -1,5 +1,5 @@
 plugins {
-	id "org.springframework.boot" version "2.2.6.RELEASE"
+	id "org.springframework.boot" version "2.2.7.RELEASE"
 	id "io.spring.dependency-management" version "1.0.9.RELEASE"
     id "java"
     id "jacoco"
@@ -29,7 +29,7 @@ dependencies {
 	implementation "org.apache.camel:camel-jackson:3.2.0"
 	implementation "org.apache.camel:camel-jsonpath:3.2.0"
 	implementation "org.apache.camel:camel-fhir:3.2.0"
-    testImplementation("org.springframework.boot:spring-boot-starter-test:2.2.6.RELEASE") {
+    testImplementation("org.springframework.boot:spring-boot-starter-test:2.2.7.RELEASE") {
         exclude group: "org.junit.vintage", module: "junit-vintage-engine"
     }
 }
