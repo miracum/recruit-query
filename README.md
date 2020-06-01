@@ -21,6 +21,15 @@ This starts the services on the following localhost ports:
 | Screening List | 8084  | <http://localhost:8084/>                |
 | OMOP Database  | 25432 | jdbc:postgresql://localhost:25432/OHDSI |
 
+Create a sample Cohort in Atlas by running the following:
+
+```sh
+curl --header "Content-Type: application/json" \
+     --request POST \
+     --data @deploy/test-cohort.json \
+     http://localhost:8083/WebAPI/cohortdefinition
+```
+
 ## Build
 
 Non-docker builds require JDK 11+ to be installed on your machine.
