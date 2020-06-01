@@ -2,7 +2,8 @@ query:
   getCohortsInterval: 60000
   startupDelay: 1000
   selector:
-    matchLabels: []
+    matchLabels:
+      - "UC1"
 
 atlas:
   url: "http://localhost:8083/WebAPI"
