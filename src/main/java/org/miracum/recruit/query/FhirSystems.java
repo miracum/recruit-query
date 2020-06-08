@@ -14,6 +14,7 @@ public class FhirSystems {
     private String screeningListStudyReferenceExtension;
     private String researchStudyAcronym;
     private String screeningListCoding;
+    private String studySource;
 
     public String getOmopSubjectIdentifier() {
         return omopSubjectIdentifier;
@@ -61,5 +62,13 @@ public class FhirSystems {
 
     public void setScreeningListCoding(String screeningListCoding) {
         this.screeningListCoding = screeningListCoding;
+    }
+
+    public String getStudySource() {
+        return studySource;
+    }
+
+    public void setStudySource(String studySource) {
+        this.studySource = studySource;
     }
 }
