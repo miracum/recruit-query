@@ -22,13 +22,8 @@ public class FhirCohortTransactionBuilder {
         systems = fhirSystems;
     }
 
-    /**
-     * Transforms gender in OMOP data
-     *
-     * @param gender String representation in OMOP of the gender
-     * @return gender in Fhir format
-     */
     private static AdministrativeGender getGenderFromOmop(String gender) {
+        if (gender == null) return AdministrativeGender.NULL;
         switch (gender.toUpperCase()) {
             case "FEMALE":
                 return AdministrativeGender.FEMALE;
@@ -66,35 +61,113 @@ public class FhirCohortTransactionBuilder {
         return date;
     }
 
+    /**
+     * Builds an FHIR Transaction with a list of ResearchSubjects from a given OMOP cohort
+     * includes Patients, ResearchStudy, ResearchSubjects, List
+     *
+     * @param cohort          OMOP CohortDefinition from an existing cohort
+     * @param personsInCohort all persons in cohort
+     * @return Bundle of type transaction
+     */
     public Bundle buildFromOmopCohort(CohortDefinition cohort, List<OmopPerson> personsInCohort) {
         String cohortId = Integer.toString(cohort.getId());
         String listId = "screeninglist-" + cohortId;
-        // create random UUIDs
+
+        //create BUNDLE
+        Bundle transaction = new Bundle().setType(Bundle.BundleType.TRANSACTION);
+
+        // create RESEARCHSTUDY and add to bundle
+        ResearchStudy study = createResearchStudy(cohort);
         UUID studyUuid = UUID.randomUUID();
+        transaction.addEntry(createStudyBundleEntryComponent(study, cohortId, studyUuid));
 
-        //BUNDLE
-        // create
-        Bundle transaction = new Bundle()
-                .setType(Bundle.BundleType.TRANSACTION);
+        //create SCREENINGLIST
+        ListResource screeningList = createScreeninglist(listId, studyUuid);
 
-        //RESEARCHSTUDY
-        // create
-        ResearchStudy study = new ResearchStudy()
-                .setStatus(ResearchStudy.ResearchStudyStatus.ACTIVE)
-                .setTitle(cohort.getName())
-                .setDescription(cohort.getDescription())
-                .addIdentifier(new Identifier()
-                        .setSystem(systems.getOmopCohortIdentifier())
-                        .setValue(cohortId)
-                );
-
-        if (cohort.getName() != null) {
-            study.addExtension(systems.getResearchStudyAcronym(), new StringType(cohort.getName()));
+        //LOOP trough all Patients
+        for (OmopPerson personInCohort : personsInCohort) {
+            // create PATIENT with OMOP ID as an Identifier and add to bundle
+            Patient patient = createPatient(personInCohort);
+            UUID patientUuid = UUID.randomUUID();
+            transaction.addEntry(createPatientBundleEntryComponent(patient, patientUuid));
+            // create RESEARCHSUBJECT with Reference on Patient and Study and add to bundle
+            ResearchSubject researchSubject = createResearchSubject(study, patientUuid);
+            UUID subjectUuid = UUID.randomUUID();
+            transaction.addEntry(createResearchSubjectBundleEntryComponent(researchSubject, subjectUuid, personInCohort.getPersonId(), cohortId));
+            // add to SCREENINGLIST
+            screeningList.addEntry(new ListResource.ListEntryComponent()
+                    .setItem(new Reference("urn:uuid:" + subjectUuid)));
         }
+        //ADD LIST TO BUNDLE
+        transaction.addEntry(createListBundleEntryComponent(screeningList, listId));
 
-        //SCREENINGLIST
-        // create
-        ListResource screeningList = new ListResource()
+        return transaction;
+    }
+
+    //--------------------------------------------PRIVATE METHODS-------------------------------------------------------
+    private BundleEntryComponent createStudyBundleEntryComponent(ResearchStudy study, String cohortId, UUID studyUuid) {
+        var bundleEntry = new BundleEntryComponent()
+                .setResource(study)
+                .setFullUrl("urn:uuid:" + studyUuid)
+                .setRequest(new BundleEntryRequestComponent()
+                        .setMethod(Bundle.HTTPVerb.PUT)
+                        .setUrl("ResearchStudy?identifier=" + systems.getOmopCohortIdentifier() + "|" + cohortId));
+        return bundleEntry;
+    }
+
+    private BundleEntryComponent createResearchSubjectBundleEntryComponent(ResearchSubject researchSubject, UUID subjectUuid, int personId, String cohortId) {
+        var bundleEntry = new BundleEntryComponent()
+                .setResource(researchSubject)
+                .setFullUrl("urn:uuid:" + subjectUuid)
+                .setRequest(new BundleEntryRequestComponent()
+                        .setMethod(Bundle.HTTPVerb.PUT)
+                        .setUrl("ResearchSubject?patient.identifier=" + systems.getOmopSubjectIdentifier() + "|" + personId
+                                + "&" + "study.identifier=" + systems.getOmopCohortIdentifier() + "|" + cohortId));
+        return bundleEntry;
+    }
+
+    private BundleEntryComponent createPatientBundleEntryComponent(Patient patient, UUID patientUuid) {
+        var bundleEntry = new BundleEntryComponent()
+                .setResource(patient)
+                .setFullUrl("urn:uuid:" + patientUuid)
+                .setRequest(new BundleEntryRequestComponent()
+                        .setMethod(Bundle.HTTPVerb.PUT)
+                        .setUrl("Patient?identifier=" + patient.getIdentifier().get(0).getSystem() + "|" + patient.getIdentifier().get(0).getValue()));
+        return bundleEntry;
+    }
+
+    private BundleEntryComponent createListBundleEntryComponent(ListResource screeningList, String listId) {
+        var bundleEntry = new BundleEntryComponent()
+                .setResource(screeningList)
+                .setFullUrl("urn:uuid:" + UUID.randomUUID())
+                .setRequest(new BundleEntryRequestComponent()
+                        .setMethod(Bundle.HTTPVerb.PUT)
+                        .setUrl("List?identifier=" + systems.getScreeningListIdentifier() + "|" + listId));
+        return bundleEntry;
+    }
+
+    // CREATE RESOURCES
+    private ResearchSubject createResearchSubject(ResearchStudy study, UUID patientUuid) {
+        var subject = new ResearchSubject()
+                .setStatus(ResearchSubject.ResearchSubjectStatus.CANDIDATE)
+                .setStudy(new Reference(study))
+                .setIndividual(new Reference("urn:uuid:" + patientUuid));
+        return subject;
+    }
+
+    private Patient createPatient(OmopPerson personInCohort) {
+        var patient = new Patient()
+                .setBirthDateElement(parseBirthDate(personInCohort))
+                .setGender(getGenderFromOmop(personInCohort.getGender()))
+                .addIdentifier(new Identifier()
+                        .setSystem(systems.getOmopSubjectIdentifier())
+                        .setValue(Integer.toString(personInCohort.getPersonId()))
+                );
+        return patient;
+    }
+
+    private ListResource createScreeninglist(String listId, UUID studyUuid) {
+        var list = new ListResource()
                 .setStatus(ListResource.ListStatus.CURRENT)
                 .setMode(ListResource.ListMode.WORKING)
                 .setCode(new CodeableConcept()
@@ -104,84 +177,27 @@ public class FhirCohortTransactionBuilder {
                 .addIdentifier(new Identifier()
                         .setSystem(systems.getScreeningListIdentifier())
                         .setValue(listId));
+
         // add Study to screeninglist as an extension
-        screeningList.addExtension(new Extension()
+        list.addExtension(new Extension()
                 .setUrl(systems.getScreeningListStudyReferenceExtension())
-                .setValue(new Reference("urn:uuid:" + studyUuid).setDisplay(cohort.getName()))
-        );
+                .setValue(new Reference("urn:uuid:" + studyUuid)));
+        return list;
+    }
 
-
-        //LOOP trough all Patients
-        for (OmopPerson personInCohort : personsInCohort) {
-            //PATIENT
-
-            // create Patient with OMOP ID as an Identifier
-            Patient patient = new Patient()
-                    // add birth year
-                    .setBirthDateElement(parseBirthDate(personInCohort))
-                    .addIdentifier(new Identifier()
-                            .setSystem(systems.getOmopSubjectIdentifier())
-                            .setValue(Integer.toString(personInCohort.getPersonId()))
-                    );
-
-            // only set the gender if it is present on the person
-            if (personInCohort.getGender() != null) {
-                patient.setGender(getGenderFromOmop(personInCohort.getGender()));
-            }
-
-            // create random UUID as a Identifier
-            UUID patientUuid = UUID.randomUUID();
-            // add patient to bundle
-            transaction.addEntry(new BundleEntryComponent()
-                    .setResource(patient)
-                    .setFullUrl("urn:uuid:" + patientUuid)
-                    .setRequest(new BundleEntryRequestComponent()
-                            .setMethod(Bundle.HTTPVerb.PUT)
-                            .setUrl("Patient?identifier=" + systems.getOmopSubjectIdentifier() + "|" + personInCohort.getPersonId()))
-            );
-
-            //RESEARCHSUBJECT
-            // create ResearchSubject with Reference on Patient and Study
-            ResearchSubject researchSubject = new ResearchSubject()
-                    .setStatus(ResearchSubject.ResearchSubjectStatus.CANDIDATE)
-                    .setStudy(new Reference("urn:uuid:" + studyUuid))
-                    .setIndividual(new Reference("urn:uuid:" + patientUuid));
-            // create random UUID for referencing ResearchSubject
-            UUID subjectUuid = UUID.randomUUID();
-            // add ResearchSubject to bundle
-            transaction.addEntry(new BundleEntryComponent()
-                    .setResource(researchSubject)
-                    .setFullUrl("urn:uuid:" + subjectUuid)
-                    .setRequest(new BundleEntryRequestComponent()
-                            .setMethod(Bundle.HTTPVerb.PUT)
-                            .setUrl("ResearchSubject?patient.identifier=" + systems.getOmopSubjectIdentifier() + "|" + personInCohort.getPersonId()
-                                    + "&" + "study.identifier=" + systems.getOmopCohortIdentifier() + "|" + cohortId))
-            );
-
-            //SCREENINGLISTE
-            // Reference to ResearchSubject
-            screeningList.addEntry(new ListResource.ListEntryComponent()
-                    .setItem(new Reference("urn:uuid:" + subjectUuid)));
-
+    private ResearchStudy createResearchStudy(CohortDefinition cohort) {
+        ResearchStudy study = new ResearchStudy()
+                .setStatus(ResearchStudy.ResearchStudyStatus.ACTIVE)
+                .setTitle(cohort.getName())
+                .setDescription(cohort.getDescription())
+                .addIdentifier(new Identifier()
+                        .setSystem(systems.getOmopCohortIdentifier())
+                        .setValue(Integer.toString(cohort.getId()))
+                );
+        study.getMeta().setSource(systems.getStudySource());
+        if (cohort.getName() != null) {
+            study.addExtension(systems.getResearchStudyAcronym(), new StringType(cohort.getName()));
         }
-
-        //ADD STUDY TO BUNDLE
-        transaction.addEntry(new BundleEntryComponent()
-                .setResource(study)
-                .setFullUrl("urn:uuid:" + studyUuid)
-                .setRequest(new BundleEntryRequestComponent()
-                        .setMethod(Bundle.HTTPVerb.PUT)
-                        .setUrl("ResearchStudy?identifier=" + systems.getOmopCohortIdentifier() + "|" + cohortId)
-                )
-        );
-        //ADD LIST TO BUNDLE
-        transaction.addEntry(new BundleEntryComponent()
-                .setResource(screeningList)
-                .setFullUrl("urn:uuid:" + UUID.randomUUID())
-                .setRequest(new BundleEntryRequestComponent()
-                        .setMethod(Bundle.HTTPVerb.PUT)
-                        .setUrl("List?identifier=" + systems.getScreeningListIdentifier() + "|" + listId)));
-
-        return transaction;
+        return study;
     }
 }

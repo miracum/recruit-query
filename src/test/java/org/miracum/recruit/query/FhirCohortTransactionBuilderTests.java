@@ -20,6 +20,7 @@ public class FhirCohortTransactionBuilderTests {
 
     public FhirCohortTransactionBuilderTests() {
         systems.setResearchStudyAcronym("https://fhir.miracum.org/uc1/StructureDefinition/studyAcronym");
+        systems.setStudySource("https://fhir.miracum.org/uc1/recruit#generatedByQueryModule");
     }
 
     @Test
@@ -134,4 +135,24 @@ public class FhirCohortTransactionBuilderTests {
 
         assertThat(acronym.getValue()).isEqualTo(cohort.getName());
     }
+
+    @Test
+    public void buildFromOmopCohort_withGivenPersons_shouldHaveMetaSource() {
+        var cohort = new CohortDefinition();
+        cohort.setId(4);
+        cohort.setName("Testcohort");
+
+        var person = new OmopPerson()
+                .setPersonId(2);
+
+        var sut = new FhirCohortTransactionBuilder(systems);
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person));
+
+        var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+
+        var study = studies.get(0);
+
+        assertThat(study.getMeta().getSource()).isEqualTo(systems.getStudySource());
+    }
+
 }

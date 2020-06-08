@@ -27,6 +27,7 @@ fhir:
     screeningListStudyReferenceExtension: "https://fhir.miracum.org/uc1/StructureDefinition/belongsToStudy"
     researchStudyAcronym: "https://fhir.miracum.org/uc1/StructureDefinition/studyAcronym"
     screeningListCoding: "https://fhir.miracum.org/uc1/CodeSystem/screeningList"
+    studySource: "https://fhir.miracum.org/uc1/recruit#generatedByQueryModule"
 
 camel:
   springboot:
