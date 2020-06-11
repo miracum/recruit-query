@@ -179,7 +179,7 @@ public class FhirCohortTransactionBuilder {
                 .setValue(new Reference(UUID_URN_PREFIX + studyUuid)));
         return list;
     }
-    
+
     private ResearchStudy createResearchStudy(CohortDefinition cohort) {
         var study = new ResearchStudy()
                 .setStatus(ResearchStudy.ResearchStudyStatus.ACTIVE)
