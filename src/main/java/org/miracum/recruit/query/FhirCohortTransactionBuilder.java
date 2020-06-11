@@ -179,19 +179,25 @@ public class FhirCohortTransactionBuilder {
                 .setValue(new Reference(UUID_URN_PREFIX + studyUuid)));
         return list;
     }
-
+    
     private ResearchStudy createResearchStudy(CohortDefinition cohort) {
         var study = new ResearchStudy()
                 .setStatus(ResearchStudy.ResearchStudyStatus.ACTIVE)
-                .setTitle(cohort.getName())
-                .setDescription(cohort.getDescription())
                 .addIdentifier(new Identifier()
                         .setSystem(systems.getOmopCohortIdentifier())
                         .setValue(cohort.getId().toString())
                 );
         study.getMeta().setSource(systems.getStudySource());
+
         if (cohort.getName() != null) {
-            study.addExtension(systems.getResearchStudyAcronym(), new StringType(cohort.getName()));
+            var title = cohort.getName().replaceAll("\\[.*]", "").trim();
+            study.setTitle(title);
+            study.addExtension(systems.getResearchStudyAcronym(), new StringType(title));
+        }
+
+        if (cohort.getDescription() != null) {
+            var description = cohort.getDescription().replaceAll("\\[.*]", "").trim();
+            study.setDescription(description);
         }
 
         return study;

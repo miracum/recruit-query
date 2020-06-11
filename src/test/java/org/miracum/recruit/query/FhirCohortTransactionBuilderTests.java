@@ -152,4 +152,21 @@ public class FhirCohortTransactionBuilderTests {
         assertThat(study.getMeta().getSource()).isEqualTo(systems.getStudySource());
     }
 
+    @Test
+    public void buildFromOmopCohort_withCohortDefinitionWithLabels_shouldStripLabelsInStudyTitleAndDescription() {
+        var cohort = new CohortDefinition();
+        cohort.setId(1L);
+        cohort.setName("[Any Label] Testcohort");
+        cohort.setDescription("[UC1] [two labels] A Description");
+
+        var sut = new FhirCohortTransactionBuilder(systems);
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of());
+
+        var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+
+        var study = studies.get(0);
+
+        assertThat(study.getTitle()).isEqualTo("Testcohort");
+        assertThat(study.getDescription()).isEqualTo("A Description");
+    }
 }
