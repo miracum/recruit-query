@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.Date;
 
 public class CohortDefinition {
-    private int id;
+    private Long id;
     private String name;
     private String description;
     private String expressionType;
@@ -17,11 +17,11 @@ public class CohortDefinition {
     private Date modifiedDate;
     private String expression;
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

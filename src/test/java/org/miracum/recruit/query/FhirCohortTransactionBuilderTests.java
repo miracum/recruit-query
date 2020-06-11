@@ -26,7 +26,7 @@ public class FhirCohortTransactionBuilderTests {
     @Test
     public void buildFromOmopCohort_withGivenPersons_shouldCreateExpectedNumberOfResourcesInTransaction() {
         var cohort = new CohortDefinition();
-        cohort.setId(4);
+        cohort.setId(4L);
         cohort.setName("Testcohort");
 
         var pers1 = new OmopPerson()
@@ -64,7 +64,7 @@ public class FhirCohortTransactionBuilderTests {
     @Test
     public void buildFromOmopCohort_withPersonWithBirthdate_shouldCreatePatientWithSameBirthDate() {
         var cohort = new CohortDefinition();
-        cohort.setId(4);
+        cohort.setId(4L);
         cohort.setName("Testcohort");
         var person = new OmopPerson()
                 .setPersonId(2)
@@ -89,7 +89,7 @@ public class FhirCohortTransactionBuilderTests {
     @Test
     public void buildFromOmopCohort_withPersonWithJustTheBirthYear_shouldCreatePatientWithJustTheBirthYear() {
         var cohort = new CohortDefinition();
-        cohort.setId(4);
+        cohort.setId(4L);
         cohort.setName("Testcohort");
         var person = new OmopPerson()
                 .setPersonId(2)
@@ -114,7 +114,7 @@ public class FhirCohortTransactionBuilderTests {
     @Test
     public void buildFromOmopCohort_withCohortDefinitionWithName_shouldSetStudyAcronymToCohortDefinitionName() {
         var cohort = new CohortDefinition();
-        cohort.setId(4);
+        cohort.setId(4L);
         cohort.setName("Testcohort");
 
         var person = new OmopPerson()
@@ -139,14 +139,11 @@ public class FhirCohortTransactionBuilderTests {
     @Test
     public void buildFromOmopCohort_withGivenPersons_shouldHaveMetaSource() {
         var cohort = new CohortDefinition();
-        cohort.setId(4);
+        cohort.setId(4L);
         cohort.setName("Testcohort");
 
-        var person = new OmopPerson()
-                .setPersonId(2);
-
         var sut = new FhirCohortTransactionBuilder(systems);
-        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person));
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of());
 
         var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
 
@@ -155,4 +152,21 @@ public class FhirCohortTransactionBuilderTests {
         assertThat(study.getMeta().getSource()).isEqualTo(systems.getStudySource());
     }
 
+    @Test
+    public void buildFromOmopCohort_withCohortDefinitionWithLabels_shouldStripLabelsInStudyTitleAndDescription() {
+        var cohort = new CohortDefinition();
+        cohort.setId(1L);
+        cohort.setName("[Any Label] Testcohort");
+        cohort.setDescription("[UC1] [two labels] A Description");
+
+        var sut = new FhirCohortTransactionBuilder(systems);
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of());
+
+        var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+
+        var study = studies.get(0);
+
+        assertThat(study.getTitle()).isEqualTo("Testcohort");
+        assertThat(study.getDescription()).isEqualTo("A Description");
+    }
 }
