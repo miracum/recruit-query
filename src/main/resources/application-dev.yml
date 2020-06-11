@@ -1,8 +1,3 @@
-query:
-  selector:
-    matchLabels:
-      - "UC1"
-
 omop:
   jdbcUrl: "jdbc:postgresql://localhost:25432/OHDSI"
   user: postgres

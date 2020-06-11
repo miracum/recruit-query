@@ -186,7 +186,7 @@ public class FhirCohortTransactionBuilder {
     }
 
     private ResearchStudy createResearchStudy(CohortDefinition cohort) {
-        ResearchStudy study = new ResearchStudy()
+        var study = new ResearchStudy()
                 .setStatus(ResearchStudy.ResearchStudyStatus.ACTIVE)
                 .setTitle(cohort.getName())
                 .setDescription(cohort.getDescription())
@@ -198,6 +198,7 @@ public class FhirCohortTransactionBuilder {
         if (cohort.getName() != null) {
             study.addExtension(systems.getResearchStudyAcronym(), new StringType(cohort.getName()));
         }
+
         return study;
     }
 }

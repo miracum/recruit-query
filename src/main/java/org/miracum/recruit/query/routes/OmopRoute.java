@@ -83,7 +83,7 @@ public class OmopRoute extends RouteBuilder {
                     ex.getIn().setBody(patients);
                 })
                 .to("log:?level=INFO&showBody=true")
-                .log(LoggingLevel.DEBUG, logger, "found ${body.size()} patient(s) for cohort id ${header.cohort.id}")
+                .log(LoggingLevel.DEBUG, logger, "[Cohort ${header.cohort.id}] found ${body.size()} patient(s) for cohort id ${header.cohort.id}")
                 .to(Router.DONE_GET_PATIENTS);
         // @formatter:on
     }

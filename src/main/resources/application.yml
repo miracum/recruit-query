@@ -1,9 +1,12 @@
 query:
   getCohortsInterval: 60000
   startupDelay: 1000
+  enableSchedule: true
   selector:
     matchLabels:
       - "UC1"
+  url: "localhost"
+  port: 8080
 
 atlas:
   url: "http://localhost:8083/WebAPI"
@@ -30,6 +33,10 @@ fhir:
     studySource: "https://fhir.miracum.org/uc1/recruit#generatedByQueryModule"
 
 camel:
+  component:
+    servlet:
+      mapping:
+        contextpath: "/*"
   springboot:
     name: Query
     jmx-enabled: false
@@ -51,3 +58,5 @@ logging:
 spring:
   profiles:
     active: dev
+  main:
+    banner-mode: off
