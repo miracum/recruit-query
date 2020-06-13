@@ -1,7 +1,7 @@
 query:
-  getCohortsInterval: 60000
-  startupDelay: 1000
-  enableSchedule: true
+  schedule:
+    enable: true
+    unixCron: "*/5 * * * *"
   selector:
     matchLabels:
       - "UC1"
