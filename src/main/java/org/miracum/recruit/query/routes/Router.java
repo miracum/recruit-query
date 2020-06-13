@@ -43,8 +43,8 @@ public class Router extends RouteBuilder {
                 .endRest();
 
         // Run from timer
-        from("timer:getCohorts?period={{query.getCohortsInterval}}&repeatCount=0&delay={{query.startupDelay}}")
-                .autoStartup("{{query.enableSchedule}}")
+        from("cron:getCohorts?schedule=0+{{query.schedule.unixCron}}")
+                .autoStartup("{{query.schedule.enable}}")
                 .to(START_COHORT_GENERATION);
 
         // Processing
