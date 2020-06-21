@@ -59,7 +59,7 @@ public class AtlasWebApiRoute extends RouteBuilder {
         from(GET_COHORT_DEFINITIONS)
                 .removeHeaders("CamelHttp*")
                 .setHeader(Exchange.HTTP_METHOD, constant("GET"))
-                .to(baseUrl + "/cohortdefinition?bridgeEndpoint=true")// https://camel.apache.org/components/latest/http-component.html
+                .to(baseUrl + "/cohortdefinition")
                 .convertBodyTo(String.class)
                 .log(LoggingLevel.DEBUG, LOG, "response from webapi: ${body}")
                 .split().jsonpathWriteAsString("$[*]") // foreach cohort. https://camel.apache.org/components/latest/jsonpath-component.html
@@ -89,7 +89,7 @@ public class AtlasWebApiRoute extends RouteBuilder {
                 .removeHeaders("CamelHttp*")
                 .log("[Cohort ${body.id}] processing cohort: ${body}")
                 .filter().method(this, "isMatchingCohort")
-                .log(LoggingLevel.INFO, LOG, "[cohort ${body.id}] cohort matches the selector labels")
+                .log(LoggingLevel.INFO, LOG, "[Cohort ${body.id}] cohort matches the selector labels")
                 .setHeader(Exchange.HTTP_METHOD, constant("GET"))
                 // needed otherwise ConvertException
                 .setHeader("cohort", body())

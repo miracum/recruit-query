@@ -1,8 +1,20 @@
 omop:
   jdbcUrl: "jdbc:postgresql://localhost:25432/OHDSI"
-  user: postgres
-  password: postgres
-  cohortResultsTable: "synpuf_results.cohort"
+  username: "postgres"
+  password: "postgres"
+
+query:
+  schedule:
+    enable: true
+    unixCron: "*/5 * * * *"
+
+atlas:
+  url: "http://localhost:8083/WebAPI"
+
+fhir:
+  # seems like there's an issue with the latest HAPI FHIR version and camel-fhir: "An attempt was made to call a method that does not exist."
+  # disabling for now...
+  logEnabled: false
 
 # to configure logging levels
 logging:
