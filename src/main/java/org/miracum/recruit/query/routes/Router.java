@@ -1,8 +1,12 @@
 package org.miracum.recruit.query.routes;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.model.rest.RestBindingMode;
+import org.apache.camel.component.micrometer.messagehistory.MicrometerMessageHistoryFactory;
+import org.apache.camel.component.micrometer.routepolicy.MicrometerRoutePolicyFactory;
+import org.apache.camel.spring.boot.CamelContextConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,11 +19,6 @@ public class Router extends RouteBuilder {
     public void configure() {
 
         // run via REST
-        restConfiguration().component("servlet")
-                .host("{{query.url}}")
-                .port("{{query.port}}")
-                .bindingMode(RestBindingMode.auto);
-
         rest("/run")
                 // run all cohorts
                 .post()
@@ -56,5 +55,22 @@ public class Router extends RouteBuilder {
 
         from(DONE_GET_PATIENTS)
                 .to(FhirRoute.CREATE_SCREENING_LIST);
+    }
+
+    @Bean
+    public CamelContextConfiguration camelContextConfiguration() {
+
+        return new CamelContextConfiguration() {
+            @Override
+            public void beforeApplicationStart(CamelContext camelContext) {
+                camelContext.addRoutePolicyFactory(new MicrometerRoutePolicyFactory());
+                camelContext.setMessageHistoryFactory(new MicrometerMessageHistoryFactory());
+            }
+
+            @Override
+            public void afterApplicationStart(CamelContext camelContext) {
+                // not used
+            }
+        };
     }
 }

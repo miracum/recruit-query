@@ -16,6 +16,8 @@ repositories {
 }
 
 dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.3.0"
     implementation "org.apache.camel:camel-http:3.3.0"
     implementation "org.apache.camel:camel-cron:3.3.0"
@@ -28,9 +30,12 @@ dependencies {
     implementation "org.apache.camel:camel-jackson:3.3.0"
     implementation "org.apache.camel:camel-jsonpath:3.3.0"
     implementation "org.apache.camel:camel-fhir:3.3.0"
-    implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.apache.camel.springboot:camel-rest-starter:3.3.0"
     implementation "org.apache.camel.springboot:camel-servlet-starter:3.3.0"
+    implementation "io.micrometer:micrometer-registry-prometheus:1.5.1"
+    implementation "io.micrometer:micrometer-core:1.5.1"
+    implementation "org.apache.camel.springboot:camel-micrometer-starter:3.3.0"
+
     testImplementation("org.springframework.boot:spring-boot-starter-test:2.3.1.RELEASE") {
         exclude group: "org.junit.vintage", module: "junit-vintage-engine"
     }
@@ -52,4 +57,8 @@ jacocoTestReport {
 
 test {
     useJUnitPlatform()
+}
+
+bootJar {
+    layered()
 }

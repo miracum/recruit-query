@@ -29,7 +29,7 @@ public class FhirRoute extends RouteBuilder {
     public void configure() {
         // Gets the Ids of the patients for one cohort in "body" and CohortDefinition in "header.cohort"
         from(CREATE_SCREENING_LIST)
-                .log(LoggingLevel.INFO, LOG, "[cohort ${header.cohort.id}] adding ${body.size()} patient(s) for cohort '${header.cohort.id} - ${header.cohort.name}'")
+                .log(LoggingLevel.INFO, LOG, "[Cohort ${header.cohort.id}] adding ${body.size()} patient(s) for cohort '${header.cohort.id} - ${header.cohort.name}'")
                 .process(ex ->
                 {
                     // get data from omop db and save it in variables
@@ -43,7 +43,7 @@ public class FhirRoute extends RouteBuilder {
                     ex.getIn().setBody(transaction);
                 })
                 .to("fhir:transaction/withBundle?log={{fhir.logEnabled}}&serverUrl={{fhir.url}}&inBody=bundle&fhirVersion=R4")
-                .log(LoggingLevel.INFO, LOG, "[cohort ${header.cohort.id}] processing finished");
+                .log(LoggingLevel.INFO, LOG, "[Cohort ${header.cohort.id}] processing finished");
     }
 }
 

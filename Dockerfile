@@ -1,20 +1,24 @@
 FROM gradle:6.5-jdk11 AS build
 WORKDIR /home/gradle/src
 COPY --chown=gradle:gradle . .
-RUN gradle build --no-daemon --info
-
-# Collect and print code coverage information:
-RUN gradle --no-daemon jacocoTestReport && \
-    awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions,\
-    " instructions covered"; print 100*covered/instructions, "% covered" }' build/jacoco/coverage.csv
+RUN gradle build --info && \
+    gradle jacocoTestReport && \
+    awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, " instructions covered"; print 100*covered/instructions, "% covered" }' build/jacoco/coverage.csv && \
+    java -Djarmode=layertools -jar build/libs/*.jar extract
 
 FROM gcr.io/distroless/java:11
-COPY --from=build /home/gradle/src/build/libs/*.jar /opt/query.jar
-USER nonroot
-ENV SPRING_PROFILES_ACTIVE=prod
-CMD ["/opt/query.jar"]
+WORKDIR /opt/query
+COPY --from=build /home/gradle/src/dependencies/ ./
+COPY --from=build /home/gradle/src/spring-boot-loader/ ./
+COPY --from=build /home/gradle/src/snapshot-dependencies/ ./
+COPY --from=build /home/gradle/src/application/ .
 
+USER nonroot
 ARG VERSION=0.0.0
+ENV APP_VERSION=${VERSION} \
+    SPRING_PROFILES_ACTIVE=prod
+ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+
 ARG GIT_REF=""
 ARG BUILD_TIME=""
 LABEL org.opencontainers.image.created=${BUILD_TIME} \
