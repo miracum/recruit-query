@@ -2,6 +2,7 @@ package org.miracum.recruit.query.routes;
 
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
+import org.hl7.fhir.r4.model.Bundle;
 import org.miracum.recruit.query.FhirCohortTransactionBuilder;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.OmopPerson;
@@ -9,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 
 import java.util.List;
 
@@ -19,10 +23,12 @@ public class FhirRoute extends RouteBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(FhirRoute.class);
 
     private final FhirCohortTransactionBuilder fhirBuilder;
+private IParser fhirParser;
 
     @Autowired
-    public FhirRoute(FhirCohortTransactionBuilder fhirBuilder) {
+    public FhirRoute(FhirCohortTransactionBuilder fhirBuilder, FhirContext fhirContext) {
         this.fhirBuilder = fhirBuilder;
+        this.fhirParser = fhirContext.newJsonParser().setPrettyPrint(true);
     }
 
     @Override
@@ -38,11 +44,15 @@ public class FhirRoute extends RouteBuilder {
                     var cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
 
                     var transaction = fhirBuilder.buildFromOmopCohort(cohortDefinition, patients);
-
+                    LOG.debug(fhirParser.encodeResourceToString(transaction));
                     // set bundle as http body
                     ex.getIn().setBody(transaction);
                 })
                 .to("fhir:transaction/withBundle?log={{fhir.logEnabled}}&serverUrl={{fhir.url}}&inBody=bundle&fhirVersion=R4")
+                .process(ex -> {
+                	var response = (Bundle)ex.getIn().getBody();
+                	LOG.debug(fhirParser.encodeResourceToString(response));
+                })
                 .log(LoggingLevel.INFO, LOG, "[Cohort ${header.cohort.id}] processing finished");
     }
 }
