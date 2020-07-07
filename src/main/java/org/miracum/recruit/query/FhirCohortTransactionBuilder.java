@@ -120,9 +120,11 @@ public class FhirCohortTransactionBuilder {
                 .setResource(researchSubject)
                 .setFullUrl("urn:uuid:" + subjectUuid)
                 .setRequest(new BundleEntryRequestComponent()
-                        .setMethod(Bundle.HTTPVerb.PUT)
-                        .setUrl("ResearchSubject?patient.identifier=" + systems.getOmopSubjectIdentifier() + "|" + personId
-                                + "&" + "study.identifier=" + systems.getOmopCohortIdentifier() + "|" + cohortId));
+                        .setMethod(Bundle.HTTPVerb.POST)
+                        .setIfNoneExist("patient.identifier=" + systems.getOmopSubjectIdentifier() + "|" + personId
+                                + "&" + "study.identifier=" + systems.getOmopCohortIdentifier() + "|" + cohortId)
+                		.setUrl("ResearchSubject"))
+;
     }
 
     private BundleEntryComponent createPatientBundleEntryComponent(Patient patient, UUID patientUuid) {
