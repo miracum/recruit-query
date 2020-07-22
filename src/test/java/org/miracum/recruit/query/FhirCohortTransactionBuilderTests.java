@@ -7,7 +7,6 @@ import org.hl7.fhir.r4.model.*;
 import org.junit.jupiter.api.Test;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.OmopPerson;
-
 import java.time.Month;
 import java.time.Year;
 import java.util.ArrayList;
@@ -185,5 +184,40 @@ public class FhirCohortTransactionBuilderTests {
         assertThat(list.getNoteFirstRep().getText()).contains("15");
         assertThat(list.getEntry()).hasSize(MAXSIZE);
     }
+
+    @Test
+    public void buildFromOmopCohort_withPersonsWithSourceId_shouldCreateAsIdentifier() {
+    	var cohort = new CohortDefinition();
+    	cohort.setId(5L);
+    	cohort.setName("Testkohorte");
+    	var person = new OmopPerson()
+             .setPersonId(2)
+             .setYearOfBirth(Year.of(1976))
+             .setMonthOfBirth(Month.FEBRUARY)
+             .setDayOfBirth(12)
+             .setGender("Female")
+             .setSourceId("1");
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person));
+        var ids = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class).get(0).getIdentifier();
+        assertThat(ids).hasSizeGreaterThan(1);
+        assertThat(ids.get(1).getValue()).isEqualTo("1");
+    }
+
+    @Test
+    public void buildFromOmopCohort_withPersonsWithoutSourceId_shouldntCreateAsIdentifier() {
+    	var cohort = new CohortDefinition();
+    	cohort.setId(5L);
+    	cohort.setName("Testkohorte");
+    	var person = new OmopPerson()
+             .setPersonId(2)
+             .setYearOfBirth(Year.of(1976))
+             .setMonthOfBirth(Month.FEBRUARY)
+             .setDayOfBirth(12)
+             .setGender("Female");
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person));
+        var ids = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class).get(0).getIdentifier();
+        assertThat(ids).hasSizeLessThan(2);
+    }
+
 
 }

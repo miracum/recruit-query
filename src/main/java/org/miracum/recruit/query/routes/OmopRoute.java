@@ -48,6 +48,7 @@ public class OmopRoute extends RouteBuilder {
                         + "{{omop.cdmSchema}}.person.year_of_birth, "
                         + "{{omop.cdmSchema}}.person.month_of_birth, "
                         + "{{omop.cdmSchema}}.person.day_of_birth, "
+                        + "{{omop.cdmSchema}}.person.person_source_value, "
                         + "{{omop.cdmSchema}}.concept.concept_name, "
                         + "{{omop.cdmSchema}}.concept.vocabulary_id"
                         + " FROM {{omop.resultsSchema}}.cohort"
@@ -65,15 +66,15 @@ public class OmopRoute extends RouteBuilder {
                         if (row.get("year_of_birth") != null) {
                             patient.setYearOfBirth(Year.of((int) row.get("year_of_birth")));
                         }
-
                         if (row.get("month_of_birth") != null) {
                             patient.setMonthOfBirth(Month.of(((int) row.get("month_of_birth"))));
                         }
-
                         if (row.get("day_of_birth") != null) {
                             patient.setDayOfBirth((int) row.get("day_of_birth"));
                         }
-
+                        if (row.get("person_source_value") != null) {
+                            patient.setSourceId((String) row.get("person_source_value"));
+                        }
                         if ((row.get("vocabulary_id")).equals("Gender")) {
                             patient.setGender((String) row.getOrDefault("concept_name", null));
                         }

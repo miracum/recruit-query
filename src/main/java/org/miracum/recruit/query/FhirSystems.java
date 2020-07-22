@@ -15,6 +15,8 @@ public class FhirSystems {
     private String researchStudyAcronym;
     private String screeningListCoding;
     private String studySource;
+    private String localIdentifier;
+    private String localIdentifierType;
 
     public String getOmopSubjectIdentifier() {
         return omopSubjectIdentifier;
@@ -71,4 +73,20 @@ public class FhirSystems {
     public void setStudySource(String studySource) {
         this.studySource = studySource;
     }
+
+	public String getLocalIdentifier() {
+		return localIdentifier;
+	}
+
+	public void setLocalIdentifier(String localIdentifier) {
+		this.localIdentifier = localIdentifier;
+	}
+
+	public String getLocalIdentifierType() {
+		return localIdentifierType;
+	}
+
+	public void setLocalIdentifierType(String localIdentifierType) {
+		this.localIdentifierType = localIdentifierType;
+	}
 }
