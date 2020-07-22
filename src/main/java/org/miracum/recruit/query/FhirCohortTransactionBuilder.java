@@ -1,6 +1,8 @@
 package org.miracum.recruit.query;
 
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
+
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryRequestComponent;
@@ -182,13 +184,25 @@ public class FhirCohortTransactionBuilder {
     }
 
     private Patient createPatient(OmopPerson personInCohort) {
-        return new Patient()
+        var patient = new Patient()
                 .setBirthDateElement(parseBirthDate(personInCohort))
                 .setGender(getGenderFromOmop(personInCohort.getGender()))
                 .addIdentifier(new Identifier()
                         .setSystem(systems.getOmopSubjectIdentifier())
                         .setValue(Integer.toString(personInCohort.getPersonId()))
                 );
+        if (StringUtils.isNotEmpty(personInCohort.getSourceId())) {
+        	patient.addIdentifier(new Identifier()
+            		.setSystem(systems.getLocalIdentifier())
+            		.setValue(personInCohort.getSourceId())
+            		.setType(new CodeableConcept()
+            				.addCoding(new Coding()
+            						.setSystem(systems.getLocalIdentifierType())
+            						.setCode("MR"))
+            				)
+            		);
+        }
+    	return patient;
     }
 
     private ListResource createScreeninglist(String listId, UUID studyUuid) {

@@ -10,6 +10,7 @@ public class OmopPerson {
     private Month monthOfBirth;
     private Integer dayOfBirth;
     private int locationId = 0;
+    private String sourceId;
 
     public int getPersonId() {
         return personId;
@@ -76,4 +77,13 @@ public class OmopPerson {
                 ", locationId=" + locationId +
                 '}';
     }
+
+	public String getSourceId() {
+		return sourceId;
+	}
+
+	public OmopPerson setSourceId(String sourceId) {
+		this.sourceId = sourceId;
+		return this;
+	}
 }
