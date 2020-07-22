@@ -1,4 +1,5 @@
 query:
+  cohortSizeThreshold: 100
   schedule:
     enable: true
     unixCron: "0 * * * *"
