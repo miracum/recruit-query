@@ -8,6 +8,7 @@ import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.OmopPerson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,13 +16,15 @@ import java.util.UUID;
 
 @Component
 public class FhirCohortTransactionBuilder {
-    private static final String UUID_URN_PREFIX = "urn:uuid:";
-
+    private int maxListSize;
     private final FhirSystems systems;
 
+    private static final String UUID_URN_PREFIX = "urn:uuid:";
+
     @Autowired
-    public FhirCohortTransactionBuilder(FhirSystems fhirSystems) {
-        systems = fhirSystems;
+    public FhirCohortTransactionBuilder(FhirSystems fhirSystems, @Value("${query.cohortSizeThreshold}") int cohortSizeThreshold) {
+        this.systems = fhirSystems;
+        this.maxListSize = cohortSizeThreshold;
     }
 
     private static AdministrativeGender getGenderFromOmop(String gender) {
@@ -63,6 +66,7 @@ public class FhirCohortTransactionBuilder {
         return date;
     }
 
+
     /**
      * Builds an FHIR Transaction with a list of ResearchSubjects from a given OMOP cohort
      * includes Patients, ResearchStudy, ResearchSubjects, List
@@ -87,7 +91,17 @@ public class FhirCohortTransactionBuilder {
         ListResource screeningList = createScreeninglist(listId, studyUuid);
 
         //LOOP trough all Patients
+        var loopCounter = 1;
         for (OmopPerson personInCohort : personsInCohort) {
+        	//break up loop if configuration parameter cohortSizeThreshold is reached
+            if (loopCounter > this.maxListSize  && this.maxListSize  != 0) {
+            	screeningList.addNote(new Annotation()
+            			.setAuthor(new StringType("UC1-Query Module"))
+            			.setText("Es wurden mehr passende Patienten gefunden als auf dieser Liste dargestellt werden können (insgesamt " + personsInCohort.size() + "). Nur die ersten " + this.maxListSize  + " Vorschläge werden angezeigt."));
+            	break;
+            } else {
+                loopCounter++;
+            }
             // create PATIENT with OMOP ID as an Identifier and add to bundle
             var patient = createPatient(personInCohort);
             var patientUuid = UUID.randomUUID();
@@ -99,6 +113,7 @@ public class FhirCohortTransactionBuilder {
             // add to SCREENINGLIST
             screeningList.addEntry(new ListResource.ListEntryComponent()
                     .setItem(new Reference(UUID_URN_PREFIX + subjectUuid)));
+
         }
         //ADD LIST TO BUNDLE
         transaction.addEntry(createListBundleEntryComponent(screeningList, listId));
@@ -106,6 +121,19 @@ public class FhirCohortTransactionBuilder {
         return transaction;
     }
 
+//--------------------------------------GETTERS AND SETTERS-------------------------------------------------------------//
+    public void setMaxListSize (int maxListSize) {
+    	this.maxListSize = maxListSize;
+    }
+    public int getMaxListSize () {
+    	return this.maxListSize;
+    }
+    public FhirSystems getSystems() {
+    	return this.systems;
+    }
+
+
+//--------------------------------------PRIVATE HELPER METHODS-----------------------------------------------------------//
     private BundleEntryComponent createStudyBundleEntryComponent(ResearchStudy study, String cohortId, UUID studyUuid) {
         return new BundleEntryComponent()
                 .setResource(study)
