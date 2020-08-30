@@ -27,7 +27,8 @@ ENTRYPOINT ["java", "-XX:MaxRAMPercentage=90", "org.springframework.boot.loader.
 
 ARG GIT_REF=""
 ARG BUILD_TIME=""
-LABEL org.opencontainers.image.created=${BUILD_TIME} \
+LABEL maintainer="miracum.org" \
+    org.opencontainers.image.created=${BUILD_TIME} \
     org.opencontainers.image.authors="miracum.org" \
     org.opencontainers.image.source="https://gitlab.miracum.org/miracum/uc1/recruit/query" \
     org.opencontainers.image.version=${VERSION} \
