@@ -6,7 +6,7 @@ omop:
 query:
   schedule:
     enable: true
-    unixCron: "*/5 * * * *"
+    unixCron: "* * * * *" # run every minute
 
 atlas:
   url: "http://localhost:8083/WebAPI"
@@ -29,3 +29,7 @@ logging:
       miracum:
         recruit:
           query: "DEBUG"
+
+opentracing:
+  jaeger:
+    log-spans: true
