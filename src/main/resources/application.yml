@@ -30,7 +30,7 @@ fhir:
     researchStudyAcronym: "https://fhir.miracum.org/uc1/StructureDefinition/studyAcronym"
     screeningListCoding: "https://fhir.miracum.org/uc1/CodeSystem/screeningList"
     studySource: "https://fhir.miracum.org/uc1/recruit/generatedByQueryModule"
-    localIdentifier: "https://miracum.org/fhir/NamingSystem/identifier/PatientId"
+    localIdentifier: "https://fhir.miracum.org/core/NamingSystem/patientId"
     localIdentifierType: "http://terminology.hl7.org/CodeSystem/v2-0203"
 
 camel:
@@ -61,14 +61,15 @@ logging:
 spring:
   profiles:
     active: dev
+  application:
+    name: query
 
 management:
-  health:
-    probes:
-      enabled: true
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
   endpoints:
     web:
       exposure:
@@ -79,3 +80,8 @@ server:
 
 app:
   version: 0.0.0-dev
+
+opentracing:
+  jaeger:
+    log-spans: false
+    include-jaeger-env-tags: true
