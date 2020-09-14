@@ -41,7 +41,7 @@ services:
       - flyway.locations=classpath:db/migration/postgresql
 
   list:
-    image: docker.miracum.org/uc1-recruit/list:v1.23
+    image: docker.miracum.org/uc1-recruit/list:1.25
     ports:
       - "8084:8080"
     environment:
