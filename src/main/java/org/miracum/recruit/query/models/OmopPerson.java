@@ -4,86 +4,94 @@ import java.time.Month;
 import java.time.Year;
 
 public class OmopPerson {
-    private int personId = 0;
-    private String gender;
-    private Year yearOfBirth;
-    private Month monthOfBirth;
-    private Integer dayOfBirth;
-    private int locationId = 0;
-    private String sourceId;
 
-    public int getPersonId() {
-        return personId;
-    }
+  private int personId = 0;
+  private String gender;
+  private Year yearOfBirth;
+  private Month monthOfBirth;
+  private Integer dayOfBirth;
+  private int locationId = 0;
+  private String sourceId;
 
-    public OmopPerson setPersonId(int personId) {
-        this.personId = personId;
-        return this;
-    }
+  public int getPersonId() {
+    return personId;
+  }
 
-    public String getGender() {
-        return gender;
-    }
+  public OmopPerson setPersonId(int personId) {
+    this.personId = personId;
+    return this;
+  }
 
-    public OmopPerson setGender(String gender) {
-        this.gender = gender;
-        return this;
-    }
+  public String getGender() {
+    return gender;
+  }
 
-    public Year getYearOfBirth() {
-        return yearOfBirth;
-    }
+  public OmopPerson setGender(String gender) {
+    this.gender = gender;
+    return this;
+  }
 
-    public OmopPerson setYearOfBirth(Year yearOfBirth) {
-        this.yearOfBirth = yearOfBirth;
-        return this;
-    }
+  public Year getYearOfBirth() {
+    return yearOfBirth;
+  }
 
-    public Month getMonthOfBirth() {
-        return monthOfBirth;
-    }
+  public OmopPerson setYearOfBirth(Year yearOfBirth) {
+    this.yearOfBirth = yearOfBirth;
+    return this;
+  }
 
-    public OmopPerson setMonthOfBirth(Month monthOfBirth) {
-        this.monthOfBirth = monthOfBirth;
-        return this;
-    }
+  public Month getMonthOfBirth() {
+    return monthOfBirth;
+  }
 
-    public Integer getDayOfBirth() {
-        return dayOfBirth;
-    }
+  public OmopPerson setMonthOfBirth(Month monthOfBirth) {
+    this.monthOfBirth = monthOfBirth;
+    return this;
+  }
 
-    public OmopPerson setDayOfBirth(Integer dayOfBirth) {
-        this.dayOfBirth = dayOfBirth;
-        return this;
-    }
+  public Integer getDayOfBirth() {
+    return dayOfBirth;
+  }
 
-    public int getLocationId() {
-        return locationId;
-    }
+  public OmopPerson setDayOfBirth(Integer dayOfBirth) {
+    this.dayOfBirth = dayOfBirth;
+    return this;
+  }
 
-    public OmopPerson setLocationId(int locationId) {
-        this.locationId = locationId;
-        return this;
-    }
+  public int getLocationId() {
+    return locationId;
+  }
 
-    @Override
-    public String toString() {
-        return "OmopPerson{" +
-                "personId=" + personId +
-                ", gender='" + gender + '\'' +
-                ", yearOfBirth=" + yearOfBirth +
-                ", monthOfBirth=" + monthOfBirth +
-                ", dayOfBirth=" + dayOfBirth +
-                ", locationId=" + locationId +
-                '}';
-    }
+  public OmopPerson setLocationId(int locationId) {
+    this.locationId = locationId;
+    return this;
+  }
 
-	public String getSourceId() {
-		return sourceId;
-	}
+  @Override
+  public String toString() {
+    return "OmopPerson{"
+        + "personId="
+        + personId
+        + ", gender='"
+        + gender
+        + '\''
+        + ", yearOfBirth="
+        + yearOfBirth
+        + ", monthOfBirth="
+        + monthOfBirth
+        + ", dayOfBirth="
+        + dayOfBirth
+        + ", locationId="
+        + locationId
+        + '}';
+  }
 
-	public OmopPerson setSourceId(String sourceId) {
-		this.sourceId = sourceId;
-		return this;
-	}
+  public String getSourceId() {
+    return sourceId;
+  }
+
+  public OmopPerson setSourceId(String sourceId) {
+    this.sourceId = sourceId;
+    return this;
+  }
 }

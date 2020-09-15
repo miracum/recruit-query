@@ -1,106 +1,125 @@
 package org.miracum.recruit.query.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.util.Date;
 
 public class CohortDefinition {
-    private Long id;
-    private String name;
-    private String description;
-    private String expressionType;
-    private String createdBy;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "GMT+2")
-    private Date createdDate;
-    private String modifiedBy;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "GMT+2")
-    private Date modifiedDate;
-    private String expression;
 
-    public Long getId() {
-        return id;
-    }
+  private Long id;
+  private String name;
+  private String description;
+  private String expressionType;
+  private String createdBy;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "GMT+2")
+  private Date createdDate;
 
-    public String getName() {
-        return name;
-    }
+  private String modifiedBy;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "GMT+2")
+  private Date modifiedDate;
 
-    public String getDescription() {
-        return description;
-    }
+  private String expression;
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public String getExpressionType() {
-        return expressionType;
-    }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-    public void setExpressionType(String expressionType) {
-        this.expressionType = expressionType;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public String getCreatedBy() {
-        return createdBy;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
+  public String getDescription() {
+    return description;
+  }
 
-    public Date getCreatedDate() {
-        return createdDate;
-    }
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
-    }
+  public String getExpressionType() {
+    return expressionType;
+  }
 
-    public String getModifiedBy() {
-        return modifiedBy;
-    }
+  public void setExpressionType(String expressionType) {
+    this.expressionType = expressionType;
+  }
 
-    public void setModifiedBy(String modifiedBy) {
-        this.modifiedBy = modifiedBy;
-    }
+  public String getCreatedBy() {
+    return createdBy;
+  }
 
-    public Date getModifiedDate() {
-        return modifiedDate;
-    }
+  public void setCreatedBy(String createdBy) {
+    this.createdBy = createdBy;
+  }
 
-    public void setModifiedDate(Date modifiedDate) {
-        this.modifiedDate = modifiedDate;
-    }
+  public Date getCreatedDate() {
+    return createdDate;
+  }
 
-    public String getExpression() {
-        return expression;
-    }
+  public void setCreatedDate(Date createdDate) {
+    this.createdDate = createdDate;
+  }
 
-    public void setExpression(String expression) {
-        this.expression = expression;
-    }
+  public String getModifiedBy() {
+    return modifiedBy;
+  }
 
-    @Override
-    public String toString() {
-        return "CohortDefinition{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", expressionType='" + expressionType + '\'' +
-                ", createdBy='" + createdBy + '\'' +
-                ", createdDate=" + createdDate +
-                ", modifiedBy='" + modifiedBy + '\'' +
-                ", modifiedDate=" + modifiedDate +
-                ", expression='" + expression + '\'' +
-                '}';
-    }
+  public void setModifiedBy(String modifiedBy) {
+    this.modifiedBy = modifiedBy;
+  }
+
+  public Date getModifiedDate() {
+    return modifiedDate;
+  }
+
+  public void setModifiedDate(Date modifiedDate) {
+    this.modifiedDate = modifiedDate;
+  }
+
+  public String getExpression() {
+    return expression;
+  }
+
+  public void setExpression(String expression) {
+    this.expression = expression;
+  }
+
+  @Override
+  public String toString() {
+    return "CohortDefinition{"
+        + "id="
+        + id
+        + ", name='"
+        + name
+        + '\''
+        + ", description='"
+        + description
+        + '\''
+        + ", expressionType='"
+        + expressionType
+        + '\''
+        + ", createdBy='"
+        + createdBy
+        + '\''
+        + ", createdDate="
+        + createdDate
+        + ", modifiedBy='"
+        + modifiedBy
+        + '\''
+        + ", modifiedDate="
+        + modifiedDate
+        + ", expression='"
+        + expression
+        + '\''
+        + '}';
+  }
 }

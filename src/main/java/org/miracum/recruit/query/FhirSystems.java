@@ -8,85 +8,86 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource("classpath:application.yml")
 @ConfigurationProperties(prefix = "fhir.systems")
 public class FhirSystems {
-    private String omopSubjectIdentifier;
-    private String omopCohortIdentifier;
-    private String screeningListIdentifier;
-    private String screeningListStudyReferenceExtension;
-    private String researchStudyAcronym;
-    private String screeningListCoding;
-    private String studySource;
-    private String localIdentifier;
-    private String localIdentifierType;
 
-    public String getOmopSubjectIdentifier() {
-        return omopSubjectIdentifier;
-    }
+  private String omopSubjectIdentifier;
+  private String omopCohortIdentifier;
+  private String screeningListIdentifier;
+  private String screeningListStudyReferenceExtension;
+  private String researchStudyAcronym;
+  private String screeningListCoding;
+  private String studySource;
+  private String localIdentifier;
+  private String localIdentifierType;
 
-    public void setOmopSubjectIdentifier(String omopSubjectIdentifier) {
-        this.omopSubjectIdentifier = omopSubjectIdentifier;
-    }
+  public String getOmopSubjectIdentifier() {
+    return omopSubjectIdentifier;
+  }
 
-    public String getOmopCohortIdentifier() {
-        return omopCohortIdentifier;
-    }
+  public void setOmopSubjectIdentifier(String omopSubjectIdentifier) {
+    this.omopSubjectIdentifier = omopSubjectIdentifier;
+  }
 
-    public void setOmopCohortIdentifier(String omopCohortIdentifier) {
-        this.omopCohortIdentifier = omopCohortIdentifier;
-    }
+  public String getOmopCohortIdentifier() {
+    return omopCohortIdentifier;
+  }
 
-    public String getScreeningListIdentifier() {
-        return screeningListIdentifier;
-    }
+  public void setOmopCohortIdentifier(String omopCohortIdentifier) {
+    this.omopCohortIdentifier = omopCohortIdentifier;
+  }
 
-    public void setScreeningListIdentifier(String screeningListIdentifier) {
-        this.screeningListIdentifier = screeningListIdentifier;
-    }
+  public String getScreeningListIdentifier() {
+    return screeningListIdentifier;
+  }
 
-    public String getScreeningListStudyReferenceExtension() {
-        return screeningListStudyReferenceExtension;
-    }
+  public void setScreeningListIdentifier(String screeningListIdentifier) {
+    this.screeningListIdentifier = screeningListIdentifier;
+  }
 
-    public void setScreeningListStudyReferenceExtension(String screeningListStudyReferenceExtension) {
-        this.screeningListStudyReferenceExtension = screeningListStudyReferenceExtension;
-    }
+  public String getScreeningListStudyReferenceExtension() {
+    return screeningListStudyReferenceExtension;
+  }
 
-    public String getResearchStudyAcronym() {
-        return researchStudyAcronym;
-    }
+  public void setScreeningListStudyReferenceExtension(String screeningListStudyReferenceExtension) {
+    this.screeningListStudyReferenceExtension = screeningListStudyReferenceExtension;
+  }
 
-    public void setResearchStudyAcronym(String researchStudyAcronym) {
-        this.researchStudyAcronym = researchStudyAcronym;
-    }
+  public String getResearchStudyAcronym() {
+    return researchStudyAcronym;
+  }
 
-    public String getScreeningListCoding() {
-        return screeningListCoding;
-    }
+  public void setResearchStudyAcronym(String researchStudyAcronym) {
+    this.researchStudyAcronym = researchStudyAcronym;
+  }
 
-    public void setScreeningListCoding(String screeningListCoding) {
-        this.screeningListCoding = screeningListCoding;
-    }
+  public String getScreeningListCoding() {
+    return screeningListCoding;
+  }
 
-    public String getStudySource() {
-        return studySource;
-    }
+  public void setScreeningListCoding(String screeningListCoding) {
+    this.screeningListCoding = screeningListCoding;
+  }
 
-    public void setStudySource(String studySource) {
-        this.studySource = studySource;
-    }
+  public String getStudySource() {
+    return studySource;
+  }
 
-	public String getLocalIdentifier() {
-		return localIdentifier;
-	}
+  public void setStudySource(String studySource) {
+    this.studySource = studySource;
+  }
 
-	public void setLocalIdentifier(String localIdentifier) {
-		this.localIdentifier = localIdentifier;
-	}
+  public String getLocalIdentifier() {
+    return localIdentifier;
+  }
 
-	public String getLocalIdentifierType() {
-		return localIdentifierType;
-	}
+  public void setLocalIdentifier(String localIdentifier) {
+    this.localIdentifier = localIdentifier;
+  }
 
-	public void setLocalIdentifierType(String localIdentifierType) {
-		this.localIdentifierType = localIdentifierType;
-	}
+  public String getLocalIdentifierType() {
+    return localIdentifierType;
+  }
+
+  public void setLocalIdentifierType(String localIdentifierType) {
+    this.localIdentifierType = localIdentifierType;
+  }
 }
