@@ -22,6 +22,7 @@ public class FhirCohortTransactionBuilder {
     private final FhirSystems systems;
 
     private static final String UUID_URN_PREFIX = "urn:uuid:";
+    private LabelExtractor labelExtractor = new LabelExtractor();
 
     @Autowired
     public FhirCohortTransactionBuilder(FhirSystems fhirSystems, @Value("${query.cohortSizeThreshold}") int cohortSizeThreshold) {
@@ -236,12 +237,19 @@ public class FhirCohortTransactionBuilder {
         if (cohort.getName() != null) {
             var title = cohort.getName().replaceAll("\\[.*]", "").trim();
             study.setTitle(title);
-            study.addExtension(systems.getResearchStudyAcronym(), new StringType(title));
         }
 
         if (cohort.getDescription() != null) {
             var description = cohort.getDescription().replaceAll("\\[.*]", "").trim();
             study.setDescription(description);
+        }
+        //Search in Description and then in Title for a description
+        String acronym = labelExtractor.extractByTag("acronym", cohort.getDescription());
+        if ( acronym == null) {
+        	acronym = labelExtractor.extractByTag("acronym", cohort.getName());
+        }
+        if ( acronym != null){
+        	study.addExtension(systems.getResearchStudyAcronym(), new StringType(acronym));
         }
 
         return study;

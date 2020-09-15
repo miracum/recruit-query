@@ -39,7 +39,6 @@ public class AtlasWebApiRoute extends RouteBuilder {
         this.labelExtractor = labelExtractor;
     }
 
-    @SuppressWarnings({"unchecked"})
     @Override
     public void configure() {
         // general error handler
@@ -111,7 +110,6 @@ public class AtlasWebApiRoute extends RouteBuilder {
 
     public boolean isMatchingCohort(@Body CohortDefinition definition) {
         log.info("[Cohort {}] Checking against match labels {}.", definition.getId(), matchLabels);
-
         if (matchLabels.isEmpty()) {
             // if no match labels are specified, simply accept all cohorts
             return true;
