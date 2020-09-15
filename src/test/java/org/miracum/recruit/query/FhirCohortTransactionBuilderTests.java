@@ -111,10 +111,11 @@ public class FhirCohortTransactionBuilderTests {
     }
 
     @Test
-    public void buildFromOmopCohort_withCohortDefinitionWithName_shouldSetStudyAcronymToCohortDefinitionName() {
+    public void buildFromOmopCohort_withCohortDefinitionWithName_shouldSetStudyAcronymFromDescription() {
         var cohort = new CohortDefinition();
         cohort.setId(4L);
         cohort.setName("Testcohort");
+        cohort.setDescription("[acronym=testacronym]");
 
         var person = new OmopPerson()
         		.setPersonId(2);
@@ -126,7 +127,44 @@ public class FhirCohortTransactionBuilderTests {
         assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isTrue();
 
         var acronym = (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
-        assertThat(acronym.getValue()).isEqualTo(cohort.getName());
+        assertThat(acronym.getValue()).isEqualTo("testacronym");
+    }
+
+    @Test
+    public void buildFromOmopCohort_withAcronymTagInName_shouldSetStudyAcronymFromName() {
+        var cohort = new CohortDefinition();
+        cohort.setId(4L);
+        cohort.setName("Testcohort [acronym=testacronym]");
+        cohort.setDescription("This is a description");
+
+        var person = new OmopPerson()
+        		.setPersonId(2);
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person));
+        var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+        assertThat(studies).hasSize(1);
+
+        var study = studies.get(0);
+        assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isTrue();
+
+        var acronym = (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
+        assertThat(acronym.getValue()).isEqualTo("testacronym");
+    }
+
+    @Test
+    public void buildFromOmopCohort_withoutAcronymTag_shouldNotSetAcronym() {
+        var cohort = new CohortDefinition();
+        cohort.setId(4L);
+        cohort.setName("Testcohorte");
+        cohort.setDescription("This is a description");
+
+        var person = new OmopPerson()
+        		.setPersonId(2);
+        var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person));
+        var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+        assertThat(studies).hasSize(1);
+
+        var study = studies.get(0);
+        assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isFalse();
     }
 
     @Test

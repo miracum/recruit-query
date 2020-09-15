@@ -7,6 +7,7 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.hl7.fhir.r4.model.Bundle;
 import org.miracum.recruit.query.FhirCohortTransactionBuilder;
+import org.miracum.recruit.query.LabelExtractor;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.OmopPerson;
 import org.slf4j.Logger;
@@ -18,16 +19,17 @@ import org.springframework.stereotype.Component;
 public class FhirRoute extends RouteBuilder {
 
     static final String CREATE_SCREENING_LIST = "direct:fhir.createScreeningList";
+    
     private static final Logger LOG = LoggerFactory.getLogger(FhirRoute.class);
-
+    
     private final FhirCohortTransactionBuilder fhirBuilder;
-    private final IParser fhirParser;
-    private final FhirContext fhirContext;
+    
+private IParser fhirParser;
 
     @Autowired
+
     public FhirRoute(FhirCohortTransactionBuilder fhirBuilder, FhirContext fhirContext) {
-        this.fhirBuilder = fhirBuilder;
-        this.fhirContext = fhirContext;
+		this.fhirBuilder = fhirBuilder;
         this.fhirParser = fhirContext.newJsonParser().setPrettyPrint(true);
     }
 
@@ -43,7 +45,6 @@ public class FhirRoute extends RouteBuilder {
                     @SuppressWarnings("unchecked")
                     var patients = (List<OmopPerson>) ex.getIn().getBody();
                     var cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
-
                     var transaction = fhirBuilder.buildFromOmopCohort(cohortDefinition, patients);
                     LOG.debug(fhirParser.encodeResourceToString(transaction));
                     // set bundle as http body

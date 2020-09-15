@@ -35,4 +35,28 @@ class LabelExtractorTests {
 
         assertThat(result).isEmpty();
     }
+
+    @Test
+    public void extractTag_oneTag_returnsOneTag() {
+    	var result = sut.extractByTag("acronym", "[acronym=Test]");
+    	assertThat(result).isEqualTo("Test");
+    }
+
+    @Test
+    public void extractTag_twoTags_returnsRightTag() {
+    	var result = sut.extractByTag("acronym", "[acronym=Test] [hello=World]");
+    	assertThat(result).isEqualTo("Test");
+    }
+
+    @Test
+    public void extractTag_longTextWithOneTag_returnsOneTag() {
+    	var result = sut.extractByTag("acronym", "This is a description with one acronym [acronym=Test] and label [Testlabel]");
+    	assertThat(result).isEqualTo("Test");
+    }
+
+    @Test
+    public void extractTag_longTextWithoutTag_returnsEmpty() {
+    	var result = sut.extractByTag("acronym", "This is a description without a tag but with [label]");
+    	assertThat(result).isBlank();
+    }
 }
