@@ -71,9 +71,8 @@ public class AtlasWebApiRoute extends RouteBuilder {
         .jsonpathWriteAsString("$[*]") // foreach cohort.
         // https://camel.apache.org/components/latest/jsonpath-component.html
         .unmarshal()
-        .json(
-            JsonLibrary.Jackson,
-            CohortDefinition.class) // Convert from json to CohortDefinition-Object
+        .json(JsonLibrary.Jackson, CohortDefinition.class) // Convert from json to
+        // CohortDefinition-Object
         .to(RUN_COHORT_GENERATION)
         .end();
 
@@ -85,9 +84,11 @@ public class AtlasWebApiRoute extends RouteBuilder {
         .toD(baseUrl + "/cohortdefinition/${body}")
         .convertBodyTo(String.class)
         .unmarshal()
-        .json(
-            JsonLibrary.Jackson,
-            CohortDefinition.class) // Convert from json to CohortDefinition-Object
+        .json(JsonLibrary.Jackson, CohortDefinition.class) // Convert
+        // from
+        // json
+        // to
+        // CohortDefinition-Object
         .log(LoggingLevel.DEBUG, LOG, "[cohort ${body.id}] response from webapi: ${body}")
         .process(
             ex -> {

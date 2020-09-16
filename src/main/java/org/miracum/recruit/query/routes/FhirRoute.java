@@ -23,7 +23,7 @@ public class FhirRoute extends RouteBuilder {
 
   private final FhirCohortTransactionBuilder fhirBuilder;
 
-  private final IParser fhirParser;
+  private IParser fhirParser;
 
   @Autowired
   public FhirRoute(FhirCohortTransactionBuilder fhirBuilder, FhirContext fhirContext) {
@@ -45,7 +45,9 @@ public class FhirRoute extends RouteBuilder {
               @SuppressWarnings("unchecked")
               var patients = (List<OmopPerson>) ex.getIn().getBody();
               var cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
-              var transaction = fhirBuilder.buildFromOmopCohort(cohortDefinition, patients);
+              var cohortSize = (long) ex.getIn().getHeader("cohortSize");
+              var transaction =
+                  fhirBuilder.buildFromOmopCohort(cohortDefinition, patients, cohortSize);
               LOG.debug(fhirParser.encodeResourceToString(transaction));
               // set bundle as http body
               ex.getIn().setBody(transaction);
