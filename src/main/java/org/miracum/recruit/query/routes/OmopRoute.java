@@ -40,9 +40,17 @@ public class OmopRoute extends RouteBuilder {
   public void configure() {
 
     // @formatter:off
+    // gets number of persons in cohort as cohortSize in header
     // gets the CohortDefinition in the body
     from(GET_PATIENTS)
-        // https://camel.apache.org/components/latest/sql-component.html
+        .to(
+            "sql:SELECT count(*) from {{omop.resultsSchema}}.cohort where {{omop.resultsSchema}}.cohort.cohort_definition_id = :#${body.id};")
+        .process(
+            ex -> {
+              @SuppressWarnings("unchecked")
+              var result = (List<Map<String, Object>>) ex.getIn().getBody();
+              ex.getIn().setHeader("cohortSize", result.get(0).get("count"));
+            })
         .to(
             "sql:SELECT "
                 + "{{omop.cdmSchema}}.person.person_id, "
@@ -55,7 +63,9 @@ public class OmopRoute extends RouteBuilder {
                 + " FROM {{omop.resultsSchema}}.cohort"
                 + " INNER JOIN {{omop.cdmSchema}}.person ON {{omop.resultsSchema}}.cohort.subject_id={{omop.cdmSchema}}.person.person_id"
                 + " LEFT JOIN {{omop.cdmSchema}}.concept ON {{omop.cdmSchema}}.concept.concept_id={{omop.cdmSchema}}.person.gender_concept_id"
-                + " WHERE {{omop.resultsSchema}}.cohort.cohort_definition_id=:#${body.id};")
+                + " WHERE {{omop.resultsSchema}}.cohort.cohort_definition_id=:#${header.cohort.id}"
+                + " ORDER BY {{omop.resultsSchema}}.cohort.cohort_end_date DESC"
+                + " LIMIT {{query.cohortSizeThreshold}};")
         .process(
             ex -> {
               @SuppressWarnings("unchecked")

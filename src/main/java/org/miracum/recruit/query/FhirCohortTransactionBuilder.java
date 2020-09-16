@@ -41,56 +41,17 @@ public class FhirCohortTransactionBuilder {
     this.maxListSize = cohortSizeThreshold;
   }
 
-  private static AdministrativeGender getGenderFromOmop(String gender) {
-    if (gender == null) {
-      return AdministrativeGender.NULL;
-    }
-    switch (gender.toUpperCase()) {
-      case "FEMALE":
-        return AdministrativeGender.FEMALE;
-      case "MALE":
-        return AdministrativeGender.MALE;
-      case "OTHER":
-      case "AMBIGIOUS":
-        return AdministrativeGender.OTHER;
-      case "UNKNOWN":
-      default:
-        return AdministrativeGender.UNKNOWN;
-    }
-  }
-
-  private static DateType parseBirthDate(OmopPerson person) {
-    DateType date = new DateType();
-    // if year of birth is present
-    if (person.getYearOfBirth() != null) {
-      if (person.getMonthOfBirth() != null) {
-        if (person.getDayOfBirth() != null) {
-          date.setPrecision(TemporalPrecisionEnum.DAY);
-          date.setDay(person.getDayOfBirth());
-        } else {
-          // no day is available, so the maximum precision is month
-          date.setPrecision(TemporalPrecisionEnum.MONTH);
-        }
-        date.setYear(person.getYearOfBirth().getValue());
-        date.setMonth(person.getMonthOfBirth().getValue() - 1);
-      } else {
-        // no month is available, so the maximum precision is year
-        date.setPrecision(TemporalPrecisionEnum.YEAR);
-        date.setYear(person.getYearOfBirth().getValue());
-      }
-    }
-    return date;
-  }
-
   /**
    * Builds an FHIR Transaction with a list of ResearchSubjects from a given OMOP cohort includes
    * Patients, ResearchStudy, ResearchSubjects, List
    *
    * @param cohort OMOP CohortDefinition from an existing cohort
-   * @param personsInCohort all persons in cohort
+   * @param personsInCohort persons who should be packed to screening list
+   * @param cohortSize number of persons in omop cohort
    * @return Bundle of type transaction
    */
-  public Bundle buildFromOmopCohort(CohortDefinition cohort, List<OmopPerson> personsInCohort) {
+  public Bundle buildFromOmopCohort(
+      CohortDefinition cohort, List<OmopPerson> personsInCohort, long cohortSize) {
     String cohortId = cohort.getId().toString();
     String listId = "screeninglist-" + cohortId;
 
@@ -104,25 +65,19 @@ public class FhirCohortTransactionBuilder {
 
     // create SCREENINGLIST
     ListResource screeningList = createScreeninglist(listId, studyUuid);
-
+    if (cohortSize > personsInCohort.size()) {
+      screeningList.addNote(
+          new Annotation()
+              .setAuthor(new StringType("UC1-Query Module"))
+              .setText(
+                  "Es wurden mehr passende Patienten gefunden als auf dieser Liste dargestellt werden können (insgesamt "
+                      + cohortSize
+                      + "). Nur die ersten "
+                      + this.maxListSize
+                      + " Vorschläge werden angezeigt."));
+    }
     // LOOP trough all Patients
-    var loopCounter = 1;
     for (OmopPerson personInCohort : personsInCohort) {
-      // break up loop if configuration parameter cohortSizeThreshold is reached
-      if (loopCounter > this.maxListSize && this.maxListSize != 0) {
-        screeningList.addNote(
-            new Annotation()
-                .setAuthor(new StringType("UC1-Query Module"))
-                .setText(
-                    "Es wurden mehr passende Patienten gefunden als auf dieser Liste dargestellt werden können (insgesamt "
-                        + personsInCohort.size()
-                        + "). Nur die ersten "
-                        + this.maxListSize
-                        + " Vorschläge werden angezeigt."));
-        break;
-      } else {
-        loopCounter++;
-      }
       // create PATIENT with OMOP ID as an Identifier and add to bundle
       var patient = createPatient(personInCohort);
       var patientUuid = UUID.randomUUID();
@@ -144,10 +99,6 @@ public class FhirCohortTransactionBuilder {
     return transaction;
   }
 
-  public int getMaxListSize() {
-    return this.maxListSize;
-  }
-
   // --------------------------------------GETTERS AND
   // SETTERS-------------------------------------------------------------//
   public void setMaxListSize(int maxListSize) {
@@ -160,6 +111,7 @@ public class FhirCohortTransactionBuilder {
 
   // --------------------------------------PRIVATE HELPER
   // METHODS-----------------------------------------------------------//
+
   private BundleEntryComponent createStudyBundleEntryComponent(
       ResearchStudy study, String cohortId, UUID studyUuid) {
     return new BundleEntryComponent()
@@ -303,5 +255,46 @@ public class FhirCohortTransactionBuilder {
     }
 
     return study;
+  }
+
+  private static AdministrativeGender getGenderFromOmop(String gender) {
+    if (gender == null) {
+      return AdministrativeGender.NULL;
+    }
+    switch (gender.toUpperCase()) {
+      case "FEMALE":
+        return AdministrativeGender.FEMALE;
+      case "MALE":
+        return AdministrativeGender.MALE;
+      case "OTHER":
+      case "AMBIGIOUS":
+        return AdministrativeGender.OTHER;
+      case "UNKNOWN":
+      default:
+        return AdministrativeGender.UNKNOWN;
+    }
+  }
+
+  private static DateType parseBirthDate(OmopPerson person) {
+    DateType date = new DateType();
+    // if year of birth is present
+    if (person.getYearOfBirth() != null) {
+      if (person.getMonthOfBirth() != null) {
+        if (person.getDayOfBirth() != null) {
+          date.setPrecision(TemporalPrecisionEnum.DAY);
+          date.setDay(person.getDayOfBirth());
+        } else {
+          // no day is available, so the maximum precision is month
+          date.setPrecision(TemporalPrecisionEnum.MONTH);
+        }
+        date.setYear(person.getYearOfBirth().getValue());
+        date.setMonth(person.getMonthOfBirth().getValue() - 1);
+      } else {
+        // no month is available, so the maximum precision is year
+        date.setPrecision(TemporalPrecisionEnum.YEAR);
+        date.setYear(person.getYearOfBirth().getValue());
+      }
+    }
+    return date;
   }
 }
