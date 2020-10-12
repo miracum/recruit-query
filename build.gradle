@@ -35,7 +35,7 @@ dependencies {
 
     implementation "io.jaegertracing:jaeger-client:1.4.0"
 
-    implementation "io.opentracing.contrib:opentracing-spring-jaeger-cloud-starter:3.2.0"
+    implementation "io.opentracing.contrib:opentracing-spring-jaeger-cloud-starter:3.2.2"
     implementation "io.opentracing.contrib:opentracing-okhttp3:3.0.0"
 
     implementation "io.micrometer:micrometer-registry-prometheus:1.5.5"
@@ -47,7 +47,7 @@ dependencies {
     implementation "ca.uhn.hapi.fhir:hapi-fhir-client-okhttp:5.1.0"
 
     implementation "com.fasterxml.jackson.core:jackson-annotations:2.11.3"
-    implementation "org.postgresql:postgresql:42.2.16"
+    implementation "org.postgresql:postgresql:42.2.17"
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:2.3.4.RELEASE") {
         exclude group: "org.junit.vintage", module: "junit-vintage-engine"
