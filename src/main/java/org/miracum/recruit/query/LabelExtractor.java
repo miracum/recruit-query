@@ -15,6 +15,14 @@ public class LabelExtractor {
     return extractAll(stringWithLabels);
   }
 
+  public Set<String> extractAll(String stringWithLabels) {
+    var substrings = StringUtils.substringsBetween(stringWithLabels, "[", "]");
+    if (substrings == null) {
+      return Set.of();
+    }
+    return Sets.newHashSet(substrings);
+  }
+
   /**
    * Checks if Set of Labels contains a specific tag with format [tag=xxx]
    *
@@ -34,13 +42,5 @@ public class LabelExtractor {
     }
     value = value.trim();
     return value;
-  }
-
-  public Set<String> extractAll(String stringWithLabels) {
-    var substrings = StringUtils.substringsBetween(stringWithLabels, "[", "]");
-    if (substrings == null) {
-      return Set.of();
-    }
-    return Sets.newHashSet(substrings);
   }
 }

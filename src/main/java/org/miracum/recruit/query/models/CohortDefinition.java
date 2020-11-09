@@ -21,76 +21,76 @@ public class CohortDefinition {
 
   private String expression;
 
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  public String getExpressionType() {
-    return expressionType;
-  }
-
-  public void setExpressionType(String expressionType) {
-    this.expressionType = expressionType;
-  }
-
   public String getCreatedBy() {
     return createdBy;
-  }
-
-  public void setCreatedBy(String createdBy) {
-    this.createdBy = createdBy;
   }
 
   public Date getCreatedDate() {
     return createdDate;
   }
 
-  public void setCreatedDate(Date createdDate) {
-    this.createdDate = createdDate;
-  }
-
-  public String getModifiedBy() {
-    return modifiedBy;
-  }
-
-  public void setModifiedBy(String modifiedBy) {
-    this.modifiedBy = modifiedBy;
-  }
-
-  public Date getModifiedDate() {
-    return modifiedDate;
-  }
-
-  public void setModifiedDate(Date modifiedDate) {
-    this.modifiedDate = modifiedDate;
+  public String getDescription() {
+    return description;
   }
 
   public String getExpression() {
     return expression;
   }
 
+  public String getExpressionType() {
+    return expressionType;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public String getModifiedBy() {
+    return modifiedBy;
+  }
+
+  public Date getModifiedDate() {
+    return modifiedDate;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setCreatedBy(String createdBy) {
+    this.createdBy = createdBy;
+  }
+
+  public void setCreatedDate(Date createdDate) {
+    this.createdDate = createdDate;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
   public void setExpression(String expression) {
     this.expression = expression;
+  }
+
+  public void setExpressionType(String expressionType) {
+    this.expressionType = expressionType;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public void setModifiedBy(String modifiedBy) {
+    this.modifiedBy = modifiedBy;
+  }
+
+  public void setModifiedDate(Date modifiedDate) {
+    this.modifiedDate = modifiedDate;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   @Override

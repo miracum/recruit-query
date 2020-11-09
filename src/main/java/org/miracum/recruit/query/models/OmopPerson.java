@@ -13,44 +13,32 @@ public class OmopPerson {
   private int locationId = 0;
   private String sourceId;
 
-  public int getPersonId() {
-    return personId;
-  }
-
-  public OmopPerson setPersonId(int personId) {
-    this.personId = personId;
-    return this;
+  public Integer getDayOfBirth() {
+    return dayOfBirth;
   }
 
   public String getGender() {
     return gender;
   }
 
-  public OmopPerson setGender(String gender) {
-    this.gender = gender;
-    return this;
-  }
-
-  public Year getYearOfBirth() {
-    return yearOfBirth;
-  }
-
-  public OmopPerson setYearOfBirth(Year yearOfBirth) {
-    this.yearOfBirth = yearOfBirth;
-    return this;
+  public int getLocationId() {
+    return locationId;
   }
 
   public Month getMonthOfBirth() {
     return monthOfBirth;
   }
 
-  public OmopPerson setMonthOfBirth(Month monthOfBirth) {
-    this.monthOfBirth = monthOfBirth;
-    return this;
+  public int getPersonId() {
+    return personId;
   }
 
-  public Integer getDayOfBirth() {
-    return dayOfBirth;
+  public String getSourceId() {
+    return sourceId;
+  }
+
+  public Year getYearOfBirth() {
+    return yearOfBirth;
   }
 
   public OmopPerson setDayOfBirth(Integer dayOfBirth) {
@@ -58,12 +46,33 @@ public class OmopPerson {
     return this;
   }
 
-  public int getLocationId() {
-    return locationId;
+  public OmopPerson setGender(String gender) {
+    this.gender = gender;
+    return this;
   }
 
   public OmopPerson setLocationId(int locationId) {
     this.locationId = locationId;
+    return this;
+  }
+
+  public OmopPerson setMonthOfBirth(Month monthOfBirth) {
+    this.monthOfBirth = monthOfBirth;
+    return this;
+  }
+
+  public OmopPerson setPersonId(int personId) {
+    this.personId = personId;
+    return this;
+  }
+
+  public OmopPerson setSourceId(String sourceId) {
+    this.sourceId = sourceId;
+    return this;
+  }
+
+  public OmopPerson setYearOfBirth(Year yearOfBirth) {
+    this.yearOfBirth = yearOfBirth;
     return this;
   }
 
@@ -84,14 +93,5 @@ public class OmopPerson {
         + ", locationId="
         + locationId
         + '}';
-  }
-
-  public String getSourceId() {
-    return sourceId;
-  }
-
-  public OmopPerson setSourceId(String sourceId) {
-    this.sourceId = sourceId;
-    return this;
   }
 }

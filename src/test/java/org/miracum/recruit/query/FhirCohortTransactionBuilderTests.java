@@ -31,6 +31,93 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
+  public void buildFromOmopCohort_withAcronymTagInName_shouldSetStudyAcronymFromName() {
+    var cohort = new CohortDefinition();
+    cohort.setId(4L);
+    cohort.setName("Testcohort [acronym=testacronym]");
+    cohort.setDescription("This is a description");
+
+    var person = new OmopPerson().setPersonId(2);
+    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
+    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+    assertThat(studies).hasSize(1);
+
+    var study = studies.get(0);
+    assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isTrue();
+
+    var acronym =
+        (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
+    assertThat(acronym.getValue()).isEqualTo("testacronym");
+  }
+
+  @Test
+  public void
+      buildFromOmopCohort_withCohortDefinitionWithLabels_shouldStripLabelsInStudyTitleAndDescription() {
+    var cohort = new CohortDefinition();
+    cohort.setId(1L);
+    cohort.setName("[Any Label] Testcohort");
+    cohort.setDescription("[UC1] [two labels] A Description");
+
+    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(), 100);
+    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+    var study = studies.get(0);
+    assertThat(study.getTitle()).isEqualTo("Testcohort");
+    assertThat(study.getDescription()).isEqualTo("A Description");
+  }
+
+  @Test
+  public void
+      buildFromOmopCohort_withCohortDefinitionWithName_shouldSetStudyAcronymFromDescription() {
+    var cohort = new CohortDefinition();
+    cohort.setId(4L);
+    cohort.setName("Testcohort");
+    cohort.setDescription("[acronym=testacronym]");
+
+    var person = new OmopPerson().setPersonId(2);
+    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
+    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+    assertThat(studies).hasSize(1);
+
+    var study = studies.get(0);
+    assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isTrue();
+
+    var acronym =
+        (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
+    assertThat(acronym.getValue()).isEqualTo("testacronym");
+  }
+
+  public void buildFromOmopCohort_withCohortSizeThreshold_shouldAddNoteToTransaction() {
+    // this.sut.setMaxListSize(10);
+    var cohort = new CohortDefinition();
+    cohort.setId(4L);
+    cohort.setName("Testcohort");
+    var persons = new ArrayList<OmopPerson>();
+
+    for (int i = 0; i < 15; i++) {
+      var person =
+          new OmopPerson()
+              .setPersonId(i + 1)
+              .setYearOfBirth(Year.of(1976 + i))
+              .setMonthOfBirth(Month.FEBRUARY)
+              .setDayOfBirth(12 + i)
+              .setGender("Female");
+      persons.add(person);
+    }
+
+    var fhirTrx = sut.buildFromOmopCohort(cohort, persons, 100);
+
+    var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
+    assertThat(lists).hasSize(1);
+
+    var list = lists.get(0);
+    // assertThat(list.hasNote());
+    assertThat(list).hasFieldOrProperty("note");
+    assertThat(list.getNoteFirstRep().getText()).contains("" + 100);
+    assertThat(list.getNoteFirstRep().getText()).contains("15");
+    assertThat(list.getEntry()).hasSize(15);
+  }
+
+  @Test
   public void
       buildFromOmopCohort_withGivenPersons_shouldCreateExpectedNumberOfResourcesInTransaction() {
     var cohort = new CohortDefinition();
@@ -65,6 +152,76 @@ public class FhirCohortTransactionBuilderTests {
     // one List
     var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
     assertThat(lists).hasSize(1);
+  }
+
+  @Test
+  public void buildFromOmopCohort_withGivenPersons_shouldHaveMetaSource() {
+    var cohort = new CohortDefinition();
+    cohort.setId(4L);
+    cohort.setName("Testcohort");
+
+    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(), 100);
+    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+    var study = studies.get(0);
+    assertThat(study.getMeta().getSource()).isEqualTo(systems.getStudySource());
+  }
+
+  @Test
+  public void buildFromOmopCohort_withoutAcronymTag_shouldNotSetAcronym() {
+    var cohort = new CohortDefinition();
+    cohort.setId(4L);
+    cohort.setName("Testcohorte");
+    cohort.setDescription("This is a description");
+
+    var person = new OmopPerson().setPersonId(2);
+    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
+    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
+    assertThat(studies).hasSize(1);
+
+    var study = studies.get(0);
+    assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isFalse();
+  }
+
+  @Test
+  public void buildFromOmopCohort_withPersonsWithoutSourceId_shouldntCreateAsIdentifier() {
+    var cohort = new CohortDefinition();
+    cohort.setId(5L);
+    cohort.setName("Testkohorte");
+    var person =
+        new OmopPerson()
+            .setPersonId(2)
+            .setYearOfBirth(Year.of(1976))
+            .setMonthOfBirth(Month.FEBRUARY)
+            .setDayOfBirth(12)
+            .setGender("Female");
+    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
+    var ids =
+        BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class)
+            .get(0)
+            .getIdentifier();
+    assertThat(ids).hasSizeLessThan(2);
+  }
+
+  @Test
+  public void buildFromOmopCohort_withPersonsWithSourceId_shouldCreateAsIdentifier() {
+    var cohort = new CohortDefinition();
+    cohort.setId(5L);
+    cohort.setName("Testkohorte");
+    var person =
+        new OmopPerson()
+            .setPersonId(2)
+            .setYearOfBirth(Year.of(1976))
+            .setMonthOfBirth(Month.FEBRUARY)
+            .setDayOfBirth(12)
+            .setGender("Female")
+            .setSourceId("1");
+    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
+    var ids =
+        BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class)
+            .get(0)
+            .getIdentifier();
+    assertThat(ids).hasSizeGreaterThan(1);
+    assertThat(ids.get(1).getValue()).isEqualTo("1");
   }
 
   @Test
@@ -113,162 +270,5 @@ public class FhirCohortTransactionBuilderTests {
     assertThat(patient.getBirthDateElement().getDay()).isEqualTo(31);
     assertThat(patient.getBirthDateElement().getHour()).isEqualTo(0);
     assertThat(patient.getBirthDateElement().getMinute()).isEqualTo(0);
-  }
-
-  @Test
-  public void
-      buildFromOmopCohort_withCohortDefinitionWithName_shouldSetStudyAcronymFromDescription() {
-    var cohort = new CohortDefinition();
-    cohort.setId(4L);
-    cohort.setName("Testcohort");
-    cohort.setDescription("[acronym=testacronym]");
-
-    var person = new OmopPerson().setPersonId(2);
-    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
-    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
-    assertThat(studies).hasSize(1);
-
-    var study = studies.get(0);
-    assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isTrue();
-
-    var acronym =
-        (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
-    assertThat(acronym.getValue()).isEqualTo("testacronym");
-  }
-
-  @Test
-  public void buildFromOmopCohort_withAcronymTagInName_shouldSetStudyAcronymFromName() {
-    var cohort = new CohortDefinition();
-    cohort.setId(4L);
-    cohort.setName("Testcohort [acronym=testacronym]");
-    cohort.setDescription("This is a description");
-
-    var person = new OmopPerson().setPersonId(2);
-    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
-    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
-    assertThat(studies).hasSize(1);
-
-    var study = studies.get(0);
-    assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isTrue();
-
-    var acronym =
-        (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
-    assertThat(acronym.getValue()).isEqualTo("testacronym");
-  }
-
-  @Test
-  public void buildFromOmopCohort_withoutAcronymTag_shouldNotSetAcronym() {
-    var cohort = new CohortDefinition();
-    cohort.setId(4L);
-    cohort.setName("Testcohorte");
-    cohort.setDescription("This is a description");
-
-    var person = new OmopPerson().setPersonId(2);
-    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
-    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
-    assertThat(studies).hasSize(1);
-
-    var study = studies.get(0);
-    assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isFalse();
-  }
-
-  @Test
-  public void buildFromOmopCohort_withGivenPersons_shouldHaveMetaSource() {
-    var cohort = new CohortDefinition();
-    cohort.setId(4L);
-    cohort.setName("Testcohort");
-
-    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(), 100);
-    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
-    var study = studies.get(0);
-    assertThat(study.getMeta().getSource()).isEqualTo(systems.getStudySource());
-  }
-
-  @Test
-  public void
-      buildFromOmopCohort_withCohortDefinitionWithLabels_shouldStripLabelsInStudyTitleAndDescription() {
-    var cohort = new CohortDefinition();
-    cohort.setId(1L);
-    cohort.setName("[Any Label] Testcohort");
-    cohort.setDescription("[UC1] [two labels] A Description");
-
-    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(), 100);
-    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
-    var study = studies.get(0);
-    assertThat(study.getTitle()).isEqualTo("Testcohort");
-    assertThat(study.getDescription()).isEqualTo("A Description");
-  }
-
-  public void buildFromOmopCohort_withCohortSizeThreshold_shouldAddNoteToTransaction() {
-    // this.sut.setMaxListSize(10);
-    var cohort = new CohortDefinition();
-    cohort.setId(4L);
-    cohort.setName("Testcohort");
-    var persons = new ArrayList<OmopPerson>();
-
-    for (int i = 0; i < 15; i++) {
-      var person =
-          new OmopPerson()
-              .setPersonId(i + 1)
-              .setYearOfBirth(Year.of(1976 + i))
-              .setMonthOfBirth(Month.FEBRUARY)
-              .setDayOfBirth(12 + i)
-              .setGender("Female");
-      persons.add(person);
-    }
-
-    var fhirTrx = sut.buildFromOmopCohort(cohort, persons, 100);
-
-    var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
-    assertThat(lists).hasSize(1);
-
-    var list = lists.get(0);
-    // assertThat(list.hasNote());
-    assertThat(list).hasFieldOrProperty("note");
-    assertThat(list.getNoteFirstRep().getText()).contains("" + 100);
-    assertThat(list.getNoteFirstRep().getText()).contains("15");
-    assertThat(list.getEntry()).hasSize(15);
-  }
-
-  @Test
-  public void buildFromOmopCohort_withPersonsWithSourceId_shouldCreateAsIdentifier() {
-    var cohort = new CohortDefinition();
-    cohort.setId(5L);
-    cohort.setName("Testkohorte");
-    var person =
-        new OmopPerson()
-            .setPersonId(2)
-            .setYearOfBirth(Year.of(1976))
-            .setMonthOfBirth(Month.FEBRUARY)
-            .setDayOfBirth(12)
-            .setGender("Female")
-            .setSourceId("1");
-    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
-    var ids =
-        BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class)
-            .get(0)
-            .getIdentifier();
-    assertThat(ids).hasSizeGreaterThan(1);
-    assertThat(ids.get(1).getValue()).isEqualTo("1");
-  }
-
-  @Test
-  public void buildFromOmopCohort_withPersonsWithoutSourceId_shouldntCreateAsIdentifier() {
-    var cohort = new CohortDefinition();
-    cohort.setId(5L);
-    cohort.setName("Testkohorte");
-    var person =
-        new OmopPerson()
-            .setPersonId(2)
-            .setYearOfBirth(Year.of(1976))
-            .setMonthOfBirth(Month.FEBRUARY)
-            .setDayOfBirth(12)
-            .setGender("Female");
-    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
-    var ids =
-        BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class)
-            .get(0)
-            .getIdentifier();
-    assertThat(ids).hasSizeLessThan(2);
   }
 }

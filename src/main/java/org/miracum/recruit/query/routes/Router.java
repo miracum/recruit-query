@@ -16,6 +16,23 @@ public class Router extends RouteBuilder {
   public static final String DONE_GET_PATIENTS = "direct:main.doneGetPatients";
   public static final String START_COHORT_GENERATION = "direct:main.startWithCohort";
 
+  @Bean
+  public CamelContextConfiguration camelContextConfiguration() {
+
+    return new CamelContextConfiguration() {
+      @Override
+      public void afterApplicationStart(CamelContext camelContext) {
+        // not used
+      }
+
+      @Override
+      public void beforeApplicationStart(CamelContext camelContext) {
+        camelContext.addRoutePolicyFactory(new MicrometerRoutePolicyFactory());
+        camelContext.setMessageHistoryFactory(new MicrometerMessageHistoryFactory());
+      }
+    };
+  }
+
   @Override
   public void configure() {
 
@@ -58,22 +75,5 @@ public class Router extends RouteBuilder {
     from(DONE_COHORT_GENERATION).to(OmopRoute.GET_PATIENTS);
 
     from(DONE_GET_PATIENTS).to(FhirRoute.CREATE_SCREENING_LIST);
-  }
-
-  @Bean
-  public CamelContextConfiguration camelContextConfiguration() {
-
-    return new CamelContextConfiguration() {
-      @Override
-      public void beforeApplicationStart(CamelContext camelContext) {
-        camelContext.addRoutePolicyFactory(new MicrometerRoutePolicyFactory());
-        camelContext.setMessageHistoryFactory(new MicrometerMessageHistoryFactory());
-      }
-
-      @Override
-      public void afterApplicationStart(CamelContext camelContext) {
-        // not used
-      }
-    };
   }
 }

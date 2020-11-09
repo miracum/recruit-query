@@ -19,75 +19,75 @@ public class FhirSystems {
   private String localIdentifier;
   private String localIdentifierType;
 
-  public String getOmopSubjectIdentifier() {
-    return omopSubjectIdentifier;
-  }
-
-  public void setOmopSubjectIdentifier(String omopSubjectIdentifier) {
-    this.omopSubjectIdentifier = omopSubjectIdentifier;
-  }
-
-  public String getOmopCohortIdentifier() {
-    return omopCohortIdentifier;
-  }
-
-  public void setOmopCohortIdentifier(String omopCohortIdentifier) {
-    this.omopCohortIdentifier = omopCohortIdentifier;
-  }
-
-  public String getScreeningListIdentifier() {
-    return screeningListIdentifier;
-  }
-
-  public void setScreeningListIdentifier(String screeningListIdentifier) {
-    this.screeningListIdentifier = screeningListIdentifier;
-  }
-
-  public String getScreeningListStudyReferenceExtension() {
-    return screeningListStudyReferenceExtension;
-  }
-
-  public void setScreeningListStudyReferenceExtension(String screeningListStudyReferenceExtension) {
-    this.screeningListStudyReferenceExtension = screeningListStudyReferenceExtension;
-  }
-
-  public String getResearchStudyAcronym() {
-    return researchStudyAcronym;
-  }
-
-  public void setResearchStudyAcronym(String researchStudyAcronym) {
-    this.researchStudyAcronym = researchStudyAcronym;
-  }
-
-  public String getScreeningListCoding() {
-    return screeningListCoding;
-  }
-
-  public void setScreeningListCoding(String screeningListCoding) {
-    this.screeningListCoding = screeningListCoding;
-  }
-
-  public String getStudySource() {
-    return studySource;
-  }
-
-  public void setStudySource(String studySource) {
-    this.studySource = studySource;
-  }
-
   public String getLocalIdentifier() {
     return localIdentifier;
-  }
-
-  public void setLocalIdentifier(String localIdentifier) {
-    this.localIdentifier = localIdentifier;
   }
 
   public String getLocalIdentifierType() {
     return localIdentifierType;
   }
 
+  public String getOmopCohortIdentifier() {
+    return omopCohortIdentifier;
+  }
+
+  public String getOmopSubjectIdentifier() {
+    return omopSubjectIdentifier;
+  }
+
+  public String getResearchStudyAcronym() {
+    return researchStudyAcronym;
+  }
+
+  public String getScreeningListCoding() {
+    return screeningListCoding;
+  }
+
+  public String getScreeningListIdentifier() {
+    return screeningListIdentifier;
+  }
+
+  public String getScreeningListStudyReferenceExtension() {
+    return screeningListStudyReferenceExtension;
+  }
+
+  public String getStudySource() {
+    return studySource;
+  }
+
+  public void setLocalIdentifier(String localIdentifier) {
+    this.localIdentifier = localIdentifier;
+  }
+
   public void setLocalIdentifierType(String localIdentifierType) {
     this.localIdentifierType = localIdentifierType;
+  }
+
+  public void setOmopCohortIdentifier(String omopCohortIdentifier) {
+    this.omopCohortIdentifier = omopCohortIdentifier;
+  }
+
+  public void setOmopSubjectIdentifier(String omopSubjectIdentifier) {
+    this.omopSubjectIdentifier = omopSubjectIdentifier;
+  }
+
+  public void setResearchStudyAcronym(String researchStudyAcronym) {
+    this.researchStudyAcronym = researchStudyAcronym;
+  }
+
+  public void setScreeningListCoding(String screeningListCoding) {
+    this.screeningListCoding = screeningListCoding;
+  }
+
+  public void setScreeningListIdentifier(String screeningListIdentifier) {
+    this.screeningListIdentifier = screeningListIdentifier;
+  }
+
+  public void setScreeningListStudyReferenceExtension(String screeningListStudyReferenceExtension) {
+    this.screeningListStudyReferenceExtension = screeningListStudyReferenceExtension;
+  }
+
+  public void setStudySource(String studySource) {
+    this.studySource = studySource;
   }
 }

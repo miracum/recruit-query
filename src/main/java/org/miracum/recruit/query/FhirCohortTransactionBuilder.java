@@ -30,8 +30,52 @@ import org.springframework.stereotype.Component;
 public class FhirCohortTransactionBuilder {
 
   private static final String UUID_URN_PREFIX = "urn:uuid:";
+
+  private static AdministrativeGender getGenderFromOmop(String gender) {
+    if (gender == null) {
+      return null;
+    }
+    switch (gender.toUpperCase()) {
+      case "FEMALE":
+        return AdministrativeGender.FEMALE;
+      case "MALE":
+        return AdministrativeGender.MALE;
+      case "OTHER":
+      case "AMBIGIOUS":
+        return AdministrativeGender.OTHER;
+      case "UNKNOWN":
+      default:
+        return AdministrativeGender.UNKNOWN;
+    }
+  }
+
+  private static DateType parseBirthDate(OmopPerson person) {
+    DateType date = new DateType();
+    // if year of birth is present
+    if (person.getYearOfBirth() != null) {
+      if (person.getMonthOfBirth() != null) {
+        if (person.getDayOfBirth() != null) {
+          date.setPrecision(TemporalPrecisionEnum.DAY);
+          date.setDay(person.getDayOfBirth());
+        } else {
+          // no day is available, so the maximum precision is month
+          date.setPrecision(TemporalPrecisionEnum.MONTH);
+        }
+        date.setYear(person.getYearOfBirth().getValue());
+        date.setMonth(person.getMonthOfBirth().getValue() - 1);
+      } else {
+        // no month is available, so the maximum precision is year
+        date.setPrecision(TemporalPrecisionEnum.YEAR);
+        date.setYear(person.getYearOfBirth().getValue());
+      }
+    }
+    return date;
+  }
+
   private final FhirSystems systems;
+
   private int maxListSize;
+
   private final LabelExtractor labelExtractor = new LabelExtractor();
 
   @Autowired
@@ -99,69 +143,8 @@ public class FhirCohortTransactionBuilder {
     return transaction;
   }
 
-  // --------------------------------------GETTERS AND
-  // SETTERS-------------------------------------------------------------//
-  public void setMaxListSize(int maxListSize) {
-    this.maxListSize = maxListSize;
-  }
-
-  public FhirSystems getSystems() {
-    return this.systems;
-  }
-
   // --------------------------------------PRIVATE HELPER
   // METHODS-----------------------------------------------------------//
-
-  private BundleEntryComponent createStudyBundleEntryComponent(
-      ResearchStudy study, String cohortId, UUID studyUuid) {
-    return new BundleEntryComponent()
-        .setResource(study)
-        .setFullUrl(UUID_URN_PREFIX + studyUuid)
-        .setRequest(
-            new BundleEntryRequestComponent()
-                .setMethod(Bundle.HTTPVerb.PUT)
-                .setUrl(
-                    "ResearchStudy?identifier="
-                        + systems.getOmopCohortIdentifier()
-                        + "|"
-                        + cohortId));
-  }
-
-  private BundleEntryComponent createResearchSubjectBundleEntryComponent(
-      ResearchSubject researchSubject, UUID subjectUuid, int personId, String cohortId) {
-    return new BundleEntryComponent()
-        .setResource(researchSubject)
-        .setFullUrl("urn:uuid:" + subjectUuid)
-        .setRequest(
-            new BundleEntryRequestComponent()
-                .setMethod(Bundle.HTTPVerb.POST)
-                .setIfNoneExist(
-                    "patient.identifier="
-                        + systems.getOmopSubjectIdentifier()
-                        + "|"
-                        + personId
-                        + "&"
-                        + "study.identifier="
-                        + systems.getOmopCohortIdentifier()
-                        + "|"
-                        + cohortId)
-                .setUrl("ResearchSubject"));
-  }
-
-  private BundleEntryComponent createPatientBundleEntryComponent(
-      Patient patient, UUID patientUuid) {
-    return new BundleEntryComponent()
-        .setResource(patient)
-        .setFullUrl("urn:uuid:" + patientUuid)
-        .setRequest(
-            new BundleEntryRequestComponent()
-                .setMethod(Bundle.HTTPVerb.PUT)
-                .setUrl(
-                    "Patient?identifier="
-                        + patient.getIdentifier().get(0).getSystem()
-                        + "|"
-                        + patient.getIdentifier().get(0).getValue()));
-  }
 
   private BundleEntryComponent createListBundleEntryComponent(
       ListResource screeningList, String listId) {
@@ -172,14 +155,6 @@ public class FhirCohortTransactionBuilder {
             new BundleEntryRequestComponent()
                 .setMethod(Bundle.HTTPVerb.PUT)
                 .setUrl("List?identifier=" + systems.getScreeningListIdentifier() + "|" + listId));
-  }
-
-  // CREATE RESOURCES
-  private ResearchSubject createResearchSubject(UUID studyUUID, UUID patientUuid) {
-    return new ResearchSubject()
-        .setStatus(ResearchSubject.ResearchSubjectStatus.CANDIDATE)
-        .setStudy(new Reference(UUID_URN_PREFIX + studyUUID))
-        .setIndividual(new Reference(UUID_URN_PREFIX + patientUuid));
   }
 
   private Patient createPatient(OmopPerson personInCohort) {
@@ -204,26 +179,19 @@ public class FhirCohortTransactionBuilder {
     return patient;
   }
 
-  private ListResource createScreeninglist(String listId, UUID studyUuid) {
-    var list =
-        new ListResource()
-            .setStatus(ListResource.ListStatus.CURRENT)
-            .setMode(ListResource.ListMode.WORKING)
-            .setCode(
-                new CodeableConcept()
-                    .addCoding(
-                        new Coding()
-                            .setSystem(systems.getScreeningListCoding())
-                            .setCode("screening-recommendations")))
-            .addIdentifier(
-                new Identifier().setSystem(systems.getScreeningListIdentifier()).setValue(listId));
-
-    // add Study to screeninglist as an extension
-    list.addExtension(
-        new Extension()
-            .setUrl(systems.getScreeningListStudyReferenceExtension())
-            .setValue(new Reference(UUID_URN_PREFIX + studyUuid)));
-    return list;
+  private BundleEntryComponent createPatientBundleEntryComponent(
+      Patient patient, UUID patientUuid) {
+    return new BundleEntryComponent()
+        .setResource(patient)
+        .setFullUrl("urn:uuid:" + patientUuid)
+        .setRequest(
+            new BundleEntryRequestComponent()
+                .setMethod(Bundle.HTTPVerb.PUT)
+                .setUrl(
+                    "Patient?identifier="
+                        + patient.getIdentifier().get(0).getSystem()
+                        + "|"
+                        + patient.getIdentifier().get(0).getValue()));
   }
 
   private ResearchStudy createResearchStudy(CohortDefinition cohort) {
@@ -257,44 +225,79 @@ public class FhirCohortTransactionBuilder {
     return study;
   }
 
-  private static AdministrativeGender getGenderFromOmop(String gender) {
-    if (gender == null) {
-      return AdministrativeGender.NULL;
-    }
-    switch (gender.toUpperCase()) {
-      case "FEMALE":
-        return AdministrativeGender.FEMALE;
-      case "MALE":
-        return AdministrativeGender.MALE;
-      case "OTHER":
-      case "AMBIGIOUS":
-        return AdministrativeGender.OTHER;
-      case "UNKNOWN":
-      default:
-        return AdministrativeGender.UNKNOWN;
-    }
+  // CREATE RESOURCES
+  private ResearchSubject createResearchSubject(UUID studyUUID, UUID patientUuid) {
+    return new ResearchSubject()
+        .setStatus(ResearchSubject.ResearchSubjectStatus.CANDIDATE)
+        .setStudy(new Reference(UUID_URN_PREFIX + studyUUID))
+        .setIndividual(new Reference(UUID_URN_PREFIX + patientUuid));
   }
 
-  private static DateType parseBirthDate(OmopPerson person) {
-    DateType date = new DateType();
-    // if year of birth is present
-    if (person.getYearOfBirth() != null) {
-      if (person.getMonthOfBirth() != null) {
-        if (person.getDayOfBirth() != null) {
-          date.setPrecision(TemporalPrecisionEnum.DAY);
-          date.setDay(person.getDayOfBirth());
-        } else {
-          // no day is available, so the maximum precision is month
-          date.setPrecision(TemporalPrecisionEnum.MONTH);
-        }
-        date.setYear(person.getYearOfBirth().getValue());
-        date.setMonth(person.getMonthOfBirth().getValue() - 1);
-      } else {
-        // no month is available, so the maximum precision is year
-        date.setPrecision(TemporalPrecisionEnum.YEAR);
-        date.setYear(person.getYearOfBirth().getValue());
-      }
-    }
-    return date;
+  private BundleEntryComponent createResearchSubjectBundleEntryComponent(
+      ResearchSubject researchSubject, UUID subjectUuid, int personId, String cohortId) {
+    return new BundleEntryComponent()
+        .setResource(researchSubject)
+        .setFullUrl("urn:uuid:" + subjectUuid)
+        .setRequest(
+            new BundleEntryRequestComponent()
+                .setMethod(Bundle.HTTPVerb.POST)
+                .setIfNoneExist(
+                    "patient.identifier="
+                        + systems.getOmopSubjectIdentifier()
+                        + "|"
+                        + personId
+                        + "&"
+                        + "study.identifier="
+                        + systems.getOmopCohortIdentifier()
+                        + "|"
+                        + cohortId)
+                .setUrl("ResearchSubject"));
+  }
+
+  private ListResource createScreeninglist(String listId, UUID studyUuid) {
+    var list =
+        new ListResource()
+            .setStatus(ListResource.ListStatus.CURRENT)
+            .setMode(ListResource.ListMode.WORKING)
+            .setCode(
+                new CodeableConcept()
+                    .addCoding(
+                        new Coding()
+                            .setSystem(systems.getScreeningListCoding())
+                            .setCode("screening-recommendations")))
+            .addIdentifier(
+                new Identifier().setSystem(systems.getScreeningListIdentifier()).setValue(listId));
+
+    // add Study to screeninglist as an extension
+    list.addExtension(
+        new Extension()
+            .setUrl(systems.getScreeningListStudyReferenceExtension())
+            .setValue(new Reference(UUID_URN_PREFIX + studyUuid)));
+    return list;
+  }
+
+  private BundleEntryComponent createStudyBundleEntryComponent(
+      ResearchStudy study, String cohortId, UUID studyUuid) {
+    return new BundleEntryComponent()
+        .setResource(study)
+        .setFullUrl(UUID_URN_PREFIX + studyUuid)
+        .setRequest(
+            new BundleEntryRequestComponent()
+                .setMethod(Bundle.HTTPVerb.PUT)
+                .setUrl(
+                    "ResearchStudy?identifier="
+                        + systems.getOmopCohortIdentifier()
+                        + "|"
+                        + cohortId));
+  }
+
+  public FhirSystems getSystems() {
+    return this.systems;
+  }
+
+  // --------------------------------------GETTERS AND
+  // SETTERS-------------------------------------------------------------//
+  public void setMaxListSize(int maxListSize) {
+    this.maxListSize = maxListSize;
   }
 }

@@ -36,13 +36,13 @@ public class QueryApplication {
     var opNameDecorator =
         new OkHttpClientSpanDecorator() {
           @Override
+          public void onError(Throwable throwable, Span span) {}
+
+          @Override
           public void onRequest(Request request, Span span) {
             // add the operation name to the span
             span.setOperationName(request.url().encodedPath());
           }
-
-          @Override
-          public void onError(Throwable throwable, Span span) {}
 
           @Override
           public void onResponse(Connection connection, Response response, Span span) {}

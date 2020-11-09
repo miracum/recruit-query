@@ -36,6 +36,45 @@ public class OmopRoute extends RouteBuilder {
     return ds;
   }
 
+  // catch SQL params from application.yml
+  @Value("${query.includePatientParameters.demographics}")
+  private boolean catchPatientDemographics;
+
+  /**
+   * Create SQL-String to request data from OMOP DB Parameter to be requested can be set in
+   * application.yml
+   *
+   * @param cohortId Cohort of which data has to be requested
+   * @return SQL-String
+   */
+  private String buildSQLString(String cohortId) {
+    StringBuilder sqlRequest =
+        new StringBuilder(
+            "sql:SELECT {{omop.cdmSchema}}.person.person_id, {{omop.cdmSchema}}.person.person_source_value");
+
+    // Check if params should be requested
+    if (this.catchPatientDemographics) {
+      sqlRequest.append(
+          ", {{omop.cdmSchema}}.concept.concept_name, {{omop.cdmSchema}}.concept.vocabulary_id");
+      sqlRequest.append(", {{omop.cdmSchema}}.person.year_of_birth");
+      sqlRequest.append(", {{omop.cdmSchema}}.person.month_of_birth");
+      sqlRequest.append(", {{omop.cdmSchema}}.person.day_of_birth");
+    }
+    sqlRequest.append(" FROM {{omop.resultsSchema}}.cohort");
+    sqlRequest.append(
+        " INNER JOIN {{omop.cdmSchema}}.person ON {{omop.resultsSchema}}.cohort.subject_id={{omop.cdmSchema}}.person.person_id");
+
+    // Join is only necessary for gender
+    if (this.catchPatientDemographics) {
+      sqlRequest.append(
+          " LEFT JOIN {{omop.cdmSchema}}.concept ON {{omop.cdmSchema}}.concept.concept_id={{omop.cdmSchema}}.person.gender_concept_id");
+    }
+    sqlRequest.append(" WHERE {{omop.resultsSchema}}.cohort.cohort_definition_id=" + cohortId);
+    sqlRequest.append(" ORDER BY {{omop.resultsSchema}}.cohort.cohort_end_date DESC");
+    sqlRequest.append(" LIMIT {{query.cohortSizeThreshold}};");
+    return sqlRequest.toString();
+  }
+
   @Override
   public void configure() {
 
@@ -51,21 +90,8 @@ public class OmopRoute extends RouteBuilder {
               var result = (List<Map<String, Object>>) ex.getIn().getBody();
               ex.getIn().setHeader("cohortSize", result.get(0).get("count"));
             })
-        .to(
-            "sql:SELECT "
-                + "{{omop.cdmSchema}}.person.person_id, "
-                + "{{omop.cdmSchema}}.person.year_of_birth, "
-                + "{{omop.cdmSchema}}.person.month_of_birth, "
-                + "{{omop.cdmSchema}}.person.day_of_birth, "
-                + "{{omop.cdmSchema}}.person.person_source_value, "
-                + "{{omop.cdmSchema}}.concept.concept_name, "
-                + "{{omop.cdmSchema}}.concept.vocabulary_id"
-                + " FROM {{omop.resultsSchema}}.cohort"
-                + " INNER JOIN {{omop.cdmSchema}}.person ON {{omop.resultsSchema}}.cohort.subject_id={{omop.cdmSchema}}.person.person_id"
-                + " LEFT JOIN {{omop.cdmSchema}}.concept ON {{omop.cdmSchema}}.concept.concept_id={{omop.cdmSchema}}.person.gender_concept_id"
-                + " WHERE {{omop.resultsSchema}}.cohort.cohort_definition_id=:#${header.cohort.id}"
-                + " ORDER BY {{omop.resultsSchema}}.cohort.cohort_end_date DESC"
-                + " LIMIT {{query.cohortSizeThreshold}};")
+        .log(buildSQLString("${header.cohort.id}"))
+        .toD(buildSQLString("${header.cohort.id}"))
         .process(
             ex -> {
               @SuppressWarnings("unchecked")
@@ -87,10 +113,10 @@ public class OmopRoute extends RouteBuilder {
                 if (row.get("person_source_value") != null) {
                   patient.setSourceId((String) row.get("person_source_value"));
                 }
-                if ((row.get("vocabulary_id")).equals("Gender")) {
+                if (row.get("vocabulary_id") != null
+                    && (row.get("vocabulary_id")).equals("Gender")) {
                   patient.setGender((String) row.getOrDefault("concept_name", null));
                 }
-
                 patients.add(patient);
               }
               ex.getIn().setBody(patients);

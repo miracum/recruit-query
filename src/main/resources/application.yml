@@ -3,6 +3,9 @@ query:
   schedule:
     enable: true
     unixCron: "0 * * * *"
+  includePatientParameters:
+    demographics: true
+    encounter: true
   selector:
     matchLabels:
       - "UC1"

@@ -9,6 +9,13 @@ class LabelExtractorTests {
   private final LabelExtractor sut = new LabelExtractor();
 
   @Test
+  void extract_WithDuplicateLabels_returnsDisctinct() {
+    var result = sut.extract("[a] abc [b] [a]");
+
+    assertThat(result).contains("a", "b");
+  }
+
+  @Test
   void extract_WithEmptyString_returnsEmptySet() {
     var result = sut.extract("");
 
@@ -23,29 +30,10 @@ class LabelExtractorTests {
   }
 
   @Test
-  void extract_WithDuplicateLabels_returnsDisctinct() {
-    var result = sut.extract("[a] abc [b] [a]");
-
-    assertThat(result).contains("a", "b");
-  }
-
-  @Test
   void extract_WithoutLabels_returnsEmptySet() {
     var result = sut.extract("hello world ]");
 
     assertThat(result).isEmpty();
-  }
-
-  @Test
-  void extractTag_oneTag_returnsOneTag() {
-    var result = sut.extractByTag("acronym", "[acronym=Test]");
-    assertThat(result).isEqualTo("Test");
-  }
-
-  @Test
-  void extractTag_twoTags_returnsRightTag() {
-    var result = sut.extractByTag("acronym", "[acronym=Test] [hello=World]");
-    assertThat(result).isEqualTo("Test");
   }
 
   @Test
@@ -62,5 +50,17 @@ class LabelExtractorTests {
     var result =
         sut.extractByTag("acronym", "This is a description without a tag but with [label]");
     assertThat(result).isBlank();
+  }
+
+  @Test
+  void extractTag_oneTag_returnsOneTag() {
+    var result = sut.extractByTag("acronym", "[acronym=Test]");
+    assertThat(result).isEqualTo("Test");
+  }
+
+  @Test
+  void extractTag_twoTags_returnsRightTag() {
+    var result = sut.extractByTag("acronym", "[acronym=Test] [hello=World]");
+    assertThat(result).isEqualTo("Test");
   }
 }
