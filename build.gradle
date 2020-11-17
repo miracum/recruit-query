@@ -29,7 +29,6 @@ dependencies {
     implementation "org.apache.camel.springboot:camel-rest-starter:3.6.0"
     implementation "org.apache.camel.springboot:camel-servlet-starter:3.6.0"
     implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.6.0"
-    implementation "org.apache.camel.springboot:camel-spring-cloud-starter:3.6.0"
     implementation "org.apache.camel.springboot:camel-micrometer-starter:3.6.0"
     implementation "org.apache.camel.springboot:camel-opentracing-starter:3.6.0"
 
