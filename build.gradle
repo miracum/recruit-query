@@ -40,10 +40,10 @@ dependencies {
     implementation "io.micrometer:micrometer-registry-prometheus:1.6.1"
     implementation "io.micrometer:micrometer-core:1.6.1"
 
-    implementation "ca.uhn.hapi.fhir:hapi-fhir-base:5.1.0"
-    implementation "ca.uhn.hapi.fhir:hapi-fhir-client:5.1.0"
-    implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:5.1.0"
-    implementation "ca.uhn.hapi.fhir:hapi-fhir-client-okhttp:5.1.0"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-base:5.2.0"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-client:5.2.0"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:5.2.0"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-client-okhttp:5.2.0"
 
     implementation "com.fasterxml.jackson.core:jackson-annotations:2.11.3"
     implementation "org.postgresql:postgresql:42.2.18"
