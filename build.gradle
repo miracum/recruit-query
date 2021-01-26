@@ -26,11 +26,11 @@ dependencies {
     implementation "org.apache.camel:camel-fhir:3.7.1"
     implementation "org.apache.camel:camel-http:3.7.1"
     implementation "org.apache.camel:camel-cron:3.7.1"
-    implementation "org.apache.camel.springboot:camel-rest-starter:3.7.0"
-    implementation "org.apache.camel.springboot:camel-servlet-starter:3.7.0"
-    implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.7.0"
-    implementation "org.apache.camel.springboot:camel-micrometer-starter:3.7.0"
-    implementation "org.apache.camel.springboot:camel-opentracing-starter:3.7.0"
+    implementation "org.apache.camel.springboot:camel-rest-starter:3.7.1"
+    implementation "org.apache.camel.springboot:camel-servlet-starter:3.7.1"
+    implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.7.1"
+    implementation "org.apache.camel.springboot:camel-micrometer-starter:3.7.1"
+    implementation "org.apache.camel.springboot:camel-opentracing-starter:3.7.1"
 
     implementation "io.jaegertracing:jaeger-client:1.5.0"
 
