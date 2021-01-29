@@ -1,5 +1,5 @@
 omop:
-  jdbcUrl: "jdbc:postgresql://localhost:25432/OHDSI"
+  jdbcUrl: "jdbc:postgresql://localhost:25432/ohdsi"
   username: "postgres"
   password: "postgres"
 

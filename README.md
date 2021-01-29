@@ -2,15 +2,16 @@
 
 > The OMOP and ATLAS-based Query Module
 
-## Development Setup
+## Development
 
 Start OMOP DB, ATLAS, a FHIR server, and the screening list module as external development services:
-
-> ℹ Expects a docker volume "volume-pg" to be generated and filled with synthetic data according to step 1 of the [ohdsi-omop-v5 README](https://gitlab.miracum.org/miracum/etl/ohdsi-omop-v5).
 
 ```sh
 docker-compose -f deploy/docker-compose.dev.yml up
 ```
+
+Note that this uses the `docker.miracum.org/miracum-etl/omop/empty:latest-cdm5.3.1` image to create an
+empty OMOP database which takes around 5 minutes to startup.
 
 This starts the services on the following localhost ports:
 
@@ -50,10 +51,10 @@ docker build -t query:test  .
 
 ## Contributing
 
-### Setup commitlint
+### Setup pre-commit hooks
 
-This sets up a pre-commit hook checking if the commit message follows the [conventional commit spec](https://www.conventionalcommits.org/en/v1.0.0/).
+This sets up a pre-commit hook to enforce basic file sanity checks:
 
 ```sh
-npm install
+pre-commit install
 ```

@@ -6,46 +6,45 @@ services:
     ports:
       - "8082:8080"
     environment:
-      server.address: http://localhost:8082/fhir
+      SERVER_ADDRESS: http://localhost:8082/fhir
 
   omopdb:
-    image: docker.miracum.org/ohdsi-omop-v5/omop-db-v5:1.0.0
+    image: docker.miracum.org/miracum-etl/omop/empty:latest-cdm5.3.1
     ports:
       - "25432:5432"
-    volumes:
-      - volume-pg:/var/lib/postgresql/data
 
   broadsea-webtools:
-    image: docker.miracum.org/ohdsi-omop-v5/broadsea-webtools:1.0.0
+    image: docker.miracum.org/miracum-etl/omop/webtools:bf69fe02
     ports:
       - "8083:8080"
-    volumes:
-      - ./config-local.js:/usr/local/tomcat/webapps/atlas/js/config-local.js:ro
     environment:
-      - env=webapi-postgresql
-      - datasource_driverClassName=org.postgresql.Driver
-      - datasource_url=jdbc:postgresql://omopdb:5432/OHDSI
-      - datasource.cdm.schema=synpuf_cdm
-      - datasource.ohdsi.schema=ohdsi
-      - datasource_username=${DATASOURCE_USERNAME:-ohdsi_admin_user}
-      - datasource_password=${DATASOURCE_PASSWORD:-admin1}
-      - spring.jpa.properties.hibernate.default_schema=ohdsi
-      - spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-      - spring.batch.repository.tableprefix=ohdsi.BATCH_
-      - flyway_datasource_driverClassName=org.postgresql.Driver
-      - flyway_datasource_url=jdbc:postgresql://omopdb:5432/OHDSI
-      - flyway_schemas=ohdsi
-      - flyway.placeholders.ohdsiSchema=ohdsi
-      - flyway_datasource_username=${DATASOURCE_USERNAME:-ohdsi_admin_user}
-      - flyway_datasource_password=${DATASOURCE_PASSWORD:-admin1}
-      - flyway.locations=classpath:db/migration/postgresql
+      PGHOST: omopdb
+      DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: postgres
+      DATASOURCE_OHDSI_SCHEMA: ohdsi
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: ohdsi
+      SPRING_BATCH_REPOSITORY_TABLEPREFIX: ohdsi.BATCH_
+      FLYWAY_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      FLYWAY_DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
+      FLYWAY_DATASOURCE_USERNAME: postgres
+      FLYWAY_DATASOURCE_PASSWORD: postgres
+      FLYWAY_LOCATIONS: classpath:db/migration/postgresql
+      FLYWAY_PLACEHOLDERS_OHDSISCHEMA: ohdsi
+      FLYWAY_SCHEMAS: ohdsi
+    volumes:
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: /entrypoint.sh
 
   list:
-    image: docker.miracum.org/uc1-recruit/list:1.25
+    image: docker.miracum.org/uc1-recruit/list:2.4
     ports:
       - "8084:8080"
     environment:
       FHIR_URL: "http://fhir:8080/fhir"
+      KEYCLOAK_DISABLED: "true"
 
   jaeger:
     image: jaegertracing/all-in-one:1.21
@@ -53,7 +52,3 @@ services:
       - 16686:16686
       - 6831:6831/udp
       - 6832:6832/udp
-
-volumes:
-  volume-pg:
-    external: true
