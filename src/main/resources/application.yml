@@ -13,14 +13,14 @@ query:
 atlas:
   url: ""
   cohortStatusCheckBackoffTime: 10000
-  dataSource: "OHDSI-CDMV5"
+  dataSource: "CDS-CDMV5"
 
 omop:
   jdbcUrl: ""
   username: ""
   password: ""
-  resultsSchema: "synpuf_results"
-  cdmSchema: "synpuf_cdm"
+  resultsSchema: "cds_results"
+  cdmSchema: "cds_cdm"
 
 fhir:
   url: "http://localhost:8082/fhir"
@@ -88,3 +88,4 @@ opentracing:
   jaeger:
     log-spans: false
     include-jaeger-env-tags: true
+    enabled: false

@@ -92,9 +92,7 @@ public class AtlasWebApiRoute extends RouteBuilder {
         .log(LoggingLevel.DEBUG, LOG, "[cohort ${body.id}] response from webapi: ${body}")
         .process(
             ex -> {
-              // expression macht probleme, daher muss sie immer genullt werden
               var body = (CohortDefinition) ex.getIn().getBody();
-              body.setExpression(null);
               ex.getIn().setBody(body);
             })
         .to(RUN_COHORT_GENERATION);

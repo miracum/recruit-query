@@ -56,25 +56,19 @@ dependencies {
 }
 
 jacoco {
-    toolVersion = "0.8.5"
-    reportsDir = file("$buildDir/jacoco-reports")
+    toolVersion = "0.8.6"
 }
 
 jacocoTestReport {
     reports {
-        html.enabled false
+        html.enabled true
         xml.enabled false
         csv.enabled true
-        csv.destination file("${buildDir}/jacoco/coverage.csv")
     }
 }
 
 test {
     useJUnitPlatform()
-}
-
-bootJar {
-    layered()
 }
 
 spotless {
@@ -83,5 +77,4 @@ spotless {
         removeUnusedImports()
         googleJavaFormat()
     }
-    lineEndings 'PLATFORM_NATIVE'
 }
