@@ -3,7 +3,7 @@ plugins {
     id "io.spring.dependency-management" version "1.0.11.RELEASE"
     id "java"
     id "jacoco"
-    id "com.diffplug.spotless" version "5.9.0"
+    id "com.diffplug.spotless" version "5.10.1"
 }
 
 group = "org.miracum.recruit"
@@ -20,21 +20,21 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-web"
 
-    implementation "org.apache.camel:camel-sql:3.7.2"
-    implementation "org.apache.camel:camel-jackson:3.7.2"
-    implementation "org.apache.camel:camel-jsonpath:3.7.2"
-    implementation "org.apache.camel:camel-fhir:3.7.2"
-    implementation "org.apache.camel:camel-http:3.7.2"
-    implementation "org.apache.camel:camel-cron:3.7.2"
-    implementation "org.apache.camel.springboot:camel-rest-starter:3.7.2"
-    implementation "org.apache.camel.springboot:camel-servlet-starter:3.7.2"
-    implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.7.2"
-    implementation "org.apache.camel.springboot:camel-micrometer-starter:3.7.2"
-    implementation "org.apache.camel.springboot:camel-opentracing-starter:3.7.2"
+    implementation "org.apache.camel:camel-sql:3.8.0"
+    implementation "org.apache.camel:camel-jackson:3.8.0"
+    implementation "org.apache.camel:camel-jsonpath:3.8.0"
+    implementation "org.apache.camel:camel-fhir:3.8.0"
+    implementation "org.apache.camel:camel-http:3.8.0"
+    implementation "org.apache.camel:camel-cron:3.8.0"
+    implementation "org.apache.camel.springboot:camel-rest-starter:3.8.0"
+    implementation "org.apache.camel.springboot:camel-servlet-starter:3.8.0"
+    implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.8.0"
+    implementation "org.apache.camel.springboot:camel-micrometer-starter:3.8.0"
+    implementation "org.apache.camel.springboot:camel-opentracing-starter:3.8.0"
 
     implementation "io.jaegertracing:jaeger-client:1.5.0"
 
-    implementation "io.opentracing.contrib:opentracing-spring-jaeger-cloud-starter:3.2.2"
+    implementation "io.opentracing.contrib:opentracing-spring-jaeger-cloud-starter:3.3.1"
     implementation "io.opentracing.contrib:opentracing-okhttp3:3.0.0"
 
     implementation "io.micrometer:micrometer-registry-prometheus:1.6.3"
