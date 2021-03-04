@@ -37,7 +37,7 @@ public class OmopRoute extends RouteBuilder {
   }
 
   // catch SQL params from application.yml
-  @Value("${query.includePatientParameters.demographics}")
+  @Value("${query.inxcludePatientParameters.demographics}")
   private boolean catchPatientDemographics;
 
   /**
@@ -53,7 +53,7 @@ public class OmopRoute extends RouteBuilder {
             "sql:SELECT {{omop.cdmSchema}}.person.person_id, {{omop.cdmSchema}}.person.person_source_value");
 
     // Check if params should be requested
-    if (this.catchPatientDemographics) {
+    if (!this.catchPatientDemographics) {
       sqlRequest.append(
           ", {{omop.cdmSchema}}.concept.concept_name, {{omop.cdmSchema}}.concept.vocabulary_id");
       sqlRequest.append(", {{omop.cdmSchema}}.person.year_of_birth");
@@ -65,7 +65,7 @@ public class OmopRoute extends RouteBuilder {
         " INNER JOIN {{omop.cdmSchema}}.person ON {{omop.resultsSchema}}.cohort.subject_id={{omop.cdmSchema}}.person.person_id");
 
     // Join is only necessary for gender
-    if (this.catchPatientDemographics) {
+    if (!this.catchPatientDemographics) {
       sqlRequest.append(
           " LEFT JOIN {{omop.cdmSchema}}.concept ON {{omop.cdmSchema}}.concept.concept_id={{omop.cdmSchema}}.person.gender_concept_id");
     }
