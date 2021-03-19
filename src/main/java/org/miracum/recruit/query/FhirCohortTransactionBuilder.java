@@ -143,8 +143,7 @@ public class FhirCohortTransactionBuilder {
     return transaction;
   }
 
-  // --------------------------------------PRIVATE HELPER
-  // METHODS-----------------------------------------------------------//
+  // ------------------PRIVATE HELPER METHODS-------------------------//
 
   private BundleEntryComponent createListBundleEntryComponent(
       ListResource screeningList, String listId) {
@@ -161,11 +160,7 @@ public class FhirCohortTransactionBuilder {
     var patient =
         new Patient()
             .setBirthDateElement(parseBirthDate(personInCohort))
-            .setGender(getGenderFromOmop(personInCohort.getGender()))
-            .addIdentifier(
-                new Identifier()
-                    .setSystem(systems.getOmopSubjectIdentifier())
-                    .setValue(Integer.toString(personInCohort.getPersonId())));
+            .setGender(getGenderFromOmop(personInCohort.getGender()));
     if (StringUtils.isNotEmpty(personInCohort.getSourceId())) {
       patient.addIdentifier(
           new Identifier()
@@ -176,6 +171,10 @@ public class FhirCohortTransactionBuilder {
                       .addCoding(
                           new Coding().setSystem(systems.getLocalIdentifierType()).setCode("MR"))));
     }
+    patient.addIdentifier(
+        new Identifier()
+            .setSystem(systems.getOmopSubjectIdentifier())
+            .setValue(Integer.toString(personInCohort.getPersonId())));
     return patient;
   }
 
