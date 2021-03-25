@@ -221,7 +221,7 @@ public class FhirCohortTransactionBuilderTests {
             .get(0)
             .getIdentifier();
     assertThat(ids).hasSizeGreaterThan(1);
-    assertThat(ids.get(1).getValue()).isEqualTo("1");
+    assertThat(ids.get(0).getValue()).isEqualTo("1");
   }
 
   @Test
