@@ -4,3 +4,6 @@ variables:
 include:
   - project: "devops/ci-templates"
     file: "/standard/.container-build.yml"
+
+build:
+  coverage: '/\d+.\d+ \% covered/'
