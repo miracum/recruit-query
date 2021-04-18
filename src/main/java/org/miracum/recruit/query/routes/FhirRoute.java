@@ -53,7 +53,7 @@ public class FhirRoute extends RouteBuilder {
               ex.getIn().setBody(transaction);
             })
         .to(
-            "fhir:transaction/withBundle?log={{fhir.logEnabled}}&serverUrl={{fhir.url}}&inBody=bundle&fhirVersion=R4&fhirContext=#bean:fhirContext")
+            "fhir:transaction/withBundle?serverUrl={{fhir.url}}&inBody=bundle&fhirVersion=R4&fhirContext=#bean:fhirContext")
         .process(
             ex -> {
               var response = (Bundle) ex.getIn().getBody();

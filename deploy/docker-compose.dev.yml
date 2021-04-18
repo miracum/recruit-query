@@ -13,7 +13,7 @@ services:
       - "8082:8080"
 
   omopdb:
-    image: harbor.miracum.org/miracum-etl/omop/empty:latest-cdm5.3.1
+    image: quay.io/miracum/omop:test-data
     ports:
       - "25432:5432"
 
@@ -22,7 +22,6 @@ services:
     ports:
       - "8083:8080"
     environment:
-      PGHOST: omopdb
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
       DATASOURCE_USERNAME: postgres

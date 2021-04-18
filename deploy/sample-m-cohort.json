@@ -1,16 +1,14 @@
 {
-  "name": "UC1 SAMPLE Cohort",
-  "description": "[UC1] [acronym=SAMPLE] Sample Cohort",
+  "name": "UC1 SAMPLE Cohort M",
+  "description": "[UC1] [acronym=SAMPLE M] Sample Cohort containing only male patients",
   "expressionType": "SIMPLE_EXPRESSION",
   "expression": {
     "ConceptSets": [],
     "PrimaryCriteria": {
       "CriteriaList": [
         {
-          "VisitOccurrence": {
-            "VisitTypeExclude": null,
-            "VisitSourceConcept": null,
-            "First": null
+          "ObservationPeriod": {
+            "First": true
           }
         }
       ],
@@ -30,24 +28,24 @@
     },
     "InclusionRules": [
       {
-        "name": "Age and Gender",
-        "description": null,
+        "name": "Older than 18",
         "expression": {
           "Type": "ALL",
           "CriteriaList": [],
           "DemographicCriteriaList": [
             {
               "Age": {
-                "Value": 90,
-                "Extent": null,
+                "Value": 18,
                 "Op": "gt"
               },
               "Gender": [
                 {
-                  "CONCEPT_CODE": "F",
-                  "CONCEPT_ID": 8532,
-                  "CONCEPT_NAME": "FEMALE",
+                  "CONCEPT_CODE": "M",
+                  "CONCEPT_ID": 8507,
+                  "CONCEPT_NAME": "MALE",
                   "DOMAIN_ID": "Gender",
+                  "INVALID_REASON_CAPTION": "Unknown",
+                  "STANDARD_CONCEPT_CAPTION": "Unknown",
                   "VOCABULARY_ID": "Gender"
                 }
               ]
@@ -62,10 +60,7 @@
       "CollapseType": "ERA",
       "EraPad": 0
     },
-    "CensorWindow": {
-      "StartDate": null,
-      "EndDate": null
-    },
-    "cdmVersionRange": null
+    "CensorWindow": {},
+    "cdmVersionRange": ">=5.0.0"
   }
 }
