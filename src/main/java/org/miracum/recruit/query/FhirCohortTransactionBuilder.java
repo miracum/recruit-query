@@ -21,12 +21,11 @@ import org.hl7.fhir.r4.model.ResearchStudy;
 import org.hl7.fhir.r4.model.ResearchSubject;
 import org.hl7.fhir.r4.model.StringType;
 import org.miracum.recruit.query.models.CohortDefinition;
-import org.miracum.recruit.query.models.OmopPerson;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.miracum.recruit.query.models.Person;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class FhirCohortTransactionBuilder {
 
   private static final String UUID_URN_PREFIX = "urn:uuid:";
@@ -49,7 +48,7 @@ public class FhirCohortTransactionBuilder {
     }
   }
 
-  private static DateType parseBirthDate(OmopPerson person) {
+  private static DateType parseBirthDate(Person person) {
     DateType date = new DateType();
     // if year of birth is present
     if (person.getYearOfBirth() != null) {
@@ -75,14 +74,20 @@ public class FhirCohortTransactionBuilder {
   private final FhirSystems systems;
 
   private int maxListSize;
+  private final boolean shouldNotCreateEncounters;
+  private final VisitToEncounterMapper visitToEncounterMapper;
 
   private final LabelExtractor labelExtractor = new LabelExtractor();
 
-  @Autowired
   public FhirCohortTransactionBuilder(
-      FhirSystems fhirSystems, @Value("${query.cohortSizeThreshold}") int cohortSizeThreshold) {
+      FhirSystems fhirSystems,
+      @Value("${query.cohortSizeThreshold}") int cohortSizeThreshold,
+      @Value("${query.excludePatientParameters.encounter}") boolean shouldNotCreateEncounters,
+      VisitToEncounterMapper visitToEncounterMapper) {
     this.systems = fhirSystems;
     this.maxListSize = cohortSizeThreshold;
+    this.visitToEncounterMapper = visitToEncounterMapper;
+    this.shouldNotCreateEncounters = shouldNotCreateEncounters;
   }
 
   /**
@@ -95,7 +100,7 @@ public class FhirCohortTransactionBuilder {
    * @return Bundle of type transaction
    */
   public Bundle buildFromOmopCohort(
-      CohortDefinition cohort, List<OmopPerson> personsInCohort, long cohortSize) {
+      CohortDefinition cohort, List<Person> personsInCohort, long cohortSize) {
     String cohortId = cohort.getId().toString();
     String listId = "screeninglist-" + cohortId;
 
@@ -121,7 +126,7 @@ public class FhirCohortTransactionBuilder {
                       + " Vorschläge werden angezeigt."));
     }
     // LOOP trough all Patients
-    for (OmopPerson personInCohort : personsInCohort) {
+    for (Person personInCohort : personsInCohort) {
       // create PATIENT with OMOP ID as an Identifier and add to bundle
       var patient = createPatient(personInCohort);
       var patientUuid = UUID.randomUUID();
@@ -136,6 +141,15 @@ public class FhirCohortTransactionBuilder {
       screeningList.addEntry(
           new ListResource.ListEntryComponent()
               .setItem(new Reference(UUID_URN_PREFIX + subjectUuid)));
+
+      if (!shouldNotCreateEncounters) {
+        var patientReference = new Reference(UUID_URN_PREFIX + patientUuid);
+        var encounterBundleEntries =
+            visitToEncounterMapper.map(personInCohort.getVisitOccurrences(), patientReference);
+        for (var encounterBundleEntry : encounterBundleEntries) {
+          transaction.addEntry(encounterBundleEntry);
+        }
+      }
     }
     // ADD LIST TO BUNDLE
     transaction.addEntry(createListBundleEntryComponent(screeningList, listId));
@@ -149,14 +163,14 @@ public class FhirCohortTransactionBuilder {
       ListResource screeningList, String listId) {
     return new BundleEntryComponent()
         .setResource(screeningList)
-        .setFullUrl("urn:uuid:" + UUID.randomUUID())
+        .setFullUrl(UUID_URN_PREFIX + UUID.randomUUID())
         .setRequest(
             new BundleEntryRequestComponent()
                 .setMethod(Bundle.HTTPVerb.PUT)
                 .setUrl("List?identifier=" + systems.getScreeningListIdentifier() + "|" + listId));
   }
 
-  private Patient createPatient(OmopPerson personInCohort) {
+  private Patient createPatient(Person personInCohort) {
     var patient =
         new Patient()
             .setBirthDateElement(parseBirthDate(personInCohort))
@@ -169,12 +183,12 @@ public class FhirCohortTransactionBuilder {
               .setType(
                   new CodeableConcept()
                       .addCoding(
-                          new Coding().setSystem(systems.getLocalIdentifierType()).setCode("MR"))));
+                          new Coding().setSystem(systems.getIdentifierType()).setCode("MR"))));
     }
     patient.addIdentifier(
         new Identifier()
             .setSystem(systems.getOmopSubjectIdentifier())
-            .setValue(Integer.toString(personInCohort.getPersonId())));
+            .setValue(personInCohort.getPersonId().toString()));
     return patient;
   }
 
@@ -182,7 +196,7 @@ public class FhirCohortTransactionBuilder {
       Patient patient, UUID patientUuid) {
     return new BundleEntryComponent()
         .setResource(patient)
-        .setFullUrl("urn:uuid:" + patientUuid)
+        .setFullUrl(UUID_URN_PREFIX + patientUuid)
         .setRequest(
             new BundleEntryRequestComponent()
                 .setMethod(Bundle.HTTPVerb.PUT)
@@ -233,10 +247,10 @@ public class FhirCohortTransactionBuilder {
   }
 
   private BundleEntryComponent createResearchSubjectBundleEntryComponent(
-      ResearchSubject researchSubject, UUID subjectUuid, int personId, String cohortId) {
+      ResearchSubject researchSubject, UUID subjectUuid, Long personId, String cohortId) {
     return new BundleEntryComponent()
         .setResource(researchSubject)
-        .setFullUrl("urn:uuid:" + subjectUuid)
+        .setFullUrl(UUID_URN_PREFIX + subjectUuid)
         .setRequest(
             new BundleEntryRequestComponent()
                 .setMethod(Bundle.HTTPVerb.POST)

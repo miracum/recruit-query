@@ -26,8 +26,8 @@ public class LabelExtractor {
   /**
    * Checks if Set of Labels contains a specific tag with format [tag=xxx]
    *
-   * @param labels set of all labels
-   * @return extracted acronym
+   * @param stringWithLabels set of all labels
+   * @return extracted tag
    */
   public String extractByTag(String tag, String stringWithLabels) {
     Set<String> labels = extractAll(stringWithLabels);

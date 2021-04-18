@@ -16,6 +16,7 @@ services:
     image: quay.io/miracum/omop:test-data
     ports:
       - "25432:5432"
+    shm_size: "1g"
 
   broadsea-webtools:
     image: harbor.miracum.org/miracum-etl/omop/webtools:v3.0.0-rc.1-cdm5.3.1
@@ -48,6 +49,7 @@ services:
     environment:
       FHIR_URL: "http://fhir:8080/fhir"
       KEYCLOAK_DISABLED: "true"
+      TRACING_ENABLED: "true"
 
   jaeger:
     image: jaegertracing/all-in-one:1.22

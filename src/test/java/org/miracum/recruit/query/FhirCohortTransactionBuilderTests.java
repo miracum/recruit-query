@@ -15,15 +15,18 @@ import org.hl7.fhir.r4.model.ResearchSubject;
 import org.hl7.fhir.r4.model.StringType;
 import org.junit.jupiter.api.Test;
 import org.miracum.recruit.query.models.CohortDefinition;
-import org.miracum.recruit.query.models.OmopPerson;
+import org.miracum.recruit.query.models.Person;
 
-public class FhirCohortTransactionBuilderTests {
+class FhirCohortTransactionBuilderTests {
 
   private final FhirSystems systems = new FhirSystems();
   private final FhirContext fhirContext = FhirContext.forR4();
   private final int MAXSIZE = 10;
-  private FhirCohortTransactionBuilder sut = new FhirCohortTransactionBuilder(systems, MAXSIZE);
+  private final FhirCohortTransactionBuilder sut =
+      new FhirCohortTransactionBuilder(
+          systems, MAXSIZE, false, new VisitToEncounterMapper(systems));
 
+  // TODO: refactor to auto-wire dependencies
   public FhirCohortTransactionBuilderTests() {
     systems.setResearchStudyAcronym(
         "https://fhir.miracum.org/uc1/StructureDefinition/studyAcronym");
@@ -31,13 +34,13 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void buildFromOmopCohort_withAcronymTagInName_shouldSetStudyAcronymFromName() {
+  void buildFromOmopCohort_withAcronymTagInName_shouldSetStudyAcronymFromName() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohort [acronym=testacronym]");
     cohort.setDescription("This is a description");
 
-    var person = new OmopPerson().setPersonId(2);
+    var person = Person.builder().personId(2L).build();
     var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
     var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
     assertThat(studies).hasSize(1);
@@ -51,7 +54,7 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void
+  void
       buildFromOmopCohort_withCohortDefinitionWithLabels_shouldStripLabelsInStudyTitleAndDescription() {
     var cohort = new CohortDefinition();
     cohort.setId(1L);
@@ -66,14 +69,13 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void
-      buildFromOmopCohort_withCohortDefinitionWithName_shouldSetStudyAcronymFromDescription() {
+  void buildFromOmopCohort_withCohortDefinitionWithName_shouldSetStudyAcronymFromDescription() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohort");
     cohort.setDescription("[acronym=testacronym]");
 
-    var person = new OmopPerson().setPersonId(2);
+    var person = Person.builder().personId(2L).build();
     var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
     var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
     assertThat(studies).hasSize(1);
@@ -86,21 +88,22 @@ public class FhirCohortTransactionBuilderTests {
     assertThat(acronym.getValue()).isEqualTo("testacronym");
   }
 
-  public void buildFromOmopCohort_withCohortSizeThreshold_shouldAddNoteToTransaction() {
+  void buildFromOmopCohort_withCohortSizeThreshold_shouldAddNoteToTransaction() {
     // this.sut.setMaxListSize(10);
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohort");
-    var persons = new ArrayList<OmopPerson>();
+    var persons = new ArrayList<Person>();
 
     for (int i = 0; i < 15; i++) {
       var person =
-          new OmopPerson()
-              .setPersonId(i + 1)
-              .setYearOfBirth(Year.of(1976 + i))
-              .setMonthOfBirth(Month.FEBRUARY)
-              .setDayOfBirth(12 + i)
-              .setGender("Female");
+          Person.builder()
+              .personId(i + 1L)
+              .yearOfBirth(Year.of(1976 + i))
+              .monthOfBirth(Month.FEBRUARY)
+              .dayOfBirth(12 + i)
+              .gender("Female")
+              .build();
       persons.add(person);
     }
 
@@ -118,19 +121,19 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void
-      buildFromOmopCohort_withGivenPersons_shouldCreateExpectedNumberOfResourcesInTransaction() {
+  void buildFromOmopCohort_withGivenPersons_shouldCreateExpectedNumberOfResourcesInTransaction() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohort");
 
     var pers1 =
-        new OmopPerson()
-            .setPersonId(1)
-            .setYearOfBirth(Year.of(1993))
-            .setMonthOfBirth(Month.AUGUST)
-            .setDayOfBirth(10);
-    var pers2 = new OmopPerson().setPersonId(2).setYearOfBirth(Year.of(1976));
+        Person.builder()
+            .personId(1L)
+            .yearOfBirth(Year.of(1993))
+            .monthOfBirth(Month.AUGUST)
+            .dayOfBirth(10)
+            .build();
+    var pers2 = Person.builder().personId(2L).yearOfBirth(Year.of(1976)).build();
 
     var persons = List.of(pers1, pers2);
 
@@ -155,7 +158,7 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void buildFromOmopCohort_withGivenPersons_shouldHaveMetaSource() {
+  void buildFromOmopCohort_withGivenPersons_shouldHaveMetaSource() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohort");
@@ -167,13 +170,13 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void buildFromOmopCohort_withoutAcronymTag_shouldNotSetAcronym() {
+  void buildFromOmopCohort_withoutAcronymTag_shouldNotSetAcronym() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohorte");
     cohort.setDescription("This is a description");
 
-    var person = new OmopPerson().setPersonId(2);
+    var person = Person.builder().personId(2L).build();
     var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
     var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ResearchStudy.class);
     assertThat(studies).hasSize(1);
@@ -183,17 +186,18 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void buildFromOmopCohort_withPersonsWithoutSourceId_shouldntCreateAsIdentifier() {
+  void buildFromOmopCohort_withPersonsWithoutSourceId_shouldntCreateAsIdentifier() {
     var cohort = new CohortDefinition();
     cohort.setId(5L);
     cohort.setName("Testkohorte");
     var person =
-        new OmopPerson()
-            .setPersonId(2)
-            .setYearOfBirth(Year.of(1976))
-            .setMonthOfBirth(Month.FEBRUARY)
-            .setDayOfBirth(12)
-            .setGender("Female");
+        Person.builder()
+            .personId(2L)
+            .yearOfBirth(Year.of(1976))
+            .monthOfBirth(Month.FEBRUARY)
+            .dayOfBirth(12)
+            .gender("Female")
+            .build();
     var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
     var ids =
         BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class)
@@ -203,18 +207,19 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void buildFromOmopCohort_withPersonsWithSourceId_shouldCreateAsIdentifier() {
+  void buildFromOmopCohort_withPersonsWithSourceId_shouldCreateAsIdentifier() {
     var cohort = new CohortDefinition();
     cohort.setId(5L);
     cohort.setName("Testkohorte");
     var person =
-        new OmopPerson()
-            .setPersonId(2)
-            .setYearOfBirth(Year.of(1976))
-            .setMonthOfBirth(Month.FEBRUARY)
-            .setDayOfBirth(12)
-            .setGender("Female")
-            .setSourceId("1");
+        Person.builder()
+            .personId(2L)
+            .yearOfBirth(Year.of(1976))
+            .monthOfBirth(Month.FEBRUARY)
+            .dayOfBirth(12)
+            .gender("Female")
+            .sourceId("1")
+            .build();
     var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(person), 100);
     var ids =
         BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class)
@@ -225,17 +230,18 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void buildFromOmopCohort_withPersonWithBirthdate_shouldCreatePatientWithSameBirthDate() {
+  void buildFromOmopCohort_withPersonWithBirthdate_shouldCreatePatientWithSameBirthDate() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohort");
     var person =
-        new OmopPerson()
-            .setPersonId(2)
-            .setYearOfBirth(Year.of(1976))
-            .setMonthOfBirth(Month.FEBRUARY)
-            .setDayOfBirth(12)
-            .setGender("Female");
+        Person.builder()
+            .personId(2L)
+            .yearOfBirth(Year.of(1976))
+            .monthOfBirth(Month.FEBRUARY)
+            .dayOfBirth(12)
+            .gender("Female")
+            .build();
     var persons = List.of(person);
 
     var fhirTrx = sut.buildFromOmopCohort(cohort, persons, 100);
@@ -250,12 +256,12 @@ public class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  public void
+  void
       buildFromOmopCohort_withPersonWithJustTheBirthYear_shouldCreatePatientWithJustTheBirthYear() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohort");
-    var person = new OmopPerson().setPersonId(2).setYearOfBirth(Year.of(1976));
+    var person = Person.builder().personId(2L).yearOfBirth(Year.of(1976)).build();
     var persons = List.of(person);
 
     var fhirTrx = sut.buildFromOmopCohort(cohort, persons, 100);
