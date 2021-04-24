@@ -12,9 +12,7 @@ atlas:
   url: "http://localhost:8083/WebAPI"
 
 fhir:
-  # seems like there's an issue with the latest HAPI FHIR version and camel-fhir: "An attempt was made to call a method that does not exist."
-  # disabling for now...
-  logEnabled: false
+  url: "http://localhost:8082/fhir"
 
 # to configure logging levels
 logging:
@@ -32,4 +30,5 @@ logging:
 
 opentracing:
   jaeger:
+    enabled: true
     log-spans: true

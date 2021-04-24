@@ -23,8 +23,7 @@ omop:
   cdmSchema: "cds_cdm"
 
 fhir:
-  url: "http://localhost:8082/fhir"
-  logEnabled: false
+  url: ""
   systems:
     omopSubjectIdentifier: "http://ohdsi.org/omop/fhir/subject-identifier"
     omopCohortIdentifier: "http://ohdsi.org/omop/fhir/cohort-identifier"
