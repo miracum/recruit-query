@@ -3,6 +3,7 @@ package org.miracum.recruit.query;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -107,8 +108,6 @@ class VisitToEncounterMapperTests {
     var result = mapper.map(List.of(vo), patientReference);
     var encounters = getEncountersFromListOfBundleEntries(result);
 
-    assertThat(encounters).hasSize(2);
-
     for (var encounter : encounters) {
       assertThat(encounter.getClass_().getCode()).isEqualTo("AMB");
     }
@@ -129,11 +128,35 @@ class VisitToEncounterMapperTests {
     var result = mapper.map(List.of(vo), patientReference);
     var encounters = getEncountersFromListOfBundleEntries(result);
 
-    assertThat(encounters).hasSize(2);
-
+    // depending on a specific ordering for the encounters is not great
     assertThat(encounters.get(0).getLocationFirstRep().getLocation().getDisplay())
         .isEqualTo(careSite1.getCareSiteName());
     assertThat(encounters.get(1).getLocationFirstRep().getLocation().getDisplay())
         .isEqualTo(careSite2.getCareSiteName());
+  }
+
+  @Test
+  void map_withoutCareSite_shouldSetEncounterLocationDisplayToVisitDetailSourceValue() {
+    var vd = VisitDetail.builder().visitDetailSourceValue("Test").build();
+    var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
+
+    var result = mapper.map(List.of(vo), patientReference);
+    var encounters = getEncountersFromListOfBundleEntries(result);
+
+    assertThat(encounters.get(0).hasLocation()).isFalse();
+    assertThat(encounters.get(1).getLocationFirstRep().getLocation().getDisplay())
+        .isEqualTo(vd.getVisitDetailSourceValue());
+  }
+
+  @Test
+  void map_withVisitOccurrenceAndDetail_shouldSetSubEncounterPartOfToReferenceMainEncounter() {
+    var vd = VisitDetail.builder().visitDetailSourceValue("Test").build();
+    var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
+
+    var result = new ArrayList<>(mapper.map(List.of(vo), patientReference));
+
+    var mainEncounterFullUrl = result.get(0).getFullUrl();
+    var subEncounter = (Encounter) result.get(1).getResource();
+    assertThat(subEncounter.getPartOf().getReference()).isEqualTo(mainEncounterFullUrl);
   }
 }

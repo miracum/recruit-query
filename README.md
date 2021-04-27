@@ -10,8 +10,7 @@ Start OMOP DB, ATLAS, a FHIR server, and the screening list module as external d
 docker-compose -f deploy/docker-compose.dev.yml up
 ```
 
-Note that this uses the `quay.io/miracum/omop:test-data` image to create an OMOP database with test
-data which takes around 5 minutes to startup.
+Note that this uses the `quay.io/miracum/omop:test-data` image to create an OMOP database with test.
 
 This starts the services on the following localhost ports:
 
@@ -71,6 +70,17 @@ pre-commit install
          --data @deploy/sample-m-cohort.json \
          http://localhost:8083/WebAPI/cohortdefinition
    ```
+
+1. all connections to the DB are closed, and it's gracefully stopped by logging into the container
+   and running
+
+   ```sh
+   su postgres
+   pg_ctl stop
+   ```
+
+   This basically ensures that the postgres container doesn't take as long to restart,
+   see <https://github.com/docker-library/postgres/issues/544>
 
 1. the running container is committed to a new image by running
 

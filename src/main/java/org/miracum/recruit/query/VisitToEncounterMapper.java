@@ -19,7 +19,6 @@ import org.hl7.fhir.r4.model.Encounter.EncounterStatus;
 import org.hl7.fhir.r4.model.Period;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.ResourceType;
-import org.miracum.recruit.query.models.CareSite;
 import org.miracum.recruit.query.models.VisitDetail;
 import org.miracum.recruit.query.models.VisitOccurrence;
 import org.slf4j.Logger;
@@ -141,7 +140,8 @@ public class VisitToEncounterMapper {
     mainEncounter.setSubject(patientReference);
 
     if (visitOccurrence.getCareSite() != null) {
-      var locationReference = createReferenceFromCareSite(visitOccurrence.getCareSite());
+      var locationReference =
+          createReferenceWithDisplay(visitOccurrence.getCareSite().getCareSiteName());
       mainEncounter.addLocation().setLocation(locationReference);
     }
 
@@ -195,10 +195,14 @@ public class VisitToEncounterMapper {
             visitDetail.getVisitDetailTypeConceptId(), impCoding);
     subEncounter.setClass_(encounterClass);
 
+    Reference locationReference;
     if (visitDetail.getCareSite() != null) {
-      var locationReference = createReferenceFromCareSite(visitDetail.getCareSite());
-      subEncounter.addLocation().setLocation(locationReference);
+      locationReference = createReferenceWithDisplay(visitDetail.getCareSite().getCareSiteName());
+    } else {
+      locationReference = createReferenceWithDisplay(visitDetail.getVisitDetailSourceValue());
     }
+
+    subEncounter.addLocation().setLocation(locationReference);
 
     // the visit_detail table does not contain stable identification data as opposed to the
     // visit_occurrence's visit_source_value. So we'll have to create a surrogate identifier
@@ -235,9 +239,7 @@ public class VisitToEncounterMapper {
                 .setUrl("Encounter"));
   }
 
-  private static Reference createReferenceFromCareSite(CareSite careSite) {
-    return new Reference()
-        .setType(ResourceType.Location.name())
-        .setDisplay(careSite.getCareSiteName());
+  private static Reference createReferenceWithDisplay(String display) {
+    return new Reference().setType(ResourceType.Location.name()).setDisplay(display);
   }
 }
