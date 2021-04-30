@@ -9,7 +9,13 @@ query:
   selector:
     matchLabels:
       - "UC1"
-
+  webapi:
+    auth:
+      enabled: false
+      oauth:
+        token-url: ""
+        client-id: ""
+        client-secret: ""
 atlas:
   url: ""
   cohortStatusCheckBackoffTime: 10000

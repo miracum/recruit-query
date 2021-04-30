@@ -58,7 +58,7 @@ public class Router extends RouteBuilder {
             ex -> {
               var template = ex.getContext().createProducerTemplate();
               template.asyncSendBody(
-                  AtlasWebApiRoute.GET_COHORT_DEFINITION, ex.getIn().getHeader("cohortId"));
+                  WebApiRoute.GET_COHORT_DEFINITION, ex.getIn().getHeader("cohortId"));
             })
         .transform()
         .simple("Successfully started Query Module for cohort ${header.cohortId}")
@@ -70,7 +70,7 @@ public class Router extends RouteBuilder {
         .to(START_COHORT_GENERATION);
 
     // Processing
-    from(START_COHORT_GENERATION).to(AtlasWebApiRoute.GET_COHORT_DEFINITIONS);
+    from(START_COHORT_GENERATION).to(WebApiRoute.GET_COHORT_DEFINITIONS);
 
     from(DONE_COHORT_GENERATION).to(OmopRoute.GET_PATIENTS);
 
