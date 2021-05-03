@@ -17,7 +17,7 @@ public class FhirSystems {
   private String researchStudyAcronym;
   private String screeningListCoding;
   private String studySource;
-  private String localIdentifier;
+  private String patientId;
   private String identifierType;
   private String encounterId;
   private String subEncounterId;

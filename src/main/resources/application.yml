@@ -33,6 +33,7 @@ fhir:
     screeningListCoding: "https://fhir.miracum.org/uc1/CodeSystem/screeningList"
     studySource: "https://fhir.miracum.org/uc1/recruit/generatedByQueryModule"
     localIdentifier: "https://fhir.miracum.org/core/NamingSystem/patientId"
+    patient-id: ${fhir.systems.localIdentifier}
     encounter-id: "https://fhir.miracum.org/identifiers/encounter-id"
     sub-encounter-id: "https://fhir.miracum.org/identifiers/sub-encounter-id"
     identifier-type: "http://terminology.hl7.org/CodeSystem/v2-0203"

@@ -178,7 +178,7 @@ public class FhirCohortTransactionBuilder {
     if (StringUtils.isNotEmpty(personInCohort.getSourceId())) {
       patient.addIdentifier(
           new Identifier()
-              .setSystem(systems.getLocalIdentifier())
+              .setSystem(systems.getPatientId())
               .setValue(personInCohort.getSourceId())
               .setType(
                   new CodeableConcept()
