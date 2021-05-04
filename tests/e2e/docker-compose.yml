@@ -9,18 +9,13 @@ services:
       HAPI_FHIR_FHIR_VERSION: "R4"
       HAPI_FHIR_CORS_ALLOWCREDENTIALS: "false"
       HAPI_FHIR_CORS_ALLOWED_ORIGIN: "*"
-    ports:
-      - "8082:8080"
 
   omopdb:
     image: quay.io/miracum/omop:test-data-v2
-    ports:
-      - "25432:5432"
 
   broadsea-webtools:
     image: harbor.miracum.org/miracum-etl/omop/webtools:v3.0.0-rc.1-cdm5.3.1
-    ports:
-      - "8083:8080"
+    restart: on-failure
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
@@ -37,22 +32,29 @@ services:
       FLYWAY_LOCATIONS: classpath:db/migration/postgresql
       FLYWAY_PLACEHOLDERS_OHDSISCHEMA: ohdsi
       FLYWAY_SCHEMAS: ohdsi
-    volumes:
-      - ./entrypoint.sh:/entrypoint.sh:ro
-    entrypoint: /entrypoint.sh
+    depends_on:
+      - omopdb
 
-  list:
-    image: harbor.miracum.org/uc1-recruit/list:v2.8
-    ports:
-      - "8084:8080"
+  query:
+    image: quay.io/miracum/recruit-query:${IMAGE_TAG}
     environment:
-      FHIR_URL: "http://fhir:8080/fhir"
-      KEYCLOAK_DISABLED: "true"
-      TRACING_ENABLED: "true"
+      FHIR_URL: http://fhir:8080/fhir
+      OMOP_JDBCURL: jdbc:postgresql://omopdb:5432/ohdsi
+      OMOP_USERNAME: postgres
+      OMOP_PASSWORD: postgres
+      OMOP_RESULTSSCHEMA: cds_results
+      OMOP_CDMSCHEMA: cds_cdm
+      ATLAS_URL: http://broadsea-webtools:8080/WebAPI
+      ATLAS_DATASOURCE: CDS-CDMV5
+      QUERY_SCHEDULE_UNIXCRON: "* * * * *"
+    depends_on:
+      - fhir
+      - omopdb
+      - broadsea-webtools
 
-  jaeger:
-    image: jaegertracing/all-in-one:1.22
-    ports:
-      - 16686:16686
-      - 6831:6831/udp
-      - 6832:6832/udp
+  tester:
+    build: .
+    environment:
+      FHIR_SERVER_URL: "http://fhir:8080/fhir"
+    depends_on:
+      - query

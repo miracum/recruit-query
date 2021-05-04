@@ -5,15 +5,15 @@ import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.sql.DataSource;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
-import org.miracum.recruit.query.models.OmopPerson;
+import org.miracum.recruit.query.models.Person;
+import org.miracum.recruit.query.repositories.VisitDetailRepository;
+import org.miracum.recruit.query.repositories.VisitOccurrenceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,22 +23,20 @@ public class OmopRoute extends RouteBuilder {
   static final String GET_PATIENTS = "direct:omop.getPatients";
   private static final Logger logger = LoggerFactory.getLogger(OmopRoute.class);
 
-  @Bean
-  public static DataSource dataSource(
-      @Value("${omop.jdbcUrl}") String jdbcUrl,
-      @Value("${omop.username}") String username,
-      @Value("${omop.password}") String password) {
-    var ds = new DriverManagerDataSource(jdbcUrl);
-    ds.setDriverClassName("org.postgresql.Driver");
-    ds.setUrl(jdbcUrl);
-    ds.setUsername(username);
-    ds.setPassword(password);
-    return ds;
-  }
-
   // catch SQL params from application.yml
   @Value("${query.excludePatientParameters.demographics}")
   private boolean excludePatientParams;
+
+  private final VisitOccurrenceRepository visitOccurrenceRepository;
+  private final VisitDetailRepository visitDetailRepository;
+
+  @Autowired
+  public OmopRoute(
+      VisitOccurrenceRepository visitOccurrenceRepository,
+      VisitDetailRepository visitDetailRepository) {
+    this.visitOccurrenceRepository = visitOccurrenceRepository;
+    this.visitDetailRepository = visitDetailRepository;
+  }
 
   /**
    * Create SQL-String to request data from OMOP DB Parameter to be requested can be set in
@@ -96,10 +94,10 @@ public class OmopRoute extends RouteBuilder {
             ex -> {
               @SuppressWarnings("unchecked")
               var result = (List<Map<String, Object>>) ex.getIn().getBody();
-              var patients = new ArrayList<OmopPerson>();
+              var patients = new ArrayList<Person>();
               for (Map<String, Object> row : result) {
-                OmopPerson patient = new OmopPerson();
-                patient.setPersonId((int) row.get("person_id"));
+                Person patient = new Person();
+                patient.setPersonId((long) (int) row.get("person_id"));
 
                 if (row.get("year_of_birth") != null) {
                   patient.setYearOfBirth(Year.of((int) row.get("year_of_birth")));
@@ -117,11 +115,34 @@ public class OmopRoute extends RouteBuilder {
                     && (row.get("vocabulary_id")).equals("Gender")) {
                   patient.setGender((String) row.getOrDefault("concept_name", null));
                 }
+
+                // for the purpose of recruitment support, we only really care about the most recent
+                // visit of a patient. However, since location data may not yet be available for
+                // that visit, we fetch the 5 most recent visits as a heuristic hoping one of them
+                // contains location/ward information.
+                var visitOccurrences =
+                    visitOccurrenceRepository.findFirst5ByPersonIdOrderByVisitStartDateDesc(
+                        patient.getPersonId());
+
+                // from a performance-perspective this isn't ideal as for each patient
+                // we have to create at most n * 5 + 1 DB queries, where n is the number of
+                // patients. We could use the "In" modifier to fetch all visit details for a given
+                // visit occurrence at once if it turns out to be too slow.
+                for (var visitOccurrence : visitOccurrences) {
+                  var visitDetails =
+                      visitDetailRepository
+                          .findTop5ByVisitOccurrenceIdOrderByVisitDetailStartDateDesc(
+                              visitOccurrence.getVisitOccurrenceId());
+                  visitOccurrence.setVisitDetails(visitDetails);
+                }
+
+                patient.setVisitOccurrences(visitOccurrences);
+
                 patients.add(patient);
               }
               ex.getIn().setBody(patients);
             })
-        .to("log:?level=INFO&showBody=true")
+        .to("log:?level=DEBUG&showBody=true")
         .log(
             LoggingLevel.DEBUG,
             logger,

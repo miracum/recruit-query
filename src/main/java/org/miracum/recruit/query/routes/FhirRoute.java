@@ -8,7 +8,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.hl7.fhir.r4.model.Bundle;
 import org.miracum.recruit.query.FhirCohortTransactionBuilder;
 import org.miracum.recruit.query.models.CohortDefinition;
-import org.miracum.recruit.query.models.OmopPerson;
+import org.miracum.recruit.query.models.Person;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ public class FhirRoute extends RouteBuilder {
             ex -> {
               // get data from omop db and save it in variables
               @SuppressWarnings("unchecked")
-              var patients = (List<OmopPerson>) ex.getIn().getBody();
+              var patients = (List<Person>) ex.getIn().getBody();
               var cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
               var cohortSize = (long) ex.getIn().getHeader("cohortSize");
               var transaction =
