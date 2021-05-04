@@ -14,7 +14,7 @@ services:
     image: quay.io/miracum/omop:test-data-v2
 
   broadsea-webtools:
-    image: harbor.miracum.org/miracum-etl/omop/webtools:v3.0.0-rc.1-cdm5.3.1
+    image: harbor.miracum.org/miracum-etl/omop/webtools:v3.0.1-rc.1-cdm5.3.1
     restart: on-failure
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
@@ -36,7 +36,7 @@ services:
       - omopdb
 
   query:
-    image: quay.io/miracum/recruit-query:${IMAGE_TAG}
+    image: ghcr.io/miracum/recruit/query:${IMAGE_TAG}
     environment:
       FHIR_URL: http://fhir:8080/fhir
       OMOP_JDBCURL: jdbc:postgresql://omopdb:5432/ohdsi
