@@ -1,5 +1,7 @@
 package org.miracum.recruit.query.routes;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.google.common.collect.Sets;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,6 +13,7 @@ import org.apache.camel.http.base.HttpOperationFailedException;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.miracum.recruit.query.CohortSelectorConfig;
 import org.miracum.recruit.query.LabelExtractor;
+import org.miracum.recruit.query.models.AccessResponseToken;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +22,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AtlasWebApiRoute extends RouteBuilder {
+public class WebApiRoute extends RouteBuilder {
 
-  static final String GET_COHORT_DEFINITIONS = "direct:atlas.getCohortDefinitions";
-  static final String GET_COHORT_DEFINITION = "direct:atlas.getCohortDefinition";
-  static final String RUN_COHORT_GENERATION = "direct:atlas.runCohortGeneration";
-  private static final Logger LOG = LoggerFactory.getLogger(AtlasWebApiRoute.class);
+  static final String GET_COHORT_DEFINITIONS = "direct:webApi.getCohortDefinitions";
+  static final String GET_COHORT_DEFINITION = "direct:webApi.getCohortDefinition";
+  static final String RUN_COHORT_GENERATION = "direct:webApi.runCohortGeneration";
+  static final String GET_OAUTH_TOKEN = "direct:authService";
+
+  private static final Logger LOG = LoggerFactory.getLogger(WebApiRoute.class);
   private static final String HEADER_GENERATION_STATUS = "generationStatus";
   private final Set<String> matchLabels;
   private final LabelExtractor labelExtractor;
@@ -35,8 +40,11 @@ public class AtlasWebApiRoute extends RouteBuilder {
   @Value("${atlas.dataSource}")
   private String dataSourceName;
 
+  @Value("${query.webapi.auth.enabled}")
+  private boolean isWebApiAuthEnabled;
+
   @Autowired
-  public AtlasWebApiRoute(CohortSelectorConfig selectorConfig, LabelExtractor labelExtractor) {
+  public WebApiRoute(CohortSelectorConfig selectorConfig, LabelExtractor labelExtractor) {
     this.matchLabels = selectorConfig.getMatchLabels();
     this.labelExtractor = labelExtractor;
   }
@@ -60,9 +68,39 @@ public class AtlasWebApiRoute extends RouteBuilder {
             LOG,
             "HTTP error during request processing. Failing after retrying.");
 
+    // @formatter:off
+    // @spotless:off
+    if (isWebApiAuthEnabled) {
+    // via https://gist.github.com/rafaeltuelho/4d2449ac9b709fd29d79fa89acd8b48b
+    from(GET_OAUTH_TOKEN)
+        .setHeader(Exchange.HTTP_METHOD, constant("POST"))
+        .setHeader(Exchange.CONTENT_TYPE)
+          .simple("application/x-www-form-urlencoded")
+        .setHeader("Accept")
+          .simple("application/json")
+        .setBody()
+          .constant("grant_type=client_credentials&client_id={{query.webapi.auth.oauth.client-id}}&client_secret={{query.webapi.auth.oauth.client-secret}}")
+        .to("{{query.webapi.auth.oauth.token-url}}")
+          .convertBodyTo(String.class)
+        .log(LoggingLevel.DEBUG, LOG, "response from OAuth token provider: ${body}")
+        .choice()
+          .when().simple("${header.CamelHttpResponseCode} == 200")
+                 .unmarshal().json(JsonLibrary.Jackson, AccessResponseToken.class)
+                 .setHeader("jwt").simple("${body.accessToken}")
+          .endChoice()
+          .otherwise()
+            .log("Failed to authenticate as {{query.webapi.auth.oauth.client-id}} against {{query.webapi.auth.oauth.token-url}}");
+    }
+
     // when running all cohorts
     from(GET_COHORT_DEFINITIONS)
-        .removeHeaders("CamelHttp*")
+        .choice()
+          .when(constant(isWebApiAuthEnabled))
+            .to(GET_OAUTH_TOKEN)
+            .setHeader("Authorization")
+              .simple("${header.jwt}")
+        .end()
+        .removeHeader("jwt")
         .setHeader(Exchange.HTTP_METHOD, constant("GET"))
         .to(baseUrl + "/cohortdefinition")
         .convertBodyTo(String.class)
@@ -78,17 +116,19 @@ public class AtlasWebApiRoute extends RouteBuilder {
 
     // when running just one cohort
     from(GET_COHORT_DEFINITION)
-        .removeHeaders("CamelHttp*")
+        .choice()
+          .when(constant(isWebApiAuthEnabled))
+            .to(GET_OAUTH_TOKEN)
+            .setHeader("Authorization")
+              .simple("${header.jwt}")
+        .end()
         .log("processing cohort: ${body}")
         .setHeader(Exchange.HTTP_METHOD, constant("GET"))
         .toD(baseUrl + "/cohortdefinition/${body}")
         .convertBodyTo(String.class)
         .unmarshal()
-        .json(JsonLibrary.Jackson, CohortDefinition.class) // Convert
-        // from
-        // json
-        // to
-        // CohortDefinition-Object
+        // Convert from json to CohortDefinition-Object
+        .json(JsonLibrary.Jackson, CohortDefinition.class)
         .log(LoggingLevel.DEBUG, LOG, "[cohort ${body.id}] response from webapi: ${body}")
         .process(
             ex -> {
@@ -99,11 +139,10 @@ public class AtlasWebApiRoute extends RouteBuilder {
 
     // generate a cohort
     from(RUN_COHORT_GENERATION)
-        .removeHeaders("CamelHttp*")
-        .log("[Cohort ${body.id}] processing cohort: ${body}")
+        .log("processing cohort: ${body}")
         .filter()
         .method(this, "isMatchingCohort")
-        .log(LoggingLevel.INFO, LOG, "[Cohort ${body.id}] cohort matches the selector labels")
+        .log("cohort=${body.id} matches the selector labels")
         .setHeader(Exchange.HTTP_METHOD, constant("GET"))
         // needed otherwise ConvertException
         .setHeader("cohort", body())
@@ -115,17 +154,25 @@ public class AtlasWebApiRoute extends RouteBuilder {
         .toD(baseUrl + "/cohortdefinition/${header.cohort.id}/info")
         .convertBodyTo(String.class)
         .setHeader(HEADER_GENERATION_STATUS, jsonpath("$.[0].status"))
-        .log("[Cohort ${header.cohort.id}] current status: ${header.generationStatus}")
+        .log(
+            LoggingLevel.INFO,
+            log,
+            "cohort=${header.cohort.id} current status=${header.generationStatus}")
         .delay(simple("${properties:atlas.cohortStatusCheckBackoffTime}"))
         .end()
         .choice()
         .when(header(HEADER_GENERATION_STATUS).isEqualTo("COMPLETE"))
-        .setBody(header("cohort"))
+          .setBody(header("cohort"))
         .to(Router.DONE_COHORT_GENERATION);
+    // @spotless:on
+    // @formatter:on
   }
 
   public boolean isMatchingCohort(@Body CohortDefinition definition) {
-    log.info("[Cohort {}] Checking against match labels {}.", definition.getId(), matchLabels);
+    log.info(
+        "Checking if {} matches labels {}.",
+        kv("cohort", definition.getId()),
+        kv("matchLabels", matchLabels));
     if (matchLabels.isEmpty()) {
       // if no match labels are specified, simply accept all cohorts
       return true;

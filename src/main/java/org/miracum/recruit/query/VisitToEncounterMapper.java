@@ -1,5 +1,7 @@
 package org.miracum.recruit.query;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.google.common.base.Strings;
 import java.sql.Date;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class VisitToEncounterMapper {
+
   private static final Logger LOG = LoggerFactory.getLogger(VisitToEncounterMapper.class);
 
   private static final String UUID_URN_PREFIX = "urn:uuid:";
@@ -68,7 +71,9 @@ public class VisitToEncounterMapper {
   private Collection<BundleEntryComponent> map(
       VisitOccurrence visitOccurrence, Reference patientReference) {
     if (Strings.isNullOrEmpty(visitOccurrence.getVisitSourceValue())) {
-      LOG.error("Given encounter does not have its source_value set. Not processing.");
+      LOG.error(
+          "Visit Occurrence {} does not have its source_value set. Not processing.",
+          kv("visitOccurrenceId", visitOccurrence.getVisitOccurrenceId()));
       return Collections.emptyList();
     }
 
@@ -107,8 +112,8 @@ public class VisitToEncounterMapper {
     } else {
       // TODO: cleanup using logback for key-value based structured logging
       LOG.debug(
-          "visit start date not set for visitSourceValue={}",
-          visitOccurrence.getVisitSourceValue());
+          "visit start date not set for {}",
+          kv("visitSourceValue", visitOccurrence.getVisitSourceValue()));
     }
 
     if (visitOccurrence.getVisitTypeConceptId() != null) {
@@ -172,9 +177,9 @@ public class VisitToEncounterMapper {
       period.setStart(Date.valueOf(visitDetail.getVisitDetailStartDate()));
     } else {
       LOG.debug(
-          "visit start date not set for visitSourceValue={} and visitDetailSourceValue={}",
-          visitOccurrence.getVisitSourceValue(),
-          visitDetail.getVisitDetailSourceValue());
+          "visit start date not set for {} and {}",
+          kv("visitSourceValue", visitOccurrence.getVisitSourceValue()),
+          kv("visitDetailSourceValue", visitDetail.getVisitDetailSourceValue()));
     }
 
     if (visitDetail.getVisitDetailTypeConceptId() != null) {
