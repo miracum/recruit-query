@@ -104,16 +104,27 @@ public class FhirCohortTransactionBuilder {
     String cohortId = cohort.getId().toString();
     String listId = "screeninglist-" + cohortId;
 
+    // Search in Description and then in the cohort name for a study acronym
+    var acronym = labelExtractor.extractByTag("acronym", cohort.getDescription());
+    if (acronym == null) {
+      acronym = labelExtractor.extractByTag("acronym", cohort.getName());
+    }
+
+    // if all else fails, use the cohort name as the study acronym
+    if (acronym == null) {
+      acronym = cohort.getName();
+    }
+
     // create BUNDLE
     Bundle transaction = new Bundle().setType(Bundle.BundleType.TRANSACTION);
 
     // create RESEARCHSTUDY and add to bundle
-    ResearchStudy study = createResearchStudy(cohort);
+    ResearchStudy study = createResearchStudy(cohort, acronym);
     UUID studyUuid = UUID.randomUUID();
     transaction.addEntry(createStudyBundleEntryComponent(study, cohortId, studyUuid));
 
     // create SCREENINGLIST
-    ListResource screeningList = createScreeninglist(listId, studyUuid);
+    ListResource screeningList = createScreeningList(listId, studyUuid, acronym);
     if (cohortSize > personsInCohort.size()) {
       screeningList.addNote(
           new Annotation()
@@ -207,7 +218,7 @@ public class FhirCohortTransactionBuilder {
                         + patient.getIdentifier().get(0).getValue()));
   }
 
-  private ResearchStudy createResearchStudy(CohortDefinition cohort) {
+  private ResearchStudy createResearchStudy(CohortDefinition cohort, String acronym) {
     var study =
         new ResearchStudy()
             .setStatus(ResearchStudy.ResearchStudyStatus.ACTIVE)
@@ -226,11 +237,7 @@ public class FhirCohortTransactionBuilder {
       var description = cohort.getDescription().replaceAll("\\[.*]", "").trim();
       study.setDescription(description);
     }
-    // Search in Description and then in Title for a description
-    String acronym = labelExtractor.extractByTag("acronym", cohort.getDescription());
-    if (acronym == null) {
-      acronym = labelExtractor.extractByTag("acronym", cohort.getName());
-    }
+
     if (acronym != null) {
       study.addExtension(systems.getResearchStudyAcronym(), new StringType(acronym));
     }
@@ -267,7 +274,7 @@ public class FhirCohortTransactionBuilder {
                 .setUrl("ResearchSubject"));
   }
 
-  private ListResource createScreeninglist(String listId, UUID studyUuid) {
+  private ListResource createScreeningList(String listId, UUID studyUuid, String acronym) {
     var list =
         new ListResource()
             .setStatus(ListResource.ListStatus.CURRENT)
@@ -281,11 +288,12 @@ public class FhirCohortTransactionBuilder {
             .addIdentifier(
                 new Identifier().setSystem(systems.getScreeningListIdentifier()).setValue(listId));
 
-    // add Study to screeninglist as an extension
+    // add Study to screening list as an extension
+    var studyReference = new Reference(UUID_URN_PREFIX + studyUuid).setDisplay(acronym);
     list.addExtension(
         new Extension()
             .setUrl(systems.getScreeningListStudyReferenceExtension())
-            .setValue(new Reference(UUID_URN_PREFIX + studyUuid)));
+            .setValue(studyReference));
     return list;
   }
 

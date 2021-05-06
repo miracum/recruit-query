@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.ResearchStudy;
 import org.hl7.fhir.r4.model.ResearchSubject;
 import org.hl7.fhir.r4.model.StringType;
@@ -31,6 +32,8 @@ class FhirCohortTransactionBuilderTests {
     systems.setResearchStudyAcronym(
         "https://fhir.miracum.org/uc1/StructureDefinition/studyAcronym");
     systems.setStudySource("https://fhir.miracum.org/uc1/recruit#generatedByQueryModule");
+    systems.setScreeningListStudyReferenceExtension(
+        "https://fhir.miracum.org/uc1/StructureDefinition/belongsToStudy");
   }
 
   @Test
@@ -51,6 +54,17 @@ class FhirCohortTransactionBuilderTests {
     var acronym =
         (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
     assertThat(acronym.getValue()).isEqualTo("testacronym");
+
+    var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
+    assertThat(lists).hasSize(1);
+    var list = lists.get(0);
+    assertThat(list.hasExtension(systems.getScreeningListStudyReferenceExtension())).isTrue();
+    var acronymFromList =
+        ((Reference)
+                list.getExtensionByUrl(systems.getScreeningListStudyReferenceExtension())
+                    .getValue())
+            .getDisplay();
+    assertThat(acronymFromList).isEqualTo("testacronym");
   }
 
   @Test
@@ -170,7 +184,7 @@ class FhirCohortTransactionBuilderTests {
   }
 
   @Test
-  void buildFromOmopCohort_withoutAcronymTag_shouldNotSetAcronym() {
+  void buildFromOmopCohort_withoutAcronymTag_shouldSetAcronymToCohortName() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
     cohort.setName("Testcohorte");
@@ -182,7 +196,9 @@ class FhirCohortTransactionBuilderTests {
     assertThat(studies).hasSize(1);
 
     var study = studies.get(0);
-    assertThat(study.hasExtension(systems.getResearchStudyAcronym())).isFalse();
+    var acronym =
+        (StringType) study.getExtensionByUrl(systems.getResearchStudyAcronym()).getValue();
+    assertThat(acronym.getValue()).isEqualTo(cohort.getName());
   }
 
   @Test
