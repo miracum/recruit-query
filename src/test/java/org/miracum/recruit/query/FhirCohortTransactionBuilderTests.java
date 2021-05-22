@@ -8,6 +8,7 @@ import java.time.Month;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
+import org.hl7.fhir.r4.model.Device;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
@@ -17,23 +18,23 @@ import org.hl7.fhir.r4.model.StringType;
 import org.junit.jupiter.api.Test;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest(classes = {FhirSystems.class})
+@EnableConfigurationProperties(value = {FhirSystems.class})
 class FhirCohortTransactionBuilderTests {
+  private static final FhirContext fhirContext = FhirContext.forR4();
 
-  private final FhirSystems systems = new FhirSystems();
-  private final FhirContext fhirContext = FhirContext.forR4();
-  private final int MAXSIZE = 10;
-  private final FhirCohortTransactionBuilder sut =
-      new FhirCohortTransactionBuilder(
-          systems, MAXSIZE, false, new VisitToEncounterMapper(systems));
+  private final FhirSystems systems;
+  private final FhirCohortTransactionBuilder sut;
 
-  // TODO: refactor to auto-wire dependencies
-  public FhirCohortTransactionBuilderTests() {
-    systems.setResearchStudyAcronym(
-        "https://fhir.miracum.org/uc1/StructureDefinition/studyAcronym");
-    systems.setStudySource("https://fhir.miracum.org/uc1/recruit#generatedByQueryModule");
-    systems.setScreeningListStudyReferenceExtension(
-        "https://fhir.miracum.org/uc1/StructureDefinition/belongsToStudy");
+  @Autowired
+  public FhirCohortTransactionBuilderTests(FhirSystems fhirSystems) {
+    this.systems = fhirSystems;
+    var mapper = new VisitToEncounterMapper(fhirSystems);
+    sut = new FhirCohortTransactionBuilder(fhirSystems, 100, false, mapper);
   }
 
   @Test
@@ -184,6 +185,19 @@ class FhirCohortTransactionBuilderTests {
   }
 
   @Test
+  void buildFromOmopCohort_withGivenPersons_shouldCreateDeviceResource() {
+    var cohort = new CohortDefinition();
+    cohort.setId(4L);
+    cohort.setName("Testcohort");
+
+    var fhirTrx = sut.buildFromOmopCohort(cohort, List.of(), 100);
+    var studies = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Device.class);
+    assertThat(studies).hasSize(1);
+    var device = studies.get(0);
+    assertThat(device.getIdentifierFirstRep().getValue()).startsWith("query-");
+  }
+
+  @Test
   void buildFromOmopCohort_withoutAcronymTag_shouldSetAcronymToCohortName() {
     var cohort = new CohortDefinition();
     cohort.setId(4L);
@@ -267,7 +281,7 @@ class FhirCohortTransactionBuilderTests {
     var patient = patients.get(0);
 
     assertThat(patient.getBirthDateElement().getYear()).isEqualTo(1976);
-    assertThat(patient.getBirthDateElement().getMonth()).isEqualTo(1); // the month is 0-based...
+    assertThat(patient.getBirthDateElement().getMonth()).isEqualTo(1); // the month is   0-based...
     assertThat(patient.getBirthDateElement().getDay()).isEqualTo(12);
   }
 

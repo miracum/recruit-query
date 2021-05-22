@@ -11,6 +11,11 @@ import org.hl7.fhir.r4.model.Bundle.BundleEntryRequestComponent;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateType;
+import org.hl7.fhir.r4.model.Device;
+import org.hl7.fhir.r4.model.Device.DeviceDeviceNameComponent;
+import org.hl7.fhir.r4.model.Device.DeviceNameType;
+import org.hl7.fhir.r4.model.Device.DeviceVersionComponent;
+import org.hl7.fhir.r4.model.Device.FHIRDeviceStatus;
 import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.Identifier;
@@ -19,6 +24,7 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.ResearchStudy;
 import org.hl7.fhir.r4.model.ResearchSubject;
+import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.StringType;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
@@ -29,6 +35,7 @@ import org.springframework.stereotype.Service;
 public class FhirCohortTransactionBuilder {
 
   private static final String UUID_URN_PREFIX = "urn:uuid:";
+  private static final String MATCH_LABELS_REGEX = "\\[.*]";
 
   private static AdministrativeGender getGenderFromOmop(String gender) {
     if (gender == null) {
@@ -72,12 +79,14 @@ public class FhirCohortTransactionBuilder {
   }
 
   private final FhirSystems systems;
-
-  private int maxListSize;
+  private final int maxListSize;
   private final boolean shouldNotCreateEncounters;
   private final VisitToEncounterMapper visitToEncounterMapper;
 
   private final LabelExtractor labelExtractor = new LabelExtractor();
+
+  @Value("${app.version}")
+  private String appVersion;
 
   public FhirCohortTransactionBuilder(
       FhirSystems fhirSystems,
@@ -112,11 +121,16 @@ public class FhirCohortTransactionBuilder {
 
     // if all else fails, use the cohort name as the study acronym
     if (acronym == null) {
-      acronym = cohort.getName().replaceAll("\\[.*]", "").trim();
+      acronym = cohort.getName().replaceAll(MATCH_LABELS_REGEX, "").trim();
     }
 
     // create BUNDLE
     Bundle transaction = new Bundle().setType(Bundle.BundleType.TRANSACTION);
+
+    var device = createDeviceBundleEntryComponent();
+    transaction.addEntry(device);
+    var deviceReference =
+        new Reference(device.getFullUrl()).setDisplay("recruIT query module " + appVersion);
 
     // create RESEARCHSTUDY and add to bundle
     ResearchStudy study = createResearchStudy(cohort, acronym);
@@ -124,7 +138,7 @@ public class FhirCohortTransactionBuilder {
     transaction.addEntry(createStudyBundleEntryComponent(study, cohortId, studyUuid));
 
     // create SCREENINGLIST
-    ListResource screeningList = createScreeningList(listId, studyUuid, acronym);
+    ListResource screeningList = createScreeningList(listId, studyUuid, acronym, deviceReference);
     if (cohortSize > personsInCohort.size()) {
       screeningList.addNote(
           new Annotation()
@@ -147,7 +161,7 @@ public class FhirCohortTransactionBuilder {
       var subjectUuid = UUID.randomUUID();
       transaction.addEntry(
           createResearchSubjectBundleEntryComponent(
-              researchSubject, subjectUuid, personInCohort.getPersonId(), cohortId));
+              researchSubject, subjectUuid, patient.getIdentifierFirstRep(), cohortId));
       // add to SCREENINGLIST
       screeningList.addEntry(
           new ListResource.ListEntryComponent()
@@ -229,12 +243,12 @@ public class FhirCohortTransactionBuilder {
     study.getMeta().setSource(systems.getStudySource());
 
     if (cohort.getName() != null) {
-      var title = cohort.getName().replaceAll("\\[.*]", "").trim();
+      var title = cohort.getName().replaceAll(MATCH_LABELS_REGEX, "").trim();
       study.setTitle(title);
     }
 
     if (cohort.getDescription() != null) {
-      var description = cohort.getDescription().replaceAll("\\[.*]", "").trim();
+      var description = cohort.getDescription().replaceAll(MATCH_LABELS_REGEX, "").trim();
       study.setDescription(description);
     }
 
@@ -254,7 +268,7 @@ public class FhirCohortTransactionBuilder {
   }
 
   private BundleEntryComponent createResearchSubjectBundleEntryComponent(
-      ResearchSubject researchSubject, UUID subjectUuid, Long personId, String cohortId) {
+      ResearchSubject researchSubject, UUID subjectUuid, Identifier patientId, String cohortId) {
     return new BundleEntryComponent()
         .setResource(researchSubject)
         .setFullUrl(UUID_URN_PREFIX + subjectUuid)
@@ -263,22 +277,28 @@ public class FhirCohortTransactionBuilder {
                 .setMethod(Bundle.HTTPVerb.POST)
                 .setIfNoneExist(
                     "patient.identifier="
-                        + systems.getOmopSubjectIdentifier()
+                        + patientId.getSystem()
                         + "|"
-                        + personId
+                        + patientId.getValue()
                         + "&"
                         + "study.identifier="
                         + systems.getOmopCohortIdentifier()
                         + "|"
                         + cohortId)
-                .setUrl("ResearchSubject"));
+                .setUrl(ResourceType.ResearchSubject.name()));
   }
 
-  private ListResource createScreeningList(String listId, UUID studyUuid, String acronym) {
+  private ListResource createScreeningList(
+      String listId, UUID studyUuid, String acronym, Reference deviceReference) {
     var list =
         new ListResource()
             .setStatus(ListResource.ListStatus.CURRENT)
             .setMode(ListResource.ListMode.WORKING)
+            .setTitle(String.format("Screening list for the '%s' study", acronym))
+            .setSource(deviceReference)
+            .setOrderedBy(
+                new CodeableConcept()
+                    .addCoding(new Coding(systems.getListOrder(), "system", "Sorted by System")))
             .setCode(
                 new CodeableConcept()
                     .addCoding(
@@ -297,6 +317,41 @@ public class FhirCohortTransactionBuilder {
     return list;
   }
 
+  private BundleEntryComponent createDeviceBundleEntryComponent() {
+    var identifier =
+        new Identifier().setSystem(systems.getDeviceId()).setValue("query-" + appVersion);
+
+    var deviceNames =
+        List.of(
+            new DeviceDeviceNameComponent()
+                .setName("query")
+                .setType(DeviceNameType.MANUFACTURERNAME),
+            new DeviceDeviceNameComponent()
+                .setName("recruIT Query Module")
+                .setType(DeviceNameType.USERFRIENDLYNAME));
+
+    var deviceVersion = new DeviceVersionComponent().setValue(appVersion);
+
+    var device =
+        new Device()
+            .setIdentifier(List.of(identifier))
+            .setStatus(FHIRDeviceStatus.ACTIVE)
+            .setManufacturer("miracum.org")
+            .setDeviceName(deviceNames)
+            .setVersion(List.of(deviceVersion));
+
+    return new BundleEntryComponent()
+        .setResource(device)
+        .setFullUrl(UUID_URN_PREFIX + UUID.randomUUID())
+        .setRequest(
+            new BundleEntryRequestComponent()
+                .setMethod(Bundle.HTTPVerb.POST)
+                .setIfNoneExist(
+                    String.format(
+                        "identifier=%s|%s", identifier.getSystem(), identifier.getValue()))
+                .setUrl(ResourceType.Device.name()));
+  }
+
   private BundleEntryComponent createStudyBundleEntryComponent(
       ResearchStudy study, String cohortId, UUID studyUuid) {
     return new BundleEntryComponent()
@@ -310,15 +365,5 @@ public class FhirCohortTransactionBuilder {
                         + systems.getOmopCohortIdentifier()
                         + "|"
                         + cohortId));
-  }
-
-  public FhirSystems getSystems() {
-    return this.systems;
-  }
-
-  // --------------------------------------GETTERS AND
-  // SETTERS-------------------------------------------------------------//
-  public void setMaxListSize(int maxListSize) {
-    this.maxListSize = maxListSize;
   }
 }
