@@ -12,6 +12,7 @@ from fhirclient.models.encounter import Encounter
 from fhirclient.models.patient import Patient
 from fhirclient.models.researchsubject import ResearchSubject
 from fhirclient.models.list import List
+from fhirclient.models.device import Device
 from fhirclient.models.domainresource import DomainResource
 
 
@@ -21,6 +22,7 @@ EXPECTED_RESOURCE_COUNTS = [
     (Patient, 10),
     (ResearchSubject, 10),
     (Encounter, 27),
+    (Device, 1),
 ]
 
 
