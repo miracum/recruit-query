@@ -3,6 +3,8 @@ package org.miracum.recruit.query;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class LabelExtractorTests {
 
@@ -15,23 +17,17 @@ class LabelExtractorTests {
     assertThat(result).contains("a", "b");
   }
 
-  @Test
-  void extract_WithEmptyString_returnsEmptySet() {
+  @ParameterizedTest
+  @ValueSource(strings = {"", "hello world ]"})
+  void extract_withGivenString_returnsEmptySet() {
     var result = sut.extract("");
 
     assertThat(result).isEmpty();
   }
 
   @Test
-  void extract_WithNullString_returnsDisctinct() {
+  void extract_withNullString_returnsEmptySet() {
     var result = sut.extract(null);
-
-    assertThat(result).isEmpty();
-  }
-
-  @Test
-  void extract_WithoutLabels_returnsEmptySet() {
-    var result = sut.extract("hello world ]");
 
     assertThat(result).isEmpty();
   }

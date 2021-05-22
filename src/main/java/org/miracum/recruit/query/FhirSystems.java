@@ -3,10 +3,8 @@ package org.miracum.recruit.query;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@PropertySource("classpath:application.yml")
 @ConfigurationProperties(prefix = "fhir.systems")
 @Data
 public class FhirSystems {
@@ -22,4 +20,6 @@ public class FhirSystems {
   private String encounterId;
   private String subEncounterId;
   private String actEncounterCode;
+  private String listOrder;
+  private String deviceId;
 }
