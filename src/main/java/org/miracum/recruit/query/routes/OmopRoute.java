@@ -21,6 +21,7 @@ public class OmopRoute extends RouteBuilder {
 
   static final String GET_PATIENT_IDS = "direct:omop.getPatientIds";
   static final String GET_PATIENTS = "direct:omop.getPatients";
+  static final String CLEAR_CACHE = "direct:omop.clearCache";
   private static final Logger logger = LoggerFactory.getLogger(OmopRoute.class);
 
   // catch SQL params from application.yml
@@ -149,5 +150,13 @@ public class OmopRoute extends RouteBuilder {
             "[Cohort ${header.cohort.id}] found ${body.size()} patient(s) for cohort id ${header.cohort.id}")
         .to(Router.DONE_GET_PATIENTS);
     // @formatter:on
+    
+    
+    from(CLEAR_CACHE)
+    .log("clear cohort cache")
+  	.to("sql:TRUNCATE TABLE ohdsi.generation_cache CONTINUE IDENTITY RESTRICT;")
+  	.log("${body}")
+  	.to(Router.START_COHORT_GENERATION);
   }
-}
+  
+ }

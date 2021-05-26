@@ -15,6 +15,7 @@ public class Router extends RouteBuilder {
   public static final String DONE_COHORT_GENERATION = "direct:main.doneWithCohort";
   public static final String DONE_GET_PATIENTS = "direct:main.doneGetPatients";
   public static final String START_COHORT_GENERATION = "direct:main.startWithCohort";
+  public static final String CLEAR_COHORT_CACHE = "direct:main.clearCache";
 
   @Bean
   public CamelContextConfiguration camelContextConfiguration() {
@@ -67,9 +68,11 @@ public class Router extends RouteBuilder {
     // Run from timer
     from("cron:getCohorts?schedule=0+{{query.schedule.unixCron}}")
         .autoStartup("{{query.schedule.enable}}")
-        .to(START_COHORT_GENERATION);
+        .to(CLEAR_COHORT_CACHE);
 
     // Processing
+    from(CLEAR_COHORT_CACHE).to(OmopRoute.CLEAR_CACHE);
+    
     from(START_COHORT_GENERATION).to(WebApiRoute.GET_COHORT_DEFINITIONS);
 
     from(DONE_COHORT_GENERATION).to(OmopRoute.GET_PATIENTS);
