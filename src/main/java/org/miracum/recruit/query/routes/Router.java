@@ -72,7 +72,7 @@ public class Router extends RouteBuilder {
 
     // Processing
     from(CLEAR_COHORT_CACHE).to(OmopRoute.CLEAR_CACHE);
-    
+
     from(START_COHORT_GENERATION).to(WebApiRoute.GET_COHORT_DEFINITIONS);
 
     from(DONE_COHORT_GENERATION).to(OmopRoute.GET_PATIENTS);
