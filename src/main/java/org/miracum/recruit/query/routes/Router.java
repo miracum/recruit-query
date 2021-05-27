@@ -54,7 +54,7 @@ public class Router extends RouteBuilder {
         // run a cohort from the omop cohort-id
         .post("/{cohortId}")
         .route()
-        .log(LoggingLevel.INFO, "Run cohort ${header.cohortId} in query module from external call")
+        .log(LoggingLevel.INFO, "Run cohort ${header.cohortId} in query module from external call")  
         .process(
             ex -> {
               var template = ex.getContext().createProducerTemplate();
@@ -68,15 +68,17 @@ public class Router extends RouteBuilder {
     // Run from timer
     from("cron:getCohorts?schedule=0+{{query.schedule.unixCron}}")
         .autoStartup("{{query.schedule.enable}}")
-        .to(CLEAR_COHORT_CACHE);
+        .to(START_COHORT_GENERATION);
 
     // Processing
-    from(CLEAR_COHORT_CACHE).to(OmopRoute.CLEAR_CACHE);
 
-    from(START_COHORT_GENERATION).to(WebApiRoute.GET_COHORT_DEFINITIONS);
+    from(START_COHORT_GENERATION)
+    	.to(OmopRoute.CLEAR_CACHE)
+    	.to(WebApiRoute.GET_COHORT_DEFINITIONS);
 
     from(DONE_COHORT_GENERATION).to(OmopRoute.GET_PATIENTS);
 
     from(DONE_GET_PATIENTS).to(FhirRoute.CREATE_SCREENING_LIST);
   }
 }
+

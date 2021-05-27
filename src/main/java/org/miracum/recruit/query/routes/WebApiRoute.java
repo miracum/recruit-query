@@ -116,6 +116,7 @@ public class WebApiRoute extends RouteBuilder {
 
     // when running just one cohort
     from(GET_COHORT_DEFINITION)
+    	.to(OmopRoute.CLEAR_CACHE)
         .choice()
           .when(constant(isWebApiAuthEnabled))
             .to(GET_OAUTH_TOKEN)
