@@ -54,7 +54,7 @@ public class Router extends RouteBuilder {
         // run a cohort from the omop cohort-id
         .post("/{cohortId}")
         .route()
-        .log(LoggingLevel.INFO, "Run cohort ${header.cohortId} in query module from external call")  
+        .log(LoggingLevel.INFO, "Run cohort ${header.cohortId} in query module from external call")
         .process(
             ex -> {
               var template = ex.getContext().createProducerTemplate();
