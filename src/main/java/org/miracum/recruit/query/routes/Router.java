@@ -15,7 +15,6 @@ public class Router extends RouteBuilder {
   public static final String DONE_COHORT_GENERATION = "direct:main.doneWithCohort";
   public static final String DONE_GET_PATIENTS = "direct:main.doneGetPatients";
   public static final String START_COHORT_GENERATION = "direct:main.startWithCohort";
-  public static final String CLEAR_COHORT_CACHE = "direct:main.clearCache";
 
   @Bean
   public CamelContextConfiguration camelContextConfiguration() {
