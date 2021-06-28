@@ -11,7 +11,7 @@ services:
       HAPI_FHIR_CORS_ALLOWED_ORIGIN: "*"
 
   omopdb:
-    image: quay.io/miracum/omop:test-data-v2
+    image: quay.io/miracum/omop:test-data-v3
 
   broadsea-webtools:
     image: harbor.miracum.org/miracum-etl/omop/webtools:v3.0.1-rc.1-cdm5.3.1
@@ -32,6 +32,16 @@ services:
       FLYWAY_LOCATIONS: classpath:db/migration/postgresql
       FLYWAY_PLACEHOLDERS_OHDSISCHEMA: ohdsi
       FLYWAY_SCHEMAS: ohdsi
+      SECURITY_PROVIDER: "AtlasRegularSecurity"
+      SECURITY_DB_DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
+      SECURITY_DB_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      SECURITY_DB_DATASOURCE_SCHEMA: ohdsi
+      SECURITY_DB_DATASOURCE_USERNAME: postgres
+      SECURITY_DB_DATASOURCE_PASSWORD: postgres
+      SECURITY_DB_DATASOURCE_AUTHENTICATIONQUERY: >-
+        SELECT password, first_name AS firstname, middle_name AS middlename, last_name AS lastname, username
+        FROM ohdsi.basic_security_users
+        WHERE username = ?
     depends_on:
       - omopdb
 
@@ -44,9 +54,13 @@ services:
       OMOP_PASSWORD: postgres
       OMOP_RESULTSSCHEMA: cds_results
       OMOP_CDMSCHEMA: cds_cdm
-      ATLAS_URL: http://broadsea-webtools:8080/WebAPI
       ATLAS_DATASOURCE: CDS-CDMV5
       QUERY_SCHEDULE_UNIXCRON: "* * * * *"
+      QUERY_WEBAPI_BASE_URL: http://broadsea-webtools:8080/WebAPI
+      QUERY_WEBAPI_AUTH_ENABLED: "true"
+      QUERY_WEBAPI_AUTH_LOGIN_PATH: "/user/login/db"
+      QUERY_WEBAPI_AUTH_USERNAME: "recruit-query-module"
+      QUERY_WEBAPI_AUTH_PASSWORD: "pass123"
     depends_on:
       - fhir
       - omopdb
