@@ -5,17 +5,14 @@ omop:
 
 query:
   schedule:
-    enable: true
     unixCron: "* * * * *" # run every minute
   webapi:
+    base-url: "http://localhost:8083/WebAPI"
     auth:
-      enabled: false
-      oauth:
-        token-url: "http://localhost:8085/auth/realms/MIRACUM/protocol/openid-connect/token"
-        client-id: "recruit-query-user"
-        client-secret: "a311cfd8-81bf-499b-b2b4-b5b4e0fffe24"
-atlas:
-  url: "http://localhost:8083/WebAPI"
+      enabled: true
+      login-path: "/user/login/db"
+      username: "recruit-query-module"
+      password: "pass123"
 
 fhir:
   url: "http://localhost:8082/fhir"

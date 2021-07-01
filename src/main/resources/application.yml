@@ -10,12 +10,13 @@ query:
     matchLabels:
       - "UC1"
   webapi:
+    base-url: ${atlas.url}
     auth:
       enabled: false
-      oauth:
-        token-url: ""
-        client-id: ""
-        client-secret: ""
+      login-path: "/user/login/db"
+      username: ""
+      password: ""
+
 atlas:
   url: ""
   cohortStatusCheckBackoffTime: 10000

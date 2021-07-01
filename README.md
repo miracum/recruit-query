@@ -71,6 +71,31 @@ pre-commit install
          http://localhost:8083/WebAPI/cohortdefinition
    ```
 
+1. the basic security tables are added,
+   see <https://github.com/OHDSI/WebAPI/wiki/Basic-Security-Configuration#database>:
+
+   ```sql
+      CREATE TABLE ohdsi.basic_security_users
+      (
+      username    character varying(255),
+      password    character varying(255),
+      first_name  character varying(255),
+      middle_name character varying(255),
+      last_name   character varying(255),
+      email       character varying(255)
+      );
+
+      -- may be required on a local installation
+      -- ALTER TABLE ohdsi.basic_security_users
+      -- OWNER to ohdsi_admin_user;
+      -- GRANT ALL ON TABLE ohdsi.basic_security_users TO ohdsi_admin_user WITH GRANT OPTION;
+
+      -- bcrypt 'pass123' = $2a$10$7RGwXpZ9mEb8uVPs/scj3OykBTsdtb8QyTE7Os6m8Ty7n56et.1Oy
+      INSERT INTO ohdsi.basic_security_users (username, password, email)
+      VALUES ('recruit-query-module', '$2a$10$7RGwXpZ9mEb8uVPs/scj3OykBTsdtb8QyTE7Os6m8Ty7n56et.1Oy',
+      'recruit-query-module@example.com')
+   ```
+
 1. all connections to the DB are closed, and it's gracefully stopped by logging into the container
    and running
 
