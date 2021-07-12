@@ -1,9 +1,9 @@
 plugins {
-    id "org.springframework.boot" version "2.4.5"
+    id "org.springframework.boot" version "2.5.2"
     id "io.spring.dependency-management" version "1.0.11.RELEASE"
     id "java"
     id "jacoco"
-    id "com.diffplug.spotless" version "5.12.4"
+    id "com.diffplug.spotless" version "5.14.0"
     id "io.freefair.lombok" version "5.3.3.3"
 }
 
@@ -13,8 +13,6 @@ sourceCompatibility = "11"
 
 repositories {
     mavenCentral()
-    maven { url "https://repo.spring.io/milestone" }
-    maven { url "https://repo.spring.io/snapshot" }
 }
 
 dependencies {
@@ -22,17 +20,17 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.springframework.boot:spring-boot-starter-data-jdbc"
 
-    implementation "org.apache.camel:camel-sql:3.9.0"
-    implementation "org.apache.camel:camel-jackson:3.9.0"
-    implementation "org.apache.camel:camel-jsonpath:3.9.0"
-    implementation "org.apache.camel:camel-fhir:3.9.0"
-    implementation "org.apache.camel:camel-http:3.9.0"
-    implementation "org.apache.camel:camel-cron:3.9.0"
-    implementation "org.apache.camel.springboot:camel-rest-starter:3.9.0"
-    implementation "org.apache.camel.springboot:camel-servlet-starter:3.9.0"
-    implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.9.0"
-    implementation "org.apache.camel.springboot:camel-micrometer-starter:3.9.0"
-    implementation "org.apache.camel.springboot:camel-opentracing-starter:3.9.0"
+    implementation "org.apache.camel:camel-sql:3.11.0"
+    implementation "org.apache.camel:camel-jackson:3.11.0"
+    implementation "org.apache.camel:camel-jsonpath:3.11.0"
+    implementation "org.apache.camel:camel-fhir:3.11.0"
+    implementation "org.apache.camel:camel-http:3.11.0"
+    implementation "org.apache.camel:camel-cron:3.11.0"
+    implementation "org.apache.camel.springboot:camel-rest-starter:3.11.0"
+    implementation "org.apache.camel.springboot:camel-servlet-starter:3.11.0"
+    implementation "org.apache.camel.springboot:camel-spring-boot-starter:3.11.0"
+    implementation "org.apache.camel.springboot:camel-micrometer-starter:3.11.0"
+    implementation "org.apache.camel.springboot:camel-opentracing-starter:3.11.0"
 
     implementation "io.jaegertracing:jaeger-client:1.6.0"
 
@@ -40,22 +38,22 @@ dependencies {
     implementation "io.opentracing.contrib:opentracing-spring-jaeger-web-starter:3.3.1"
     implementation "io.opentracing.contrib:opentracing-okhttp3:3.0.0"
 
-    implementation "io.micrometer:micrometer-registry-prometheus:1.6.6"
-    implementation "io.micrometer:micrometer-core:1.6.6"
+    implementation "io.micrometer:micrometer-registry-prometheus:1.7.1"
+    implementation "io.micrometer:micrometer-core:1.7.1"
 
-    implementation "ca.uhn.hapi.fhir:hapi-fhir-base:5.3.3"
-    implementation "ca.uhn.hapi.fhir:hapi-fhir-client:5.3.3"
-    implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:5.3.3"
-    implementation "ca.uhn.hapi.fhir:hapi-fhir-client-okhttp:5.3.3"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-base:5.4.1"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-client:5.4.1"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-structures-r4:5.4.1"
+    implementation "ca.uhn.hapi.fhir:hapi-fhir-client-okhttp:5.4.1"
 
     implementation "com.fasterxml.jackson.core:jackson-annotations:2.12.3"
-    implementation "org.postgresql:postgresql:42.2.20"
+    implementation "org.postgresql:postgresql:42.2.22"
 
     implementation "net.logstash.logback:logstash-logback-encoder:6.6"
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test:2.4.5") {
-        exclude group: "org.junit.vintage", module: "junit-vintage-engine"
-    }
+    implementation "net.minidev:json-smart:2.4.7"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
 
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
@@ -74,6 +72,10 @@ jacocoTestReport {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    enabled = false
 }
 
 spotless {
