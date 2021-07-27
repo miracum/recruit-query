@@ -276,7 +276,7 @@ public class FhirCohortTransactionBuilder {
             new BundleEntryRequestComponent()
                 .setMethod(Bundle.HTTPVerb.POST)
                 .setIfNoneExist(
-                    "patient.identifier="
+                    "ResearchSubject?patient.identifier="
                         + patientId.getSystem()
                         + "|"
                         + patientId.getValue()
