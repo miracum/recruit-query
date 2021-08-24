@@ -69,7 +69,7 @@ public class OmopRoute extends RouteBuilder {
           " LEFT JOIN {{omop.cdmSchema}}.concept ON {{omop.cdmSchema}}.concept.concept_id={{omop.cdmSchema}}.person.gender_concept_id");
     }
     sqlRequest.append(" WHERE {{omop.resultsSchema}}.cohort.cohort_definition_id=" + cohortId);
-    sqlRequest.append(" ORDER BY {{omop.resultsSchema}}.cohort.cohort_end_date DESC");
+    sqlRequest.append(" ORDER BY {{omop.resultsSchema}}.cohort.cohort_start_date DESC");
     sqlRequest.append(" LIMIT {{query.cohortSizeThreshold}};");
     return sqlRequest.toString();
   }
