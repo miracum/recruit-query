@@ -154,7 +154,7 @@ public class WebApiRoute extends RouteBuilder {
         .setHeader(Exchange.HTTP_METHOD, constant("GET"))
         // needed otherwise ConvertException
         .setHeader("cohort", body())
-        .setBody(constant(null))
+        .setBody().simple("${null}")
         .toD(baseUrl + "/cohortdefinition/${header.cohort.id}/generate/" + dataSourceName)
         .setHeader(HEADER_GENERATION_STATUS, constant("PENDING"))
         // Check Status of generation and loop while still running
