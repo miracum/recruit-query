@@ -57,20 +57,20 @@ public class WebApiRoute extends RouteBuilder {
   public void configure() throws MalformedURLException {
     // general error handler
     errorHandler(
-        defaultErrorHandler()
-            .maximumRedeliveries(5)
-            .redeliveryDelay(5000)
-            .retryAttemptedLogLevel(LoggingLevel.WARN));
+      defaultErrorHandler()
+        .maximumRedeliveries(5)
+        .redeliveryDelay(5000)
+        .retryAttemptedLogLevel(LoggingLevel.WARN));
 
     // in case of a http exception then retry at most 3 times
     onException(HttpOperationFailedException.class)
-        .maximumRedeliveries(3)
-        .handled(true)
-        .delay(10_000)
-        .log(
-            LoggingLevel.WARN,
-            LOG,
-            "HTTP error during request processing. Failing after retrying.");
+      .maximumRedeliveries(3)
+      .handled(true)
+      .delay(10_000)
+      .log(
+        LoggingLevel.WARN,
+        LOG,
+        "HTTP error during request processing. Failing after retrying.");
 
     // @formatter:off
     // @spotless:off
@@ -154,7 +154,7 @@ public class WebApiRoute extends RouteBuilder {
         .setHeader(Exchange.HTTP_METHOD, constant("GET"))
         // needed otherwise ConvertException
         .setHeader("cohort", body())
-        .setBody(constant(null))
+        .setBody().simple("${null}")
         .toD(baseUrl + "/cohortdefinition/${header.cohort.id}/generate/" + dataSourceName)
         .setHeader(HEADER_GENERATION_STATUS, constant("PENDING"))
         // Check Status of generation and loop while still running
@@ -178,9 +178,9 @@ public class WebApiRoute extends RouteBuilder {
 
   public boolean isMatchingCohort(@Body CohortDefinition definition) {
     log.info(
-        "Checking if {} matches labels {}.",
-        kv("cohort", definition.getId()),
-        kv("matchLabels", matchLabels));
+      "Checking if {} matches labels {}.",
+      kv("cohort", definition.getId()),
+      kv("matchLabels", matchLabels));
     if (matchLabels.isEmpty()) {
       // if no match labels are specified, simply accept all cohorts
       return true;
