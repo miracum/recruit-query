@@ -125,7 +125,7 @@ public class OmopRoute extends RouteBuilder {
                     visitOccurrenceRepository.findFirst5ByPersonIdOrderByVisitStartDateDesc(
                         patient.getPersonId());
 
-                // from a performance-perspective this isn't ideal as for each patient
+                // from a performance-perspective this isn't ideal as in total
                 // we have to create at most n * 5 + 1 DB queries, where n is the number of
                 // patients. We could use the "In" modifier to fetch all visit details for a given
                 // visit occurrence at once if it turns out to be too slow.
