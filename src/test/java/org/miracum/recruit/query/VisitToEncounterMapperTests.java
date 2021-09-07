@@ -30,15 +30,15 @@ class VisitToEncounterMapperTests {
 
   @Autowired private FhirSystems fhirSystems;
 
+  private static List<Encounter> getEncountersFromListOfBundleEntries(
+      Collection<BundleEntryComponent> entries) {
+    return entries.stream().map(e -> (Encounter) e.getResource()).collect(Collectors.toList());
+  }
+
   @BeforeEach
   void setUp() {
     this.mapper = new VisitToEncounterMapper(fhirSystems);
     this.patientReference = new Reference();
-  }
-
-  private static List<Encounter> getEncountersFromListOfBundleEntries(
-      Collection<BundleEntryComponent> entries) {
-    return entries.stream().map(e -> (Encounter) e.getResource()).collect(Collectors.toList());
   }
 
   @Test
@@ -146,6 +146,21 @@ class VisitToEncounterMapperTests {
     assertThat(encounters.get(0).hasLocation()).isFalse();
     assertThat(encounters.get(1).getLocationFirstRep().getLocation().getDisplay())
         .isEqualTo(vd.getVisitDetailSourceValue());
+  }
+
+  @Test
+  void
+      map_withVisitDetailCareSiteAndSourceValue_shouldSetLocationReferenceDisplayToConcatenationOfBoth() {
+    var careSite = CareSite.builder().careSiteName("Care Site").build();
+    var vd = VisitDetail.builder().careSite(careSite).visitDetailSourceValue("CS").build();
+    var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
+
+    var result = new ArrayList<>(mapper.map(List.of(vo), patientReference));
+    var encounters = getEncountersFromListOfBundleEntries(result);
+
+    var subEncounter = encounters.get(1);
+    assertThat(subEncounter.getLocationFirstRep().getLocation().getDisplay())
+        .isEqualTo("Care Site (CS)");
   }
 
   @Test

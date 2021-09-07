@@ -28,14 +28,37 @@ import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.StringType;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FhirCohortTransactionBuilder {
 
+  private static final Logger LOG = LoggerFactory.getLogger(FhirCohortTransactionBuilder.class);
+
   private static final String UUID_URN_PREFIX = "urn:uuid:";
   private static final String MATCH_LABELS_REGEX = "\\[.*]";
+  private final FhirSystems systems;
+  private final int maxListSize;
+  private final boolean shouldNotCreateEncounters;
+  private final VisitToEncounterMapper visitToEncounterMapper;
+  private final LabelExtractor labelExtractor = new LabelExtractor();
+
+  @Value("${app.version}")
+  private String appVersion;
+
+  public FhirCohortTransactionBuilder(
+      FhirSystems fhirSystems,
+      @Value("${query.cohortSizeThreshold}") int cohortSizeThreshold,
+      @Value("${query.excludePatientParameters.encounter}") boolean shouldNotCreateEncounters,
+      VisitToEncounterMapper visitToEncounterMapper) {
+    this.systems = fhirSystems;
+    this.maxListSize = cohortSizeThreshold;
+    this.visitToEncounterMapper = visitToEncounterMapper;
+    this.shouldNotCreateEncounters = shouldNotCreateEncounters;
+  }
 
   private static AdministrativeGender getGenderFromOmop(String gender) {
     if (gender == null) {
@@ -76,27 +99,6 @@ public class FhirCohortTransactionBuilder {
       }
     }
     return date;
-  }
-
-  private final FhirSystems systems;
-  private final int maxListSize;
-  private final boolean shouldNotCreateEncounters;
-  private final VisitToEncounterMapper visitToEncounterMapper;
-
-  private final LabelExtractor labelExtractor = new LabelExtractor();
-
-  @Value("${app.version}")
-  private String appVersion;
-
-  public FhirCohortTransactionBuilder(
-      FhirSystems fhirSystems,
-      @Value("${query.cohortSizeThreshold}") int cohortSizeThreshold,
-      @Value("${query.excludePatientParameters.encounter}") boolean shouldNotCreateEncounters,
-      VisitToEncounterMapper visitToEncounterMapper) {
-    this.systems = fhirSystems;
-    this.maxListSize = cohortSizeThreshold;
-    this.visitToEncounterMapper = visitToEncounterMapper;
-    this.shouldNotCreateEncounters = shouldNotCreateEncounters;
   }
 
   /**
@@ -169,8 +171,8 @@ public class FhirCohortTransactionBuilder {
 
       if (!shouldNotCreateEncounters) {
         var patientReference = new Reference(UUID_URN_PREFIX + patientUuid);
-        var encounterBundleEntries =
-            visitToEncounterMapper.map(personInCohort.getVisitOccurrences(), patientReference);
+        var visitOccurrences = personInCohort.getVisitOccurrences();
+        var encounterBundleEntries = visitToEncounterMapper.map(visitOccurrences, patientReference);
         for (var encounterBundleEntry : encounterBundleEntries) {
           transaction.addEntry(encounterBundleEntry);
         }

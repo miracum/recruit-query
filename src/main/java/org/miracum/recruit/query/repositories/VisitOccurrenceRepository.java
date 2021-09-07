@@ -13,7 +13,7 @@ public interface VisitOccurrenceRepository extends CrudRepository<VisitOccurrenc
   @Query(
       "SELECT visit_occurrence.*, care_site.* "
           + "FROM visit_occurrence "
-          + "         JOIN care_site ON visit_occurrence.care_site_id = care_site.care_site_id "
+          + "  LEFT JOIN care_site ON visit_occurrence.care_site_id = care_site.care_site_id "
           + "WHERE visit_occurrence.person_id = :personId "
           + "ORDER BY visit_start_date DESC "
           + "LIMIT 5")
