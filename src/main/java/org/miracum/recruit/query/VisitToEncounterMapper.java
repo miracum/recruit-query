@@ -58,6 +58,10 @@ public class VisitToEncounterMapper {
         new Coding(fhirSystems.getActEncounterCode(), "EMER", "emergency"));
   }
 
+  private static Reference createReferenceWithDisplay(String display) {
+    return new Reference().setType(ResourceType.Location.name()).setDisplay(display);
+  }
+
   public Collection<BundleEntryComponent> map(
       Collection<VisitOccurrence> visitOccurrences, Reference patientReference) {
     if (visitOccurrences == null) {
@@ -200,12 +204,20 @@ public class VisitToEncounterMapper {
             visitDetail.getVisitDetailTypeConceptId(), impCoding);
     subEncounter.setClass_(encounterClass);
 
-    Reference locationReference;
+    // construct the display value for the referenced Location
+    var referenceDisplayBuilder = new StringBuilder();
     if (visitDetail.getCareSite() != null) {
-      locationReference = createReferenceWithDisplay(visitDetail.getCareSite().getCareSiteName());
+      referenceDisplayBuilder.append(visitDetail.getCareSite().getCareSiteName());
+      if (visitDetail.getVisitDetailSourceValue() != null) {
+        referenceDisplayBuilder.append(
+            String.format(" (%s)", visitDetail.getVisitDetailSourceValue()));
+      }
+
     } else {
-      locationReference = createReferenceWithDisplay(visitDetail.getVisitDetailSourceValue());
+      referenceDisplayBuilder.append(visitDetail.getVisitDetailSourceValue());
     }
+
+    var locationReference = createReferenceWithDisplay(referenceDisplayBuilder.toString());
 
     subEncounter.addLocation().setLocation(locationReference);
 
@@ -242,9 +254,5 @@ public class VisitToEncounterMapper {
                         subEncounter.getIdentifierFirstRep().getSystem(),
                         subEncounter.getIdentifierFirstRep().getValue()))
                 .setUrl("Encounter"));
-  }
-
-  private static Reference createReferenceWithDisplay(String display) {
-    return new Reference().setType(ResourceType.Location.name()).setDisplay(display);
   }
 }
