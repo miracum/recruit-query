@@ -54,7 +54,7 @@ services:
     entrypoint: /entrypoint.sh
 
   list:
-    image: ghcr.io/miracum/recruit/list:v2.13.2
+    image: ghcr.io/miracum/recruit/list:v2.13.3
     ports:
       - "8084:8080"
     environment:
