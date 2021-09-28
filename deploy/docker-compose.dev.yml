@@ -1,8 +1,8 @@
-version: "3.7"
+version: "3.9"
 
 services:
   fhir:
-    image: ghcr.io/chgl/hapi/hapi-fhir-jpaserver-starter:5.5.0-pre1-snapshot
+    image: docker.io/hapiproject/hapi:v5.5.0-distroless
     environment:
       HAPI_FHIR_VALIDATION_REQUESTS_ENABLED: "true"
       HAPI_FHIR_SUBSCRIPTION_RESTHOOK_ENABLED: "true"
@@ -18,10 +18,11 @@ services:
     ports:
       - "25432:5432"
 
-  broadsea-webtools:
-    image: harbor.miracum.org/miracum-etl/omop/webtools:v3.0.1-rc.1-cdm5.3.1
+  ohdsi-webapi:
+    image: docker.io/ohdsi/webapi:2.10.0
     ports:
       - "8083:8080"
+    restart: on-failure
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
@@ -40,6 +41,8 @@ services:
       FLYWAY_SCHEMAS: ohdsi
       SECURITY_PROVIDER: "AtlasRegularSecurity"
       SECURITY_DB_DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
+      SECURITY_CORS_ENABLED: "true"
+      SECURITY_ORIGIN: "*"
       SECURITY_DB_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       SECURITY_DB_DATASOURCE_SCHEMA: ohdsi
       SECURITY_DB_DATASOURCE_USERNAME: postgres
@@ -48,15 +51,22 @@ services:
         SELECT password, first_name AS firstname, middle_name AS middlename, last_name AS lastname, username
         FROM ohdsi.basic_security_users
         WHERE username = ?
+    depends_on:
+      - omopdb
+
+  ohdsi-atlas:
+    image: docker.io/ohdsi/atlas:2.10.0
+    ports:
+      - "8084:8080"
+    environment:
+      WEBAPI_URL: "http://localhost:8083/WebAPI/"
     volumes:
-      - ./entrypoint.sh:/entrypoint.sh:ro
-      - ./config-local.js:/usr/local/tomcat/webapps/atlas/js/config-local.js:ro
-    entrypoint: /entrypoint.sh
+      - ./config-local.js:/usr/share/nginx/html/atlas/js/config-local.js
 
   list:
     image: ghcr.io/miracum/recruit/list:v2.13.3
     ports:
-      - "8084:8080"
+      - "8085:8080"
     environment:
       FHIR_URL: "http://fhir:8080/fhir"
       KEYCLOAK_DISABLED: "true"
