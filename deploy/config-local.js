@@ -4,13 +4,10 @@ define([], function () {
   // clearing local storage otherwise source cache will obscure the override settings
   localStorage.clear();
 
-  const getUrl = window.location;
-  const baseUrl = getUrl.protocol + "//" + getUrl.host;
-
   // WebAPI
   configLocal.api = {
     name: "OHDSI",
-    url: baseUrl + "/WebAPI/",
+    url: "http://localhost:8083/WebAPI/",
   };
 
   configLocal.cohortComparisonResultsEnabled = false;
@@ -23,7 +20,7 @@ define([], function () {
       url: "user/login/db",
       ajax: true,
       icon: "fa fa-openid",
-      isUseCredentialsForm: true
+      isUseCredentialsForm: true,
     },
   ];
 

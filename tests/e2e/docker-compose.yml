@@ -1,8 +1,8 @@
-version: "3.7"
+version: "3.9"
 
 services:
   fhir:
-    image: ghcr.io/chgl/hapi/hapi-fhir-jpaserver-starter:5.4.2-distroless
+    image: docker.io/hapiproject/hapi:v5.5.0-distroless
     environment:
       HAPI_FHIR_VALIDATION_REQUESTS_ENABLED: "true"
       HAPI_FHIR_SUBSCRIPTION_RESTHOOK_ENABLED: "true"
@@ -13,9 +13,10 @@ services:
   omopdb:
     image: quay.io/miracum/omop:test-data-v3
 
-  broadsea-webtools:
-    image: harbor.miracum.org/miracum-etl/omop/webtools:v3.0.1-rc.1-cdm5.3.1
-    restart: on-failure
+  ohdsi-webapi:
+    image: docker.io/ohdsi/webapi:2.10.0
+    ports:
+      - "8083:8080"
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
@@ -56,7 +57,7 @@ services:
       OMOP_CDMSCHEMA: cds_cdm
       ATLAS_DATASOURCE: CDS-CDMV5
       QUERY_SCHEDULE_UNIXCRON: "* * * * *"
-      QUERY_WEBAPI_BASE_URL: http://broadsea-webtools:8080/WebAPI
+      QUERY_WEBAPI_BASE_URL: http://ohdsi-webapi:8080/WebAPI
       QUERY_WEBAPI_AUTH_ENABLED: "true"
       QUERY_WEBAPI_AUTH_LOGIN_PATH: "/user/login/db"
       QUERY_WEBAPI_AUTH_USERNAME: "recruit-query-module"
@@ -64,7 +65,7 @@ services:
     depends_on:
       - fhir
       - omopdb
-      - broadsea-webtools
+      - ohdsi-webapi
 
   tester:
     build: .

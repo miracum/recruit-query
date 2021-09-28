@@ -17,8 +17,9 @@ This starts the services on the following localhost ports:
 | Service        | Port  | URL                                     |
 | -------------- | ----- | --------------------------------------- |
 | FHIR Server    | 8082  | <http://localhost:8082/>                |
-| OHDSI ATLAS    | 8083  | <http://localhost:8083/atlas>           |
-| Screening List | 8084  | <http://localhost:8084/>                |
+| OHDSI WebAPI   | 8083  | <http://localhost:8083/WebAPI/info>     |
+| OHDSI Atlas    | 8084  | <http://localhost:8084/atlas/>          |
+| Screening List | 8085  | <http://localhost:8085/>                |
 | OMOP Database  | 25432 | jdbc:postgresql://localhost:25432/ohdsi |
 
 ## Build
