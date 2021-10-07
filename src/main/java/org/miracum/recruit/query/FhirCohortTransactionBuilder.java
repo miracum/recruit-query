@@ -123,8 +123,10 @@ public class FhirCohortTransactionBuilder {
 
     // if all else fails, use the cohort name as the study acronym
     if (acronym == null) {
-      acronym = cohort.getName().replaceAll(MATCH_LABELS_REGEX, "").trim();
+      acronym = cohort.getName().replaceAll(MATCH_LABELS_REGEX, "");
     }
+
+    acronym = acronym.trim();
 
     // create BUNDLE
     Bundle transaction = new Bundle().setType(Bundle.BundleType.TRANSACTION);
