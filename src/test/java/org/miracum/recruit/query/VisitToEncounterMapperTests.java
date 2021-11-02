@@ -61,6 +61,7 @@ class VisitToEncounterMapperTests {
     var vd =
         VisitDetail.builder()
             .visitDetailStartDate(LocalDate.now())
+            .visitDetailSourceValue("vd")
             .visitDetailEndDate(LocalDate.now())
             .visitDetailTypeConceptId(32220)
             .build();
@@ -117,7 +118,12 @@ class VisitToEncounterMapperTests {
   void map_withGivenCareSites_shouldSetEncounterLocationDisplayToCareSiteName() {
     var careSite1 = CareSite.builder().careSiteName("Test 1").build();
     var careSite2 = CareSite.builder().careSiteName("Test 2").build();
-    var vd = VisitDetail.builder().careSite(careSite2).build();
+    var vd =
+        VisitDetail.builder()
+            .visitDetailStartDate(LocalDate.now())
+            .visitDetailSourceValue("vd")
+            .careSite(careSite2)
+            .build();
     var vo =
         VisitOccurrence.builder()
             .careSite(careSite1)
@@ -132,12 +138,16 @@ class VisitToEncounterMapperTests {
     assertThat(encounters.get(0).getLocationFirstRep().getLocation().getDisplay())
         .isEqualTo(careSite1.getCareSiteName());
     assertThat(encounters.get(1).getLocationFirstRep().getLocation().getDisplay())
-        .isEqualTo(careSite2.getCareSiteName());
+        .isEqualTo("Test 2 (vd)");
   }
 
   @Test
   void map_withoutCareSite_shouldSetEncounterLocationDisplayToVisitDetailSourceValue() {
-    var vd = VisitDetail.builder().visitDetailSourceValue("Test").build();
+    var vd =
+        VisitDetail.builder()
+            .visitDetailSourceValue("Test")
+            .visitDetailStartDate(LocalDate.now())
+            .build();
     var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
 
     var result = mapper.map(List.of(vo), patientReference);
@@ -149,23 +159,28 @@ class VisitToEncounterMapperTests {
   }
 
   @Test
-  void
-      map_withVisitDetailCareSiteAndSourceValue_shouldSetLocationReferenceDisplayToConcatenationOfBoth() {
-    var careSite = CareSite.builder().careSiteName("Care Site").build();
-    var vd = VisitDetail.builder().careSite(careSite).visitDetailSourceValue("CS").build();
+  void map_withVisitDetailwithoutVisitDetailSourceValue_shouldNotCreateASubEncounter() {
+    var vd = VisitDetail.builder().build();
     var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
 
     var result = new ArrayList<>(mapper.map(List.of(vo), patientReference));
     var encounters = getEncountersFromListOfBundleEntries(result);
 
-    var subEncounter = encounters.get(1);
-    assertThat(subEncounter.getLocationFirstRep().getLocation().getDisplay())
-        .isEqualTo("Care Site (CS)");
+    assertThat(encounters).hasSize(1);
+
+    var mainEncounter = encounters.get(0);
+
+    // maybe not the most obvious way to test whether the Encounter is a main- or sub-encounter
+    assertThat(mainEncounter.hasPartOf()).isFalse();
   }
 
   @Test
   void map_withVisitOccurrenceAndDetail_shouldSetSubEncounterPartOfToReferenceMainEncounter() {
-    var vd = VisitDetail.builder().visitDetailSourceValue("Test").build();
+    var vd =
+        VisitDetail.builder()
+            .visitDetailSourceValue("Test")
+            .visitDetailStartDate(LocalDate.now())
+            .build();
     var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
 
     var result = new ArrayList<>(mapper.map(List.of(vo), patientReference));

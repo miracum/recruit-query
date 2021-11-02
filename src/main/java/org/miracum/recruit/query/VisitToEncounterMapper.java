@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -18,6 +18,7 @@ import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Encounter.EncounterStatus;
+import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Period;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.ResourceType;
@@ -32,7 +33,6 @@ public class VisitToEncounterMapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(VisitToEncounterMapper.class);
 
-  private static final String UUID_URN_PREFIX = "urn:uuid:";
   private static final Integer VISIT_TYPE_CONCEPT_STILL_PATIENT = 32220;
   private static final Integer VISIT_CONCEPT_IN_PATIENT = 9201;
   private static final Integer VISIT_CONCEPT_OUT_PATIENT = 9202;
@@ -47,9 +47,7 @@ public class VisitToEncounterMapper {
     this.impCoding = new Coding(fhirSystems.getActEncounterCode(), "IMP", "inpatient encounter");
 
     visitConceptToEncounterClassMap = new HashMap<>();
-    visitConceptToEncounterClassMap.put(
-        VISIT_CONCEPT_IN_PATIENT,
-        new Coding(fhirSystems.getActEncounterCode(), "IMP", "inpatient encounter"));
+    visitConceptToEncounterClassMap.put(VISIT_CONCEPT_IN_PATIENT, impCoding);
     visitConceptToEncounterClassMap.put(
         VISIT_CONCEPT_OUT_PATIENT,
         new Coding(fhirSystems.getActEncounterCode(), "AMB", "ambulatory"));
@@ -95,7 +93,7 @@ public class VisitToEncounterMapper {
           mapVisitDetailToSubEncounter(
               visitDetail, visitOccurrence, patientReference, mainEncounterReference);
 
-      result.add(subEncounter);
+      subEncounter.ifPresent(result::add);
     }
 
     return result;
@@ -104,7 +102,7 @@ public class VisitToEncounterMapper {
   private BundleEntryComponent mapVisitOccurrenceToMainEncounter(
       VisitOccurrence visitOccurrence, Reference patientReference) {
 
-    var mainEncounterFullUrl = UUID_URN_PREFIX + UUID.randomUUID();
+    var mainEncounterFullUrl = IdType.newRandomUuid().getValue();
 
     // both status and class are required fields so they should be filled as soon as possible
     // to ensure validation passes.
@@ -114,7 +112,6 @@ public class VisitToEncounterMapper {
     if (visitOccurrence.getVisitStartDate() != null) {
       period.setStart(Date.valueOf(visitOccurrence.getVisitStartDate()));
     } else {
-      // TODO: cleanup using logback for key-value based structured logging
       LOG.debug(
           "visit start date not set for {}",
           kv("visitSourceValue", visitOccurrence.getVisitSourceValue()));
@@ -165,14 +162,25 @@ public class VisitToEncounterMapper {
                         "identifier=%s|%s",
                         mainEncounter.getIdentifierFirstRep().getSystem(),
                         mainEncounter.getIdentifierFirstRep().getValue()))
-                .setUrl("Encounter"));
+                .setUrl(mainEncounter.getResourceType().name()));
   }
 
-  private BundleEntryComponent mapVisitDetailToSubEncounter(
+  private Optional<BundleEntryComponent> mapVisitDetailToSubEncounter(
       VisitDetail visitDetail,
       VisitOccurrence visitOccurrence,
       Reference patientReference,
       Reference mainEncounterReference) {
+
+    if (Strings.isNullOrEmpty(visitDetail.getVisitDetailSourceValue())
+        || visitDetail.getVisitDetailStartDate() == null) {
+      LOG.warn(
+          "unable to map visit_detail ({} belonging to {}) to an Encounter resource: "
+              + "Either visit_detail_source_value and/or visit_detail_start_date are missing.",
+          kv("visitDetailId", visitDetail.getVisitDetailId()),
+          kv("visitOccurrenceId", visitDetail.getVisitOccurrenceId()));
+      return Optional.empty();
+    }
+
     var subEncounter = new Encounter().setStatus(EncounterStatus.UNKNOWN).setClass_(impCoding);
 
     var period = new Period();
@@ -242,17 +250,20 @@ public class VisitToEncounterMapper {
         .setSystem(fhirSystems.getSubEncounterId())
         .setValue(identifierValue);
 
-    return new BundleEntryComponent()
-        .setResource(subEncounter)
-        .setFullUrl(UUID_URN_PREFIX + UUID.randomUUID())
-        .setRequest(
-            new BundleEntryRequestComponent()
-                .setMethod(Bundle.HTTPVerb.POST)
-                .setIfNoneExist(
-                    String.format(
-                        "identifier=%s|%s",
-                        subEncounter.getIdentifierFirstRep().getSystem(),
-                        subEncounter.getIdentifierFirstRep().getValue()))
-                .setUrl("Encounter"));
+    var entryComponent =
+        new BundleEntryComponent()
+            .setResource(subEncounter)
+            .setFullUrl(IdType.newRandomUuid().getValue())
+            .setRequest(
+                new BundleEntryRequestComponent()
+                    .setMethod(Bundle.HTTPVerb.POST)
+                    .setIfNoneExist(
+                        String.format(
+                            "identifier=%s|%s",
+                            subEncounter.getIdentifierFirstRep().getSystem(),
+                            subEncounter.getIdentifierFirstRep().getValue()))
+                    .setUrl(subEncounter.getResourceType().name()));
+
+    return Optional.of(entryComponent);
   }
 }

@@ -132,7 +132,7 @@ public class OmopRoute extends RouteBuilder {
                 for (var visitOccurrence : visitOccurrences) {
                   var visitDetails =
                       visitDetailRepository
-                          .findTop5ByVisitOccurrenceIdOrderByVisitDetailStartDateDesc(
+                          .findTop5ByVisitOccurrenceIdAndVisitDetailSourceValueIsNotNullOrderByVisitDetailStartDateDesc(
                               visitOccurrence.getVisitOccurrenceId());
                   visitOccurrence.setVisitDetails(visitDetails);
                 }
