@@ -6,13 +6,16 @@ import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface VisitDetailRepository extends PagingAndSortingRepository<VisitDetail, Long> {
+
   @Query(
       "SELECT visit_detail.*, care_site.* "
           + "FROM visit_detail "
           + "  LEFT JOIN care_site ON visit_detail.care_site_id = care_site.care_site_id "
           + "WHERE visit_detail.visit_occurrence_id = :visitOccurrenceId "
+          + "AND visit_detail.visit_detail_source_value IS NOT NULL "
           + "ORDER BY visit_detail_start_date DESC "
           + "LIMIT 5")
-  Set<VisitDetail> findTop5ByVisitOccurrenceIdOrderByVisitDetailStartDateDesc(
-      Long visitOccurrenceId);
+  Set<VisitDetail>
+      findTop5ByVisitOccurrenceIdAndVisitDetailSourceValueIsNotNullOrderByVisitDetailStartDateDesc(
+          Long visitOccurrenceId);
 }

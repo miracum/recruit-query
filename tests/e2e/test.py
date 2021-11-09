@@ -21,7 +21,7 @@ EXPECTED_RESOURCE_COUNTS = [
     (List, 2),
     (Patient, 10),
     (ResearchSubject, 10),
-    (Encounter, 27),
+    (Encounter, 25),
     (Device, 1),
 ]
 
@@ -63,7 +63,7 @@ def smart():
     stop_max_delay=120_000,
 )
 @pytest.mark.parametrize("resource,expected_count", EXPECTED_RESOURCE_COUNTS)
-def test_has_created_expected_number_of_researchstudy_resources(
+def test_has_created_expected_number_of_resources(
     resource: DomainResource, expected_count: int, smart
 ):
     search = resource.where(struct={"_summary": "count"})
