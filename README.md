@@ -20,6 +20,7 @@ This starts the services on the following localhost ports:
 | OHDSI WebAPI   | 8083  | <http://localhost:8083/WebAPI/info>     |
 | OHDSI Atlas    | 8084  | <http://localhost:8084/atlas/>          |
 | Screening List | 8085  | <http://localhost:8085/>                |
+| Jaeger UI      | 16686 | <http://localhost:16686/>               |
 | OMOP Database  | 25432 | jdbc:postgresql://localhost:25432/ohdsi |
 
 ## Build

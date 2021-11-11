@@ -6,6 +6,7 @@ query:
   excludePatientParameters:
     demographics: false
     encounter: false
+  append-recommendations-to-existing-list: false
   selector:
     matchLabels:
       - "UC1"

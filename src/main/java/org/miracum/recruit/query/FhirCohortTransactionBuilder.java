@@ -1,8 +1,13 @@
 package org.miracum.recruit.query;
 
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
@@ -28,15 +33,12 @@ import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.StringType;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FhirCohortTransactionBuilder {
-
-  private static final Logger LOG = LoggerFactory.getLogger(FhirCohortTransactionBuilder.class);
 
   private static final String UUID_URN_PREFIX = "urn:uuid:";
   private static final String MATCH_LABELS_REGEX = "\\[.*]";
@@ -101,21 +103,37 @@ public class FhirCohortTransactionBuilder {
     return date;
   }
 
+  public Bundle buildFromOmopCohort(
+      CohortDefinition cohort, List<Person> personsInCohort, long actualCohortSize) {
+    return buildFromOmopCohort(
+        cohort, personsInCohort, actualCohortSize, Pair.of(new ListResource(), List.of()));
+  }
+
   /**
    * Builds an FHIR Transaction with a list of ResearchSubjects from a given OMOP cohort includes
    * Patients, ResearchStudy, ResearchSubjects, List
    *
    * @param cohort OMOP CohortDefinition from an existing cohort
    * @param personsInCohort persons who should be packed to screening list
-   * @param cohortSize number of persons in omop cohort
+   * @param actualCohortSize actual number of persons in OMOP cohort (may be larger than
+   *     personsInCohort.size)
+   * @param previousListPatientsPair the previous instance of the screening list and a list of all
+   *     Patients associated with the ResearchStudy represented by the current cohort
    * @return Bundle of type transaction
    */
   public Bundle buildFromOmopCohort(
-      CohortDefinition cohort, List<Person> personsInCohort, long cohortSize) {
+      CohortDefinition cohort,
+      List<Person> personsInCohort,
+      long actualCohortSize,
+      Pair<ListResource, List<Patient>> previousListPatientsPair) {
+    if (previousListPatientsPair == null) {
+      throw new IllegalArgumentException("previousListPatientsPair may not be null");
+    }
+
     String cohortId = cohort.getId().toString();
     String listId = "screeninglist-" + cohortId;
 
-    // Search in Description and then in the cohort name for a study acronym
+    // Search in description and then in the cohort name for a study acronym
     var acronym = labelExtractor.extractByTag("acronym", cohort.getDescription());
     if (acronym == null) {
       acronym = labelExtractor.extractByTag("acronym", cohort.getName());
@@ -143,33 +161,52 @@ public class FhirCohortTransactionBuilder {
 
     // create SCREENINGLIST
     ListResource screeningList = createScreeningList(listId, studyUuid, acronym, deviceReference);
-    if (cohortSize > personsInCohort.size()) {
+    if (actualCohortSize > personsInCohort.size()) {
       screeningList.addNote(
           new Annotation()
               .setAuthor(new StringType("UC1-Query Module"))
               .setText(
                   "Es wurden mehr passende Patienten gefunden als auf dieser Liste dargestellt werden können (insgesamt "
-                      + cohortSize
+                      + actualCohortSize
                       + "). Nur die ersten "
                       + this.maxListSize
                       + " Vorschläge werden angezeigt."));
     }
-    // LOOP trough all Patients
+
+    var previousList = previousListPatientsPair.getFirst();
+    var previousListOfSubjects = previousListPatientsPair.getSecond();
+
+    // add all List.entry to the newly created screening list - these entries are definitely part
+    // of the update.
+    for (var entry : previousList.getEntry()) {
+      // in previous versions of the query module, List.entry.date was never set.
+      // For consistency, we set it here for the first time - even if the
+      // actual recommendation date maybe much older.
+      if (!entry.hasDate()) {
+        entry.setDate(new Date());
+      }
+
+      screeningList.addEntry(entry);
+    }
+
+    // LOOP through all Patients
+
+    // one downside of this approach is that Encounter data for persons that are no longer part of
+    // personsInCohort,
+    // ie. have been removed due to changes in eligibility criteria or some technical reason, are no
+    // longer updated
     for (Person personInCohort : personsInCohort) {
       // create PATIENT with OMOP ID as an Identifier and add to bundle
       var patient = createPatient(personInCohort);
+      // TODO: may be replaced using: new Reference(IdType.newRandomUuid());
       var patientUuid = UUID.randomUUID();
       transaction.addEntry(createPatientBundleEntryComponent(patient, patientUuid));
       // create RESEARCHSUBJECT with Reference on Patient and Study and add to bundle
-      var researchSubject = createResearchSubject(studyUuid, patientUuid);
+      var researchSubject = createResearchSubject(studyUuid, patientUuid, study, patient);
       var subjectUuid = UUID.randomUUID();
       transaction.addEntry(
           createResearchSubjectBundleEntryComponent(
               researchSubject, subjectUuid, patient.getIdentifierFirstRep(), cohortId));
-      // add to SCREENINGLIST
-      screeningList.addEntry(
-          new ListResource.ListEntryComponent()
-              .setItem(new Reference(UUID_URN_PREFIX + subjectUuid)));
 
       if (!shouldNotCreateEncounters) {
         var patientReference = new Reference(UUID_URN_PREFIX + patientUuid);
@@ -179,9 +216,31 @@ public class FhirCohortTransactionBuilder {
           transaction.addEntry(encounterBundleEntry);
         }
       }
+
+      // add to the new screening list only if it doesn't already exist
+      // note that we unfortunately can't (yet) just check List.entry since they
+      // just reference the ResearchSubject and we can't easily determine if these subjects
+      // correspond to an existing Patient.
+      var matchesPatientAlreadyOnTheList =
+          previousListOfSubjects.stream()
+              .anyMatch(existing -> checkIfPatientsAreTheSameByIdentifier(existing, patient));
+
+      // note that even if the recommendation isn't new, we still update the Patient resources and
+      // their Encounters for all persons in the current cohort generation.
+      if (!matchesPatientAlreadyOnTheList) {
+        screeningList.addEntry(
+            new ListResource.ListEntryComponent()
+                .setItem(new Reference(UUID_URN_PREFIX + subjectUuid))
+                .setDate(new Date()));
+      }
     }
-    // ADD LIST TO BUNDLE
-    transaction.addEntry(createListBundleEntryComponent(screeningList, listId));
+
+    // only add the list and update its contents if the number of recommendations has increased or
+    // - for convenience reasons to display all lists in the UI - if it remained at zero.
+    if (screeningList.getEntry().isEmpty()
+        || screeningList.getEntry().size() > previousList.getEntry().size()) {
+      transaction.addEntry(createListBundleEntryComponent(screeningList, listId));
+    }
 
     return transaction;
   }
@@ -231,9 +290,9 @@ public class FhirCohortTransactionBuilder {
                 .setMethod(Bundle.HTTPVerb.PUT)
                 .setUrl(
                     "Patient?identifier="
-                        + patient.getIdentifier().get(0).getSystem()
+                        + patient.getIdentifierFirstRep().getSystem()
                         + "|"
-                        + patient.getIdentifier().get(0).getValue()));
+                        + patient.getIdentifierFirstRep().getValue()));
   }
 
   private ResearchStudy createResearchStudy(CohortDefinition cohort, String acronym) {
@@ -264,11 +323,15 @@ public class FhirCohortTransactionBuilder {
   }
 
   // CREATE RESOURCES
-  private ResearchSubject createResearchSubject(UUID studyUUID, UUID patientUuid) {
+  private ResearchSubject createResearchSubject(
+      UUID studyUUID, UUID patientUuid, ResearchStudy study, Patient patient) {
     return new ResearchSubject()
         .setStatus(ResearchSubject.ResearchSubjectStatus.CANDIDATE)
-        .setStudy(new Reference(UUID_URN_PREFIX + studyUUID))
-        .setIndividual(new Reference(UUID_URN_PREFIX + patientUuid));
+        .setStudy(
+            new Reference(UUID_URN_PREFIX + studyUUID).setIdentifier(study.getIdentifierFirstRep()))
+        .setIndividual(
+            new Reference(UUID_URN_PREFIX + patientUuid)
+                .setIdentifier(patient.getIdentifierFirstRep()));
   }
 
   private BundleEntryComponent createResearchSubjectBundleEntryComponent(
@@ -279,6 +342,11 @@ public class FhirCohortTransactionBuilder {
         .setRequest(
             new BundleEntryRequestComponent()
                 .setMethod(Bundle.HTTPVerb.POST)
+                // we can't easily use `ResearchSubject?identifier=` here (yet?) since this will
+                // cause duplicate
+                // subjects to be created if ones already exist that were created with a previous
+                // version
+                // where `ResearchSubject.identifier` was left empty.
                 .setIfNoneExist(
                     "ResearchSubject?patient.identifier="
                         + patientId.getSystem()
@@ -369,5 +437,36 @@ public class FhirCohortTransactionBuilder {
                         + systems.getOmopCohortIdentifier()
                         + "|"
                         + cohortId));
+  }
+
+  // checks if any of the identifiers of "a" matches any of the identifiers of "b"
+  private boolean checkIfPatientsAreTheSameByIdentifier(Patient a, Patient b) {
+    var allIdentifiersOfBoth = new ArrayList<>(a.getIdentifier());
+    allIdentifiersOfBoth.addAll(b.getIdentifier());
+
+    // we first convert the identifiers to a "<system>|<value>" representation
+    // which allows us to use the toSet collector, which can easily compare
+    // strings for their equality. An alternative solution would be to
+    // use Identifier::equalsShallow for some custom toSet implementation.
+    var distinctIdentifiers =
+        allIdentifiersOfBoth.stream()
+            .map(
+                identifier -> String.format("%s|%s", identifier.getSystem(), identifier.getValue()))
+            .collect(Collectors.toSet());
+
+    // if the number of distinct identifiers is less than the number
+    // of all identifiers, we know that there was at least one duplicate
+    return distinctIdentifiers.size() < allIdentifiersOfBoth.size();
+  }
+
+  private Set<Patient> getNewlyFoundPatients(
+      List<Patient> previousListOfPatients, List<Patient> patientsFoundInCurrentCohortGeneration) {
+
+    // the set of newly found patients are all those in the patientsFoundInCurrentCohortGeneration
+    // that aren't already in the previousListOfPatients, ie:
+    // newlyFoundPatients = patientsFoundInCurrentCohortGeneration \ previousListOfPatients
+    var allPatients = new ArrayList<>(previousListOfPatients);
+    allPatients.addAll(patientsFoundInCurrentCohortGeneration);
+    return new HashSet<>(allPatients);
   }
 }

@@ -13,6 +13,7 @@ query:
       login-path: "/user/login/db"
       username: "recruit-query-module"
       password: "pass123"
+  append-recommendations-to-existing-list: true
 
 fhir:
   url: "http://localhost:8082/fhir"
