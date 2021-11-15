@@ -10,7 +10,8 @@ Start OMOP DB, ATLAS, a FHIR server, and the screening list module as external d
 docker-compose -f deploy/docker-compose.dev.yml up
 ```
 
-Note that this uses the `quay.io/miracum/omop:test-data` image to create an OMOP database with test.
+Note that this uses the `quay.io/miracum/omop:test-data-v3` image to create an OMOP database
+pre-filled with test data useful for development.
 
 This starts the services on the following localhost ports:
 
@@ -51,7 +52,7 @@ This sets up a pre-commit hook to enforce basic file sanity checks:
 pre-commit install
 ```
 
-## How the `quay.io/miracum/omop:test-data` image is build
+## How the `quay.io/miracum/omop:test-data-v3` image is build
 
 1. a Postgres image with the OMOP CDM setup is created by
    following <https://gitlab.miracum.org/miracum/etl/ohdsi-omop-v5/-/tree/master/precreated/README.md>

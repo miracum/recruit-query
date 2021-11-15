@@ -6,7 +6,15 @@ query:
   excludePatientParameters:
     demographics: false
     encounter: false
+  # if true, instead of overwriting the contents of the List for each cohort based on what
+  # the last generation run returned, append to this list
   append-recommendations-to-existing-list: false
+  # if true, always send a List resource as part of the transaction even if nothing changed
+  force-update-screening-list: false
+  # if true, send Patient resources as "conditional-creates" on their first identifier instead of
+  # conditional updates. Useful if the server is already filled with Patient resources from a
+  # different system
+  only-create-patients-if-not-exist: false
   selector:
     matchLabels:
       - "UC1"

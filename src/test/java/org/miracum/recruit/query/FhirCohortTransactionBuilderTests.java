@@ -17,6 +17,8 @@ import org.hl7.fhir.r4.model.ResearchStudy;
 import org.hl7.fhir.r4.model.ResearchSubject;
 import org.hl7.fhir.r4.model.StringType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +41,7 @@ class FhirCohortTransactionBuilderTests {
   public FhirCohortTransactionBuilderTests(FhirSystems fhirSystems) {
     this.systems = fhirSystems;
     var mapper = new VisitToEncounterMapper(fhirSystems);
-    sut = new FhirCohortTransactionBuilder(fhirSystems, 100, false, mapper);
+    sut = new FhirCohortTransactionBuilder(fhirSystems, 100, false, false, false, mapper);
     testCohort = new CohortDefinition();
     testCohort.setId(1L);
     testCohort.setName("Testcohort");
@@ -225,6 +227,31 @@ class FhirCohortTransactionBuilderTests {
   }
 
   @Test
+  void buildFromOmopCohort_withPersonWithSourceIdAndPersonId_shouldUseSourceIdAsFirstIdentifier() {
+    var person =
+        Person.builder()
+            .personId(1L)
+            .yearOfBirth(Year.of(1976))
+            .monthOfBirth(Month.FEBRUARY)
+            .dayOfBirth(12)
+            .gender("Female")
+            .sourceId("mrn-1")
+            .build();
+    var fhirTrx = sut.buildFromOmopCohort(testCohort, List.of(person), 100);
+    var patients = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Patient.class);
+    assertThat(patients).hasSize(1);
+
+    var firstIdentifier = patients.get(0).getIdentifierFirstRep();
+
+    assertThat(firstIdentifier.getValue()).isEqualTo(person.getSourceId());
+    assertThat(firstIdentifier.getType().getCodingFirstRep().getCode()).isEqualTo("MR");
+
+    var identifiers = patients.get(0).getIdentifier();
+
+    assertThat(identifiers).hasSize(2);
+  }
+
+  @Test
   void buildFromOmopCohort_withPersonsWithSourceId_shouldCreateAsIdentifier() {
     var person =
         Person.builder()
@@ -342,8 +369,11 @@ class FhirCohortTransactionBuilderTests {
     assertThat(list.getEntry()).anyMatch(entry -> entry.getItem().equals(previousEntry));
   }
 
-  @Test
-  void buildFromOmopCohort_withNoChangesToPreviousScreeningList_shouldNotAddTheListToTransaction() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void
+      buildFromOmopCohort_withNoChangesToPreviousScreeningList_shouldOnlyAddListToTransactionIfConfigForces(
+          boolean shouldAlwaysUpdateList) {
     var persons =
         List.of(
             Person.builder().personId(1L).sourceId("1").yearOfBirth(Year.of(2001)).build(),
@@ -362,11 +392,25 @@ class FhirCohortTransactionBuilderTests {
     previousList.addEntry().setItem(new Reference("1"));
     previousList.addEntry().setItem(new Reference("2"));
 
+    var localSut =
+        new FhirCohortTransactionBuilder(
+            systems,
+            100,
+            false,
+            shouldAlwaysUpdateList,
+            false,
+            new VisitToEncounterMapper(systems));
+
     var fhirTrx =
-        sut.buildFromOmopCohort(testCohort, persons, 100, Pair.of(previousList, previousPatients));
+        localSut.buildFromOmopCohort(
+            testCohort, persons, 100, Pair.of(previousList, previousPatients));
 
     var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
 
-    assertThat(lists).isEmpty();
+    if (shouldAlwaysUpdateList) {
+      assertThat(lists).hasSize(1);
+    } else {
+      assertThat(lists).isEmpty();
+    }
   }
 }

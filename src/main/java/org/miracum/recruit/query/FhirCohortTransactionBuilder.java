@@ -33,12 +33,16 @@ import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.StringType;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FhirCohortTransactionBuilder {
+
+  private static final Logger LOG = LoggerFactory.getLogger(FhirCohortTransactionBuilder.class);
 
   private static final String UUID_URN_PREFIX = "urn:uuid:";
   private static final String MATCH_LABELS_REGEX = "\\[.*]";
@@ -47,6 +51,8 @@ public class FhirCohortTransactionBuilder {
   private final boolean shouldNotCreateEncounters;
   private final VisitToEncounterMapper visitToEncounterMapper;
   private final LabelExtractor labelExtractor = new LabelExtractor();
+  private final boolean shouldForceUpdateScreeningList;
+  private final boolean shouldOnlyCreatePatientsIfNotExist;
 
   @Value("${app.version}")
   private String appVersion;
@@ -55,11 +61,16 @@ public class FhirCohortTransactionBuilder {
       FhirSystems fhirSystems,
       @Value("${query.cohortSizeThreshold}") int cohortSizeThreshold,
       @Value("${query.excludePatientParameters.encounter}") boolean shouldNotCreateEncounters,
+      @Value("${query.force-update-screening-list}") boolean shouldForceUpdateScreeningList,
+      @Value("${query.only-create-patients-if-not-exist}")
+          boolean shouldOnlyCreatePatientsIfNotExist,
       VisitToEncounterMapper visitToEncounterMapper) {
     this.systems = fhirSystems;
     this.maxListSize = cohortSizeThreshold;
     this.visitToEncounterMapper = visitToEncounterMapper;
     this.shouldNotCreateEncounters = shouldNotCreateEncounters;
+    this.shouldForceUpdateScreeningList = shouldForceUpdateScreeningList;
+    this.shouldOnlyCreatePatientsIfNotExist = shouldOnlyCreatePatientsIfNotExist;
   }
 
   private static AdministrativeGender getGenderFromOmop(String gender) {
@@ -215,6 +226,10 @@ public class FhirCohortTransactionBuilder {
         for (var encounterBundleEntry : encounterBundleEntries) {
           transaction.addEntry(encounterBundleEntry);
         }
+      } else {
+        LOG.debug(
+            "Creation of Encounter resources is disabled. Transaction will only include ResearchStudy,"
+                + " ResearchSubject and Patient resources.");
       }
 
       // add to the new screening list only if it doesn't already exist
@@ -237,8 +252,12 @@ public class FhirCohortTransactionBuilder {
 
     // only add the list and update its contents if the number of recommendations has increased or
     // - for convenience reasons to display all lists in the UI - if it remained at zero.
-    if (screeningList.getEntry().isEmpty()
+    if (shouldForceUpdateScreeningList
+        || screeningList.getEntry().isEmpty()
         || screeningList.getEntry().size() > previousList.getEntry().size()) {
+      LOG.debug(
+          "Adding screening list to transaction: either the contents changed, it is empty,"
+              + " or the update was forced.");
       transaction.addEntry(createListBundleEntryComponent(screeningList, listId));
     }
 
@@ -282,17 +301,31 @@ public class FhirCohortTransactionBuilder {
 
   private BundleEntryComponent createPatientBundleEntryComponent(
       Patient patient, UUID patientUuid) {
+    var request = new BundleEntryRequestComponent();
+
+    if (shouldOnlyCreatePatientsIfNotExist) {
+      request
+          .setMethod(Bundle.HTTPVerb.POST)
+          .setUrl("Patient")
+          .setIfNoneExist(
+              "identifier="
+                  + patient.getIdentifierFirstRep().getSystem()
+                  + "|"
+                  + patient.getIdentifierFirstRep().getValue());
+    } else {
+      request
+          .setMethod(Bundle.HTTPVerb.PUT)
+          .setUrl(
+              "Patient?identifier="
+                  + patient.getIdentifierFirstRep().getSystem()
+                  + "|"
+                  + patient.getIdentifierFirstRep().getValue());
+    }
+
     return new BundleEntryComponent()
         .setResource(patient)
         .setFullUrl(UUID_URN_PREFIX + patientUuid)
-        .setRequest(
-            new BundleEntryRequestComponent()
-                .setMethod(Bundle.HTTPVerb.PUT)
-                .setUrl(
-                    "Patient?identifier="
-                        + patient.getIdentifierFirstRep().getSystem()
-                        + "|"
-                        + patient.getIdentifierFirstRep().getValue()));
+        .setRequest(request);
   }
 
   private ResearchStudy createResearchStudy(CohortDefinition cohort, String acronym) {
