@@ -23,6 +23,10 @@ public class LabelExtractor {
     return Sets.newHashSet(substrings);
   }
 
+  public boolean hasLabel(String stringWithLabels, String searchedForLabel) {
+    return extractAll(stringWithLabels).contains(searchedForLabel);
+  }
+
   /**
    * Checks if Set of Labels contains a specific tag with format [tag=xxx]
    *

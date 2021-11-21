@@ -51,4 +51,16 @@ class LabelExtractorTests {
     var result = sut.extractByTag("acronym", "[acronym:Test]");
     assertThat(result).isEqualTo("Test");
   }
+
+  @ParameterizedTest
+  @CsvSource({
+    "[test], test, true",
+    "A longer text [] with some more words [test=false], test, false",
+    "A [acronym=Test] [hello=World], longer text [] with some more words [test], test, true",
+  })
+  void hasLabel_withGivenString_shouldReturnTrueIfStringContainsLabel(
+      String text, String searchedForLabel, boolean expectedResult) {
+    var result = sut.hasLabel(text, searchedForLabel);
+    assertThat(result).isEqualTo(expectedResult);
+  }
 }

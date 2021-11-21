@@ -17,7 +17,7 @@ import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ResearchSubject;
 import org.miracum.recruit.query.FhirCohortTransactionBuilder;
-import org.miracum.recruit.query.FhirSystems;
+import org.miracum.recruit.query.LabelExtractor;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +30,14 @@ public class FhirRoute extends RouteBuilder {
 
   static final String CREATE_SCREENING_LIST = "direct:fhir.createScreeningList";
 
+  private static final String FORCE_OVERWRITE_LABEL = "overwrite-existing-screening-list";
+
   private final FhirCohortTransactionBuilder fhirBuilder;
   private final IParser fhirParser;
   private final IGenericClient fhirClient;
   private final FhirContext fhirContext;
   private final boolean shouldAppendToExistingList;
-  private final FhirSystems fhirSystems;
+  private final LabelExtractor labelExtractor;
 
   @Autowired
   public FhirRoute(
@@ -43,13 +45,13 @@ public class FhirRoute extends RouteBuilder {
       FhirContext fhirContext,
       IGenericClient fhirClient,
       @Value("${query.append-recommendations-to-existing-list}") boolean shouldAppendToExistingList,
-      FhirSystems fhirSystems) {
+      LabelExtractor labelExtractor) {
     this.fhirContext = fhirContext;
     this.fhirBuilder = fhirBuilder;
     this.fhirParser = fhirContext.newJsonParser().setPrettyPrint(true);
     this.fhirClient = fhirClient;
     this.shouldAppendToExistingList = shouldAppendToExistingList;
-    this.fhirSystems = fhirSystems;
+    this.labelExtractor = labelExtractor;
   }
 
   @Override
@@ -68,10 +70,17 @@ public class FhirRoute extends RouteBuilder {
               var cohortDefinition = (CohortDefinition) ex.getIn().getHeader("cohort");
               var cohortSize = (long) ex.getIn().getHeader("cohortSize");
 
+              // check if either the name or the description contains the hard-coded
+              // `overwrite-existing-screening-list` label, which causes the recommendations
+              // to be overwritten regardless of any other config.
+              var forceOverwriteExistingList =
+                  labelExtractor.hasLabel(cohortDefinition.getDescription(), FORCE_OVERWRITE_LABEL)
+                      || labelExtractor.hasLabel(cohortDefinition.getName(), FORCE_OVERWRITE_LABEL);
+
               // if the module is configured to append to existing screening lists,
               // first try fetching this List from the server
               Bundle transaction;
-              if (!shouldAppendToExistingList) {
+              if (forceOverwriteExistingList || !shouldAppendToExistingList) {
                 transaction =
                     fhirBuilder.buildFromOmopCohort(cohortDefinition, patients, cohortSize);
               } else {
