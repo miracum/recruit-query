@@ -3,10 +3,10 @@ package org.miracum.recruit.query.routes;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.model.api.Include;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.apache.camel.LoggingLevel;
@@ -15,7 +15,6 @@ import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.ResearchStudy;
 import org.hl7.fhir.r4.model.ResearchSubject;
 import org.miracum.recruit.query.FhirCohortTransactionBuilder;
 import org.miracum.recruit.query.FhirSystems;
@@ -103,14 +102,22 @@ public class FhirRoute extends RouteBuilder {
   }
 
   private Optional<Pair<ListResource, List<Patient>>> fetchPatientsInCohort(Long cohortId) {
-    var screeningListIdentifierValue = "screeninglist-" + cohortId;
+    var screeningListIdentifier = fhirBuilder.getScreeningListIdentifierFromCohortId(cohortId);
 
     // we need both the previous List resource (if available) and all ResearchSubjects + Patients:
     // the List is required to be able to retain the List.entry.date from the previous list when
     // appending the newly found persons from this cohort generation run.
     // the Patient resources are used to determine which patients were newly found in this run
     // compared to the last
-    var listSearchResults =
+    // note that we eventually return only the Patient resources included in this search,
+    // this is because the ResearchSubjects don't contain any identifier we could use
+    // to determine whether a patient we plan on adding to the new list already exists
+    // or has to be added. This identifier is the Patient.identifier, ie. the medical record number.
+
+    // fhir/List?identifier=<...>/screeningListId%7Cscreeninglist-3
+    // &_include=List:item
+    // &_include:iterate=ResearchSubject:patient
+    var searchResults =
         fhirClient
             .search()
             .forResource(ListResource.class)
@@ -118,12 +125,14 @@ public class FhirRoute extends RouteBuilder {
                 ListResource.IDENTIFIER
                     .exactly()
                     .systemAndIdentifier(
-                        fhirSystems.getScreeningListIdentifier(), screeningListIdentifierValue))
+                        screeningListIdentifier.getSystem(), screeningListIdentifier.getValue()))
+            .include(new Include("List:item"))
+            .include(new Include("ResearchSubject:patient", true))
             .returnBundle(Bundle.class)
             .execute();
 
     var listResources =
-        BundleUtil.toListOfResourcesOfType(fhirContext, listSearchResults, ListResource.class);
+        BundleUtil.toListOfResourcesOfType(fhirContext, searchResults, ListResource.class);
 
     if (listResources.isEmpty()) {
       return Optional.empty();
@@ -138,33 +147,11 @@ public class FhirRoute extends RouteBuilder {
 
     var previousList = listResources.get(0);
 
-    // this searches for:
-    // ResearchSubject?study.identifier=<cohortId>&_include=ResearchSubject:individual
-    // note that we eventually return only the Patient resources included in this search,
-    // this is because the ResearchSubjects don't contain any identifier we could use
-    // to determine whether a patient we plan on adding to the new list already exists
-    // or has to be added. This identifier is the Patient.identifier, ie. the medical record number.
-    var searchResults =
-        fhirClient
-            .search()
-            .forResource(ResearchSubject.class)
-            .where(
-                ResearchSubject.STUDY.hasChainedProperty(
-                    ResearchStudy.IDENTIFIER
-                        .exactly()
-                        .systemAndIdentifier(
-                            fhirSystems.getOmopCohortIdentifier(), cohortId.toString())))
-            .include(ResearchSubject.INCLUDE_INDIVIDUAL.asNonRecursive())
-            .returnBundle(Bundle.class)
-            .execute();
-
     var foundSubjects =
-        new ArrayList<>(
-            BundleUtil.toListOfResourcesOfType(fhirContext, searchResults, ResearchSubject.class));
+        BundleUtil.toListOfResourcesOfType(fhirContext, searchResults, ResearchSubject.class);
 
     var foundPatients =
-        new ArrayList<>(
-            BundleUtil.toListOfResourcesOfType(fhirContext, searchResults, Patient.class));
+        BundleUtil.toListOfResourcesOfType(fhirContext, searchResults, Patient.class);
 
     // Load the subsequent pages
     while (searchResults.getLink(IBaseBundle.LINK_NEXT) != null) {
