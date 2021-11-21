@@ -141,8 +141,7 @@ public class FhirCohortTransactionBuilder {
       throw new IllegalArgumentException("previousListPatientsPair may not be null");
     }
 
-    String cohortId = cohort.getId().toString();
-    String listId = "screeninglist-" + cohortId;
+    var cohortId = cohort.getId();
 
     // Search in description and then in the cohort name for a study acronym
     var acronym = labelExtractor.extractByTag("acronym", cohort.getDescription());
@@ -171,7 +170,7 @@ public class FhirCohortTransactionBuilder {
     transaction.addEntry(createStudyBundleEntryComponent(study, cohortId, studyUuid));
 
     // create SCREENINGLIST
-    ListResource screeningList = createScreeningList(listId, studyUuid, acronym, deviceReference);
+    ListResource screeningList = createScreeningList(cohortId, studyUuid, acronym, deviceReference);
     if (actualCohortSize > personsInCohort.size()) {
       screeningList.addNote(
           new Annotation()
@@ -217,7 +216,10 @@ public class FhirCohortTransactionBuilder {
       var subjectUuid = UUID.randomUUID();
       transaction.addEntry(
           createResearchSubjectBundleEntryComponent(
-              researchSubject, subjectUuid, patient.getIdentifierFirstRep(), cohortId));
+              researchSubject,
+              subjectUuid,
+              patient.getIdentifierFirstRep(),
+              study.getIdentifierFirstRep()));
 
       if (!shouldNotCreateEncounters) {
         var patientReference = new Reference(UUID_URN_PREFIX + patientUuid);
@@ -258,23 +260,36 @@ public class FhirCohortTransactionBuilder {
       LOG.debug(
           "Adding screening list to transaction: either the contents changed, it is empty,"
               + " or the update was forced.");
-      transaction.addEntry(createListBundleEntryComponent(screeningList, listId));
+      transaction.addEntry(createListBundleEntryComponent(screeningList));
     }
 
     return transaction;
   }
 
+  public Identifier getScreeningListIdentifierFromCohortId(Long cohortId) {
+    var identifierValue = "screeninglist-" + cohortId;
+    return new Identifier()
+        .setSystem(systems.getScreeningListIdentifier())
+        .setValue(identifierValue);
+  }
+
   // ------------------PRIVATE HELPER METHODS-------------------------//
 
-  private BundleEntryComponent createListBundleEntryComponent(
-      ListResource screeningList, String listId) {
+  private BundleEntryComponent createListBundleEntryComponent(ListResource screeningList) {
+    assert screeningList.getIdentifier().size() == 1;
+
+    var listIdentifier = screeningList.getIdentifierFirstRep();
     return new BundleEntryComponent()
         .setResource(screeningList)
         .setFullUrl(UUID_URN_PREFIX + UUID.randomUUID())
         .setRequest(
             new BundleEntryRequestComponent()
                 .setMethod(Bundle.HTTPVerb.PUT)
-                .setUrl("List?identifier=" + systems.getScreeningListIdentifier() + "|" + listId));
+                .setUrl(
+                    "List?identifier="
+                        + listIdentifier.getSystem()
+                        + "|"
+                        + listIdentifier.getValue()));
   }
 
   private Patient createPatient(Person personInCohort) {
@@ -368,7 +383,7 @@ public class FhirCohortTransactionBuilder {
   }
 
   private BundleEntryComponent createResearchSubjectBundleEntryComponent(
-      ResearchSubject researchSubject, UUID subjectUuid, Identifier patientId, String cohortId) {
+      ResearchSubject researchSubject, UUID subjectUuid, Identifier patientId, Identifier studyId) {
     return new BundleEntryComponent()
         .setResource(researchSubject)
         .setFullUrl(UUID_URN_PREFIX + subjectUuid)
@@ -387,14 +402,17 @@ public class FhirCohortTransactionBuilder {
                         + patientId.getValue()
                         + "&"
                         + "study.identifier="
-                        + systems.getOmopCohortIdentifier()
+                        + studyId.getSystem()
                         + "|"
-                        + cohortId)
+                        + studyId.getValue())
                 .setUrl(ResourceType.ResearchSubject.name()));
   }
 
   private ListResource createScreeningList(
-      String listId, UUID studyUuid, String acronym, Reference deviceReference) {
+      Long cohortId, UUID studyUuid, String acronym, Reference deviceReference) {
+
+    var identifier = getScreeningListIdentifierFromCohortId(cohortId);
+
     var list =
         new ListResource()
             .setStatus(ListResource.ListStatus.CURRENT)
@@ -410,8 +428,7 @@ public class FhirCohortTransactionBuilder {
                         new Coding()
                             .setSystem(systems.getScreeningListCoding())
                             .setCode("screening-recommendations")))
-            .addIdentifier(
-                new Identifier().setSystem(systems.getScreeningListIdentifier()).setValue(listId));
+            .addIdentifier(identifier);
 
     // add Study to screening list as an extension
     var studyReference = new Reference(UUID_URN_PREFIX + studyUuid).setDisplay(acronym);
@@ -458,7 +475,7 @@ public class FhirCohortTransactionBuilder {
   }
 
   private BundleEntryComponent createStudyBundleEntryComponent(
-      ResearchStudy study, String cohortId, UUID studyUuid) {
+      ResearchStudy study, Long cohortId, UUID studyUuid) {
     return new BundleEntryComponent()
         .setResource(study)
         .setFullUrl(UUID_URN_PREFIX + studyUuid)
