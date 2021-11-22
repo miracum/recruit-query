@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   fhir:
-    image: docker.io/hapiproject/hapi:v5.5.2-distroless
+    image: docker.io/hapiproject/hapi:v5.6.0-distroless
     environment:
       HAPI_FHIR_VALIDATION_REQUESTS_ENABLED: "true"
       HAPI_FHIR_SUBSCRIPTION_RESTHOOK_ENABLED: "true"
@@ -64,7 +64,7 @@ services:
       - ./config-local.js:/usr/share/nginx/html/atlas/js/config-local.js
 
   list:
-    image: ghcr.io/miracum/recruit/list:v2.14.1
+    image: ghcr.io/miracum/recruit/list:v2.14.2
     ports:
       - "8085:8080"
     environment:
