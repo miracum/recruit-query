@@ -15,8 +15,6 @@ services:
 
   ohdsi-webapi:
     image: docker.io/ohdsi/webapi:2.10.0
-    ports:
-      - "8083:8080"
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
