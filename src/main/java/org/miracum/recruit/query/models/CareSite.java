@@ -13,8 +13,4 @@ import org.springframework.data.annotation.Id;
 public class CareSite {
   @Id private Long careSiteId;
   private String careSiteName;
-  private Integer placeOfServiceConceptId;
-  private Long locationId;
-  private String careSiteSourceValue;
-  private String placeOfServiceSourceValue;
 }

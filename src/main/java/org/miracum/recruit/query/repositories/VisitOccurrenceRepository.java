@@ -11,7 +11,7 @@ public interface VisitOccurrenceRepository extends CrudRepository<VisitOccurrenc
   // unfortunately we can't encode the "JOIN" within the method name so we have to manually
   // specify the entire SQL statement.
   @Query(
-      "SELECT visit_occurrence.*, care_site.* "
+      "SELECT visit_occurrence.*, care_site.care_site_name "
           + "FROM visit_occurrence "
           + "  LEFT JOIN care_site ON visit_occurrence.care_site_id = care_site.care_site_id "
           + "WHERE visit_occurrence.person_id = :personId "
