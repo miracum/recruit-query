@@ -297,6 +297,11 @@ public class FhirCohortTransactionBuilder {
                         patientIdToResourceMap.get(
                             subject.getIndividual().getReferenceElement().getIdPart())));
 
+    // if any of the List entries flags were cleared, this indicates a need to send an updated
+    // screening list to the server - even if the number of subjects in the list itself hasn't
+    // changed
+    var haveFlagsBeenUpdated = false;
+
     // add all List.entry to the newly created screening list - these entries are definitely part
     // of the update.
     for (var entry : previousList.getEntry()) {
@@ -333,11 +338,13 @@ public class FhirCohortTransactionBuilder {
           if (entry.hasFlag()) {
             LOG.debug("List entry has a flag set. Clearing it.");
             entry.setFlag(null);
+            haveFlagsBeenUpdated = true;
           }
         } else {
           // the Patient that was on the previous list is no longer part of the newly generated
           // cohort, we have to flag it as such.
           entry.setFlag(markedAsNoLongerEligibleBySystemConcept);
+          haveFlagsBeenUpdated = true;
         }
       }
 
@@ -346,9 +353,13 @@ public class FhirCohortTransactionBuilder {
       screeningList.addEntry(entry);
     }
 
-    // only add the list and update its contents if the number of recommendations has increased or
-    // - for convenience reasons to display all lists in the UI - if it remained at zero.
+    // in general, only add the list and update its contents if the number of recommendations has
+    // increased
+    // but for convenience, we also add and update a list if it is empty - this makes sure the list
+    // shows on in the web UI every time. Note that we could be smarter here and check if this
+    // is the first time the list was published to avoid constantly updating an empty list.
     if (shouldForceUpdateScreeningList
+        || haveFlagsBeenUpdated
         || screeningList.getEntry().isEmpty()
         || screeningList.getEntry().size() > previousList.getEntry().size()) {
       LOG.debug(

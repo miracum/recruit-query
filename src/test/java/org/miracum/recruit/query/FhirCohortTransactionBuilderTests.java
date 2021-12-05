@@ -1,26 +1,36 @@
 package org.miracum.recruit.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.util.BundleUtil;
+import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import org.hl7.fhir.r4.model.Bundle.HTTPVerb;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Device;
+import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.ResearchStudy;
 import org.hl7.fhir.r4.model.ResearchSubject;
+import org.hl7.fhir.r4.model.ResourceType;
 import org.hl7.fhir.r4.model.StringType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
+import org.miracum.recruit.query.models.VisitDetail;
+import org.miracum.recruit.query.models.VisitOccurrence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -314,6 +324,45 @@ class FhirCohortTransactionBuilderTests {
   }
 
   @Test
+  void buildFromOmopCohort_withPreviousScreeningListNull_throwsIllegalArgumentException() {
+    assertThatIllegalArgumentException()
+        .isThrownBy(() -> sut.buildFromOmopCohort(testCohort, List.of(), 100, null));
+  }
+
+  @Test
+  void buildFromOmopCohort_withVisitOccurrencesInPerson_shouldCreateEncounterResources() {
+    var vd =
+        VisitDetail.builder()
+            .visitDetailStartDate(LocalDate.now())
+            .visitDetailSourceValue("vd")
+            .visitDetailEndDate(LocalDate.now())
+            .visitDetailTypeConceptId(32220)
+            .build();
+    var vo =
+        VisitOccurrence.builder()
+            .visitSourceValue("1")
+            .visitStartDate(LocalDate.now())
+            .visitEndDate(LocalDate.now())
+            .visitTypeConceptId(32220)
+            .visitDetails(Set.of(vd))
+            .build();
+
+    var person =
+        Person.builder()
+            .personId(1L)
+            .yearOfBirth(Year.of(2001))
+            .visitOccurrences(Set.of(vo))
+            .build();
+
+    var fhirTrx = sut.buildFromOmopCohort(testCohort, List.of(person), 100);
+
+    var encounters = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, Encounter.class);
+
+    // main encounter + the visit-detail mapped sub-encounter
+    assertThat(encounters).hasSize(2);
+  }
+
+  @Test
   void
       buildFromOmopCohort_withEmptyPreviousListOfSubjects_shouldCreateListWithJustTheNewPatients() {
     var persons =
@@ -333,6 +382,29 @@ class FhirCohortTransactionBuilderTests {
     var list = lists.get(0);
 
     assertThat(list.getEntry()).hasSameSizeAs(persons);
+  }
+
+  @Test
+  void
+      buildFromOmopCohort_withShouldOnlyCreatePatientsIfNotExistEnabled_shouldUseAConditionalCreateInsteadOfUpdate() {
+    var persons =
+        List.of(
+            Person.builder().personId(1L).yearOfBirth(Year.of(2001)).build(),
+            Person.builder().personId(2L).yearOfBirth(Year.of(2002)).build());
+
+    var localSut =
+        new FhirCohortTransactionBuilder(
+            systems, 100, false, false, true, new VisitToEncounterMapper(systems));
+
+    var fhirTrx = localSut.buildFromOmopCohort(testCohort, persons, 100);
+
+    var patientBundleEntries =
+        fhirTrx.getEntry().stream()
+            .filter(entry -> entry.getResource().getResourceType() == ResourceType.Patient);
+
+    assertThat(patientBundleEntries)
+        .hasSameSizeAs(persons)
+        .allMatch(entry -> entry.getRequest().getMethod() == HTTPVerb.POST);
   }
 
   @Test
@@ -436,7 +508,7 @@ class FhirCohortTransactionBuilderTests {
 
     // there is one new person in the cohort, but id does not have the same id
     // as the subject already on the list
-    var newPerson = Person.builder().personId(2L).yearOfBirth(Year.of(2002)).build();
+    var newPerson = Person.builder().personId(2L).sourceId("2").yearOfBirth(Year.of(2002)).build();
 
     var persons = List.of(newPerson);
 
@@ -470,5 +542,60 @@ class FhirCohortTransactionBuilderTests {
     assertThat(entryToPreviousSubject).isNotEmpty();
 
     assertThat(entryToPreviousSubject.get().hasFlag()).isTrue();
+  }
+
+  @Test
+  void
+      buildFromOmopCohort_withGivenPreviousSubjectWhoseListEntryHasTheIneligibleFlagSetAndNewCohortIncludingThisSubject_shouldClearTheFlag() {
+    var previousPatient =
+        new Patient()
+            .setIdentifier(
+                List.of(new Identifier().setSystem(systems.getPatientId()).setValue("1")));
+    previousPatient.setId("1");
+
+    var previousSubject = new ResearchSubject().setIndividual(new Reference("Patient/1"));
+    previousSubject.setId("1");
+
+    // pretend that this new person was previously in the cohort (thus generating the
+    // previousPatient resource)
+    // and was removed later (thus adding the "ineligible" flag) and is now included in the cohort
+    // again.
+    var newPerson = Person.builder().personId(1L).sourceId("1").yearOfBirth(Year.of(2002)).build();
+
+    var persons = List.of(newPerson);
+
+    var previousList = new ListResource();
+    var previousEntry = new Reference("ResearchSubject/1");
+
+    // we don't really care about the specific flag - although maybe we should - so just use
+    // any coding
+    previousList
+        .addEntry()
+        .setItem(previousEntry)
+        .setFlag(new CodeableConcept().addCoding(new Coding("test", "ineligible", "ineligible")));
+
+    var previousListResources =
+        new ScreeningListResources(
+            previousList, List.of(previousPatient), List.of(previousSubject));
+
+    var fhirTrx = sut.buildFromOmopCohort(testCohort, persons, 100, previousListResources);
+
+    var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
+
+    assertThat(lists).hasSize(1);
+
+    var list = lists.get(0);
+
+    assertThat(list.getEntry()).hasSize(1);
+
+    var entryToPreviousSubject =
+        list.getEntry().stream()
+            .filter(entry -> entry.getItem().getReference().equals("ResearchSubject/1"))
+            .findFirst();
+
+    assertThat(entryToPreviousSubject).isNotEmpty();
+
+    // the flag should be cleared
+    assertThat(entryToPreviousSubject.get().hasFlag()).isFalse();
   }
 }
