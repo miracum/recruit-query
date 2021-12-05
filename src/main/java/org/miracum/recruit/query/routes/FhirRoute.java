@@ -18,11 +18,11 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ResearchSubject;
 import org.miracum.recruit.query.FhirCohortTransactionBuilder;
 import org.miracum.recruit.query.LabelExtractor;
+import org.miracum.recruit.query.ScreeningListResources;
 import org.miracum.recruit.query.models.CohortDefinition;
 import org.miracum.recruit.query.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -84,12 +84,16 @@ public class FhirRoute extends RouteBuilder {
                 transaction =
                     fhirBuilder.buildFromOmopCohort(cohortDefinition, patients, cohortSize);
               } else {
-                var existingListOfPatients = fetchPatientsInCohort(cohortDefinition.getId());
+                var previousScreeningListResources =
+                    fetchPatientsInCohort(cohortDefinition.getId());
 
-                if (existingListOfPatients.isPresent()) {
+                if (previousScreeningListResources.isPresent()) {
                   transaction =
                       fhirBuilder.buildFromOmopCohort(
-                          cohortDefinition, patients, cohortSize, existingListOfPatients.get());
+                          cohortDefinition,
+                          patients,
+                          cohortSize,
+                          previousScreeningListResources.get());
                 } else {
                   transaction =
                       fhirBuilder.buildFromOmopCohort(cohortDefinition, patients, cohortSize);
@@ -110,7 +114,7 @@ public class FhirRoute extends RouteBuilder {
         .log(LoggingLevel.INFO, log, "[Cohort ${header.cohort.id}] processing finished");
   }
 
-  private Optional<Pair<ListResource, List<Patient>>> fetchPatientsInCohort(Long cohortId) {
+  private Optional<ScreeningListResources> fetchPatientsInCohort(Long cohortId) {
     var screeningListIdentifier = fhirBuilder.getScreeningListIdentifierFromCohortId(cohortId);
 
     // we need both the previous List resource (if available) and all ResearchSubjects + Patients:
@@ -183,6 +187,16 @@ public class FhirRoute extends RouteBuilder {
       return Optional.empty();
     }
 
-    return Optional.of(Pair.of(previousList, foundPatients));
+    if (foundPatients.size() != foundSubjects.size()) {
+      log.error(
+          "The number of ResearchSubject resources ({}) differs from the number of Patient ones ({})",
+          kv("numResearchSubjects", foundSubjects.size()),
+          kv("numPatients", foundPatients.size()));
+    }
+
+    var screeningListResources =
+        new ScreeningListResources(previousList, foundPatients, foundSubjects);
+
+    return Optional.of(screeningListResources);
   }
 }

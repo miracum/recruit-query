@@ -56,6 +56,7 @@ fhir:
     act-encounter-code: "http://terminology.hl7.org/CodeSystem/v3-ActCode"
     list-order: "http://terminology.hl7.org/CodeSystem/list-order"
     device-id: "https://fhir.miracum.org/uc1/identifiers/recruit-module-id"
+    system-determined-subject-status: "https://fhir.miracum.org/uc1/CodeSystem/system-determined-subject-status"
 
 camel:
   component:

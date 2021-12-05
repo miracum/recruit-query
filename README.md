@@ -15,14 +15,14 @@ pre-filled with test data useful for development.
 
 This starts the services on the following localhost ports:
 
-| Service        | Port  | URL                                     |
-| -------------- | ----- | --------------------------------------- |
-| FHIR Server    | 8082  | <http://localhost:8082/>                |
-| OHDSI WebAPI   | 8083  | <http://localhost:8083/WebAPI/info>     |
-| OHDSI Atlas    | 8084  | <http://localhost:8084/atlas/>          |
-| Screening List | 8085  | <http://localhost:8085/>                |
-| Jaeger UI      | 16686 | <http://localhost:16686/>               |
-| OMOP Database  | 25432 | jdbc:postgresql://localhost:25432/ohdsi |
+| Service        | Port  | URL                                     | Comment                                                           |
+| -------------- | ----- | --------------------------------------- | ----------------------------------------------------------------- |
+| FHIR Server    | 8082  | <http://localhost:8082/>                |                                                                   |
+| OHDSI WebAPI   | 8083  | <http://localhost:8083/WebAPI/info>     |                                                                   |
+| OHDSI Atlas    | 8084  | <http://localhost:8084/atlas/>          | Login with username `recruit-query-module` and password `pass123` |
+| Screening List | 8085  | <http://localhost:8085/>                |                                                                   |
+| Jaeger UI      | 16686 | <http://localhost:16686/>               |                                                                   |
+| OMOP Database  | 25432 | jdbc:postgresql://localhost:25432/ohdsi |                                                                   |
 
 ## Build
 

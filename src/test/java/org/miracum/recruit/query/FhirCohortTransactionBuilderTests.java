@@ -24,7 +24,6 @@ import org.miracum.recruit.query.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.util.Pair;
 
 @SpringBootTest(classes = {FhirSystems.class})
 @EnableConfigurationProperties(value = {FhirSystems.class})
@@ -322,8 +321,10 @@ class FhirCohortTransactionBuilderTests {
             Person.builder().personId(1L).yearOfBirth(Year.of(2001)).build(),
             Person.builder().personId(2L).yearOfBirth(Year.of(2002)).build());
 
-    var fhirTrx =
-        sut.buildFromOmopCohort(testCohort, persons, 100, Pair.of(new ListResource(), List.of()));
+    var previousListResources =
+        new ScreeningListResources(new ListResource(), List.of(), List.of());
+
+    var fhirTrx = sut.buildFromOmopCohort(testCohort, persons, 100, previousListResources);
 
     var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
 
@@ -336,13 +337,14 @@ class FhirCohortTransactionBuilderTests {
 
   @Test
   void
-      buildFromOmopCohort_withGivenPreviousScreeningListAndCohortContainingPreviousPersonAndANewPerson_shouldCreateListCotainingPreviousAndNewSubjects() {
+      buildFromOmopCohort_withGivenPreviousScreeningListAndCohortContainingPreviousPersonAndANewPerson_shouldCreateListContainingPreviousAndNewSubjects() {
     // previousPerson and previousPatient are the same since their identifier is identical:
     // source_value=1 is used as an identifier for the Patient.
     var previousPatient =
         new Patient()
             .setIdentifier(
                 List.of(new Identifier().setSystem(systems.getPatientId()).setValue("1")));
+    previousPatient.setId("1");
     var previousPerson =
         Person.builder().personId(1L).sourceId("1").yearOfBirth(Year.of(2001)).build();
 
@@ -354,9 +356,10 @@ class FhirCohortTransactionBuilderTests {
     var previousEntry = new Reference("ResearchSubject/previous-persons-research-subject");
     previousList.addEntry().setItem(previousEntry);
 
-    var fhirTrx =
-        sut.buildFromOmopCohort(
-            testCohort, persons, 100, Pair.of(previousList, List.of(previousPatient)));
+    var previousListResources =
+        new ScreeningListResources(previousList, List.of(previousPatient), List.of());
+
+    var fhirTrx = sut.buildFromOmopCohort(testCohort, persons, 100, previousListResources);
 
     var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
 
@@ -372,7 +375,7 @@ class FhirCohortTransactionBuilderTests {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void
-      buildFromOmopCohort_withNoChangesToPreviousScreeningList_shouldOnlyAddListToTransactionIfConfigForces(
+      buildFromOmopCohort_withNoChangesToPreviousScreeningListAndConfigForcesUpdate_shouldAddListToTransaction(
           boolean shouldAlwaysUpdateList) {
     var persons =
         List.of(
@@ -381,12 +384,16 @@ class FhirCohortTransactionBuilderTests {
 
     var previousPatients =
         List.of(
-            new Patient()
-                .setIdentifier(
-                    List.of(new Identifier().setSystem(systems.getPatientId()).setValue("1"))),
-            new Patient()
-                .setIdentifier(
-                    List.of(new Identifier().setSystem(systems.getPatientId()).setValue("2"))));
+            (Patient)
+                new Patient()
+                    .setIdentifier(
+                        List.of(new Identifier().setSystem(systems.getPatientId()).setValue("1")))
+                    .setId("1"),
+            (Patient)
+                new Patient()
+                    .setIdentifier(
+                        List.of(new Identifier().setSystem(systems.getPatientId()).setValue("2")))
+                    .setId("2"));
 
     var previousList = new ListResource();
     previousList.addEntry().setItem(new Reference("1"));
@@ -401,9 +408,10 @@ class FhirCohortTransactionBuilderTests {
             false,
             new VisitToEncounterMapper(systems));
 
-    var fhirTrx =
-        localSut.buildFromOmopCohort(
-            testCohort, persons, 100, Pair.of(previousList, previousPatients));
+    var previousListResources =
+        new ScreeningListResources(previousList, previousPatients, List.of());
+
+    var fhirTrx = localSut.buildFromOmopCohort(testCohort, persons, 100, previousListResources);
 
     var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
 
@@ -412,5 +420,55 @@ class FhirCohortTransactionBuilderTests {
     } else {
       assertThat(lists).isEmpty();
     }
+  }
+
+  @Test
+  void
+      buildFromOmopCohort_withExistingSubjectsInPreviousListOneOfWhichIsNotPartOfTheNewPersonCohort_shouldFlagItAsIneligible() {
+    var previousPatient =
+        new Patient()
+            .setIdentifier(
+                List.of(new Identifier().setSystem(systems.getPatientId()).setValue("1")));
+    previousPatient.setId("1");
+
+    var previousSubject = new ResearchSubject().setIndividual(new Reference("Patient/1"));
+    previousSubject.setId("1");
+
+    // there is one new person in the cohort, but id does not have the same id
+    // as the subject already on the list
+    var newPerson = Person.builder().personId(2L).yearOfBirth(Year.of(2002)).build();
+
+    var persons = List.of(newPerson);
+
+    var previousList = new ListResource();
+    var previousEntry = new Reference("ResearchSubject/1");
+
+    previousList.addEntry().setItem(previousEntry);
+
+    assertThat(previousList.getEntry()).allMatch(entry -> !entry.hasFlag());
+
+    var previousListResources =
+        new ScreeningListResources(
+            previousList, List.of(previousPatient), List.of(previousSubject));
+
+    var fhirTrx = sut.buildFromOmopCohort(testCohort, persons, 100, previousListResources);
+
+    var lists = BundleUtil.toListOfResourcesOfType(fhirContext, fhirTrx, ListResource.class);
+
+    assertThat(lists).hasSize(1);
+
+    var list = lists.get(0);
+
+    // there should be previousPerson + newPerson referenced in the new list
+    assertThat(list.getEntry()).hasSize(2);
+
+    var entryToPreviousSubject =
+        list.getEntry().stream()
+            .filter(entry -> entry.getItem().getReference().equals("ResearchSubject/1"))
+            .findFirst();
+
+    assertThat(entryToPreviousSubject).isNotEmpty();
+
+    assertThat(entryToPreviousSubject.get().hasFlag()).isTrue();
   }
 }
