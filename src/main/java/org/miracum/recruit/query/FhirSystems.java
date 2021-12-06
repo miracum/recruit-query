@@ -22,4 +22,5 @@ public class FhirSystems {
   private String actEncounterCode;
   private String listOrder;
   private String deviceId;
+  private String systemDeterminedSubjectStatus;
 }

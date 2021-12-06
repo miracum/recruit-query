@@ -8,7 +8,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 public interface VisitDetailRepository extends PagingAndSortingRepository<VisitDetail, Long> {
 
   @Query(
-      "SELECT visit_detail.*, care_site.* "
+      "SELECT visit_detail.*, care_site.care_site_name "
           + "FROM visit_detail "
           + "  LEFT JOIN care_site ON visit_detail.care_site_id = care_site.care_site_id "
           + "WHERE visit_detail.visit_occurrence_id = :visitOccurrenceId "

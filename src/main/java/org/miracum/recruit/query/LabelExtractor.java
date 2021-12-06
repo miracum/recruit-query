@@ -23,6 +23,10 @@ public class LabelExtractor {
     return Sets.newHashSet(substrings);
   }
 
+  public boolean hasLabel(String stringWithLabels, String searchedForLabel) {
+    return extractAll(stringWithLabels).contains(searchedForLabel);
+  }
+
   /**
    * Checks if Set of Labels contains a specific tag with format [tag=xxx]
    *
@@ -32,9 +36,14 @@ public class LabelExtractor {
   public String extractByTag(String tag, String stringWithLabels) {
     Set<String> labels = extractAll(stringWithLabels);
     String value = "";
+
+    // TODO: could be replaced with a RegEx
     for (String label : labels) {
       if (label.contains(tag)) {
-        value = label.split("=")[1];
+        var splitted = label.split("=|:");
+        if (splitted.length > 1) {
+          value = splitted[1];
+        }
       }
     }
     if (value.isBlank()) {

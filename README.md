@@ -10,17 +10,19 @@ Start OMOP DB, ATLAS, a FHIR server, and the screening list module as external d
 docker-compose -f deploy/docker-compose.dev.yml up
 ```
 
-Note that this uses the `quay.io/miracum/omop:test-data` image to create an OMOP database with test.
+Note that this uses the `quay.io/miracum/omop:test-data-v3` image to create an OMOP database
+pre-filled with test data useful for development.
 
 This starts the services on the following localhost ports:
 
-| Service        | Port  | URL                                     |
-| -------------- | ----- | --------------------------------------- |
-| FHIR Server    | 8082  | <http://localhost:8082/>                |
-| OHDSI WebAPI   | 8083  | <http://localhost:8083/WebAPI/info>     |
-| OHDSI Atlas    | 8084  | <http://localhost:8084/atlas/>          |
-| Screening List | 8085  | <http://localhost:8085/>                |
-| OMOP Database  | 25432 | jdbc:postgresql://localhost:25432/ohdsi |
+| Service        | Port  | URL                                     | Comment                                                           |
+| -------------- | ----- | --------------------------------------- | ----------------------------------------------------------------- |
+| FHIR Server    | 8082  | <http://localhost:8082/>                |                                                                   |
+| OHDSI WebAPI   | 8083  | <http://localhost:8083/WebAPI/info>     |                                                                   |
+| OHDSI Atlas    | 8084  | <http://localhost:8084/atlas/>          | Login with username `recruit-query-module` and password `pass123` |
+| Screening List | 8085  | <http://localhost:8085/>                |                                                                   |
+| Jaeger UI      | 16686 | <http://localhost:16686/>               |                                                                   |
+| OMOP Database  | 25432 | jdbc:postgresql://localhost:25432/ohdsi |                                                                   |
 
 ## Build
 
@@ -50,7 +52,7 @@ This sets up a pre-commit hook to enforce basic file sanity checks:
 pre-commit install
 ```
 
-## How the `quay.io/miracum/omop:test-data` image is build
+## How the `quay.io/miracum/omop:test-data-v3` image is build
 
 1. a Postgres image with the OMOP CDM setup is created by
    following <https://gitlab.miracum.org/miracum/etl/ohdsi-omop-v5/-/tree/master/precreated/README.md>

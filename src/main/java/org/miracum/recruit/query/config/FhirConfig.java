@@ -2,6 +2,7 @@ package org.miracum.recruit.query.config;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.okhttp.client.OkHttpRestfulClientFactory;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.binder.okhttp3.OkHttpMetricsEventListener;
 import io.opentracing.Span;
@@ -14,6 +15,7 @@ import okhttp3.Connection;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -60,5 +62,11 @@ public class FhirConfig {
 
     fhirContext.setRestfulClientFactory(okHttpFactory);
     return fhirContext;
+  }
+
+  @Bean
+  public IGenericClient fhirClient(
+      FhirContext fhirContext, @Value("${fhir.url}") String fhirServerUrl) {
+    return fhirContext.newRestfulGenericClient(fhirServerUrl);
   }
 }
