@@ -40,7 +40,7 @@ public class LabelExtractor {
     // TODO: could be replaced with a RegEx
     for (String label : labels) {
       if (label.contains(tag)) {
-        var splitted = label.split("=|:");
+        var splitted = label.split("[=:]");
         if (splitted.length > 1) {
           value = splitted[1];
         }

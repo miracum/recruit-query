@@ -96,7 +96,7 @@ public class FhirCohortTransactionBuilder {
       case "MALE":
         return AdministrativeGender.MALE;
       case "OTHER":
-      case "AMBIGIOUS":
+      case "AMBIGUOUS":
         return AdministrativeGender.OTHER;
       case "UNKNOWN":
       default:
