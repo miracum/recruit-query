@@ -21,7 +21,7 @@ EXPECTED_RESOURCE_COUNTS = [
     (List, 2),
     (Patient, 10),
     (ResearchSubject, 10),
-    (Encounter, 25),
+    (Encounter, 27),
     (Device, 1),
 ]
 

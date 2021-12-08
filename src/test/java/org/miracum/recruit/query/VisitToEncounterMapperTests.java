@@ -159,7 +159,8 @@ class VisitToEncounterMapperTests {
   }
 
   @Test
-  void map_withVisitDetailwithoutVisitDetailSourceValue_shouldNotCreateASubEncounter() {
+  void
+      map_withVisitDetailWithoutVisitDetailSourceValueAndWithoutCareSite_shouldNotCreateASubEncounter() {
     var vd = VisitDetail.builder().build();
     var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
 
@@ -188,5 +189,54 @@ class VisitToEncounterMapperTests {
     var mainEncounterFullUrl = result.get(0).getFullUrl();
     var subEncounter = (Encounter) result.get(1).getResource();
     assertThat(subEncounter.getPartOf().getReference()).isEqualTo(mainEncounterFullUrl);
+  }
+
+  @Test
+  void
+      map_withVisitDetailWithoutVisitDetailSourceValueButWithCareSite_shouldCreateASubEncounterWithCareSiteNamesAsLocationDisplay() {
+    var careSite = CareSite.builder().careSiteName("Test 1").build();
+    var vd = VisitDetail.builder().visitDetailStartDate(LocalDate.now()).careSite(careSite).build();
+    var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
+
+    var result = new ArrayList<>(mapper.map(List.of(vo), patientReference));
+    var encounters = getEncountersFromListOfBundleEntries(result);
+
+    assertThat(encounters)
+        .hasSize(2)
+        .anyMatch(
+            encounter ->
+                encounter.hasPartOf()
+                    && encounter
+                        .getLocation()
+                        .get(0)
+                        .getLocation()
+                        .getDisplay()
+                        .equals(careSite.getCareSiteName()));
+  }
+
+  @Test
+  void
+      map_withVisitDetailWithoutCareSiteButWithVisitDetailSourceValue_shouldCreateASubEncounterWithVisitDetailSourceValueAsLocationDisplay() {
+    var vd =
+        VisitDetail.builder()
+            .visitDetailStartDate(LocalDate.now())
+            .visitDetailSourceValue("HNO")
+            .build();
+    var vo = VisitOccurrence.builder().visitSourceValue("1").visitDetails(Set.of(vd)).build();
+
+    var result = new ArrayList<>(mapper.map(List.of(vo), patientReference));
+    var encounters = getEncountersFromListOfBundleEntries(result);
+
+    assertThat(encounters)
+        .hasSize(2)
+        .anyMatch(
+            encounter ->
+                encounter.hasPartOf()
+                    && encounter
+                        .getLocation()
+                        .get(0)
+                        .getLocation()
+                        .getDisplay()
+                        .equals(vd.getVisitDetailSourceValue()));
   }
 }

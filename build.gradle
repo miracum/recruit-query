@@ -54,6 +54,8 @@ dependencies {
 
     implementation "net.minidev:json-smart:2.4.7"
 
+    implementation "com.github.slugify:slugify:2.5"
+
     testImplementation "org.springframework.boot:spring-boot-starter-test"
 
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"

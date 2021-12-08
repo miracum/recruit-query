@@ -23,13 +23,11 @@ public class OmopRoute extends RouteBuilder {
   static final String GET_PATIENTS = "direct:omop.getPatients";
   static final String CLEAR_CACHE = "direct:omop.clearCache";
   private static final Logger logger = LoggerFactory.getLogger(OmopRoute.class);
-
+  private final VisitOccurrenceRepository visitOccurrenceRepository;
+  private final VisitDetailRepository visitDetailRepository;
   // catch SQL params from application.yml
   @Value("${query.excludePatientParameters.demographics}")
   private boolean excludePatientParams;
-
-  private final VisitOccurrenceRepository visitOccurrenceRepository;
-  private final VisitDetailRepository visitDetailRepository;
 
   @Autowired
   public OmopRoute(
@@ -132,7 +130,7 @@ public class OmopRoute extends RouteBuilder {
                 for (var visitOccurrence : visitOccurrences) {
                   var visitDetails =
                       visitDetailRepository
-                          .findTop5ByVisitOccurrenceIdAndVisitDetailSourceValueIsNotNullOrderByVisitDetailStartDateDesc(
+                          .findTop5ByVisitOccurrenceIdOrderByVisitDetailStartDateDesc(
                               visitOccurrence.getVisitOccurrenceId());
                   visitOccurrence.setVisitDetails(visitDetails);
                 }
