@@ -20,6 +20,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.springframework.boot:spring-boot-starter-data-jdbc"
+    implementation "org.springframework.boot:spring-boot-starter-webflux"
 
     implementation "org.apache.camel:camel-sql:3.13.0"
     implementation "org.apache.camel:camel-jackson:3.13.0"
