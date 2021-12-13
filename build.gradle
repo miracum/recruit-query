@@ -16,10 +16,17 @@ repositories {
     mavenCentral()
 }
 
+// Mitigation for CVE-2021-44228
+// https://spring.io/blog/2021/12/10/log4j2-vulnerability-and-spring-boot
+ext {
+    set("log4j2.version", "2.15.0")
+}
+
 dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.springframework.boot:spring-boot-starter-data-jdbc"
+    implementation "org.springframework.boot:spring-boot-starter-webflux"
 
     implementation "org.apache.camel:camel-sql:3.13.0"
     implementation "org.apache.camel:camel-jackson:3.13.0"
@@ -53,6 +60,8 @@ dependencies {
     implementation "net.logstash.logback:logstash-logback-encoder:7.0.1"
 
     implementation "net.minidev:json-smart:2.4.7"
+
+    implementation "com.github.slugify:slugify:2.5"
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
 

@@ -2,6 +2,7 @@ package org.miracum.recruit.query;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
+import com.github.slugify.Slugify;
 import com.google.common.base.Strings;
 import java.sql.Date;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class VisitToEncounterMapper {
   private final Coding impCoding;
   private final FhirSystems fhirSystems;
   private final Map<Integer, Coding> visitConceptToEncounterClassMap;
+  private final Slugify slugify = new Slugify();
 
   public VisitToEncounterMapper(FhirSystems fhirSystems) {
     this.fhirSystems = fhirSystems;
@@ -171,11 +173,19 @@ public class VisitToEncounterMapper {
       Reference patientReference,
       Reference mainEncounterReference) {
 
-    if (Strings.isNullOrEmpty(visitDetail.getVisitDetailSourceValue())
-        || visitDetail.getVisitDetailStartDate() == null) {
+    if (visitDetail.getVisitDetailStartDate() == null) {
       LOG.warn(
           "unable to map visit_detail ({} belonging to {}) to an Encounter resource: "
-              + "Either visit_detail_source_value and/or visit_detail_start_date are missing.",
+              + "visit_detail_start_date is missing.",
+          kv("visitDetailId", visitDetail.getVisitDetailId()),
+          kv("visitOccurrenceId", visitDetail.getVisitOccurrenceId()));
+      return Optional.empty();
+    }
+
+    if (visitDetail.getCareSite() == null && visitDetail.getVisitDetailSourceValue() == null) {
+      LOG.warn(
+          "unable to map visit_detail ({} belonging to {}) to an Encounter resource: "
+              + "both visit_detail_care_site_id and visit_detail_source_value are missing.",
           kv("visitDetailId", visitDetail.getVisitDetailId()),
           kv("visitOccurrenceId", visitDetail.getVisitOccurrenceId()));
       return Optional.empty();
@@ -233,12 +243,25 @@ public class VisitToEncounterMapper {
     // visit_occurrence's visit_source_value. So we'll have to create a surrogate identifier
     // from the visit_source_value, the visit_detail's start date and the visit_detail_source_value
     // which should at least approximate the location of the visit to some extent.
-    var identifierValue =
-        String.format(
-            "%s-%s-%s",
-            visitOccurrence.getVisitSourceValue(),
-            visitDetail.getVisitDetailStartDate(),
-            visitDetail.getVisitDetailSourceValue());
+
+    var identifierValueBuilder = new StringBuilder();
+    identifierValueBuilder.append(visitOccurrence.getVisitSourceValue());
+
+    // if only the care_site is set, use it to construct the identifier
+    identifierValueBuilder.append("-");
+    identifierValueBuilder.append(visitDetail.getVisitDetailStartDate());
+
+    if (visitDetail.getCareSite() != null) {
+      identifierValueBuilder.append("-");
+      identifierValueBuilder.append(visitDetail.getCareSite().getCareSiteName());
+    }
+
+    if (!Strings.isNullOrEmpty(visitDetail.getVisitDetailSourceValue())) {
+      identifierValueBuilder.append("-");
+      identifierValueBuilder.append(visitDetail.getVisitDetailSourceValue());
+    }
+
+    var identifierValue = slugify.slugify(identifierValueBuilder.toString());
 
     subEncounter.setSubject(patientReference);
     subEncounter.setPartOf(mainEncounterReference);

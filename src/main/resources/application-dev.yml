@@ -22,7 +22,7 @@ fhir:
 logging:
   level:
     org:
-      springframework: "INFO"
+      springframework: "DEBUG"
       apache:
         camel:
           spring:
