@@ -11,17 +11,17 @@ services:
       HAPI_FHIR_CORS_ALLOWED_ORIGIN: "*"
       HAPI_FHIR_NARRATIVE_ENABLED: "false"
     ports:
-      - "8082:8080"
+      - "127.0.0.1:8082:8080"
 
   omopdb:
     image: quay.io/miracum/omop:test-data-v3
     ports:
-      - "25432:5432"
+      - "127.0.0.1:25432:5432"
 
   ohdsi-webapi:
     image: docker.io/ohdsi/webapi:2.10.1
     ports:
-      - "8083:8080"
+      - "127.0.0.1:8083:8080"
     restart: on-failure
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
@@ -57,7 +57,7 @@ services:
   ohdsi-atlas:
     image: docker.io/ohdsi/atlas:2.10.1
     ports:
-      - "8084:8080"
+      - "127.0.0.1:8084:8080"
     environment:
       WEBAPI_URL: "http://localhost:8083/WebAPI/"
     volumes:
@@ -66,7 +66,7 @@ services:
   list:
     image: ghcr.io/miracum/recruit/list:v2.14.2
     ports:
-      - "8085:8080"
+      - "127.0.0.1:8085:8080"
     environment:
       FHIR_URL: "http://fhir:8080/fhir"
       KEYCLOAK_DISABLED: "true"
@@ -76,6 +76,6 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:1.29
     ports:
-      - 16686:16686
-      - 6831:6831/udp
-      - 6832:6832/udp
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:6831:6831/udp"
+      - "127.0.0.1:6832:6832/udp"

@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   fhir:
-    image: docker.io/hapiproject/hapi:v5.5.1-distroless
+    image: docker.io/hapiproject/hapi:v5.6.0-distroless
     environment:
       HAPI_FHIR_VALIDATION_REQUESTS_ENABLED: "true"
       HAPI_FHIR_SUBSCRIPTION_RESTHOOK_ENABLED: "true"
@@ -14,7 +14,7 @@ services:
     image: quay.io/miracum/omop:test-data-v3
 
   ohdsi-webapi:
-    image: docker.io/ohdsi/webapi:2.10.0
+    image: docker.io/ohdsi/webapi:2.10.1
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://omopdb:5432/ohdsi
