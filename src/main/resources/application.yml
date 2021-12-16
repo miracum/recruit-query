@@ -40,6 +40,9 @@ omop:
 
 fhir:
   url: ""
+  server:
+    # call, connect, read, and write timeout to the FHIR server in seconds
+    timeout-in-seconds: 300
   systems:
     omopSubjectIdentifier: "http://ohdsi.org/omop/fhir/subject-identifier"
     omopCohortIdentifier: "http://ohdsi.org/omop/fhir/cohort-identifier"
