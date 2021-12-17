@@ -23,7 +23,8 @@ import org.springframework.context.annotation.Configuration;
 public class FhirConfig {
 
   @Bean
-  public FhirContext fhirContext() {
+  public FhirContext fhirContext(
+      @Value("${fhir.server.timeout-in-seconds}") long fhirServerTimeoutSeconds) {
     var fhirContext = FhirContext.forR4();
 
     var opNameDecorator =
@@ -49,10 +50,10 @@ public class FhirConfig {
     var okclient =
         new OkHttpClient.Builder()
             .addInterceptor(tracingInterceptor)
-            .callTimeout(Duration.ofSeconds(60))
-            .connectTimeout(Duration.ofSeconds(60))
-            .readTimeout(Duration.ofSeconds(60))
-            .writeTimeout(Duration.ofSeconds(60))
+            .callTimeout(Duration.ofSeconds(fhirServerTimeoutSeconds))
+            .connectTimeout(Duration.ofSeconds(fhirServerTimeoutSeconds))
+            .readTimeout(Duration.ofSeconds(fhirServerTimeoutSeconds))
+            .writeTimeout(Duration.ofSeconds(fhirServerTimeoutSeconds))
             .addNetworkInterceptor(tracingInterceptor)
             .eventListener(
                 OkHttpMetricsEventListener.builder(Metrics.globalRegistry, "fhir.client").build())
