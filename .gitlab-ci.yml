@@ -12,21 +12,21 @@ include:
   after_script:
     - docker logout $CONTAINER_REGISTRY_HOST
 
-e2e:
-  extends:
-    - .job_defaults
-  stage: test
-  image:
-    name: docker/compose:1.29.2
-    entrypoint: [""]
-  before_script:
-    - export IMAGE_TAG=$CI_COMMIT_SHORT_SHA
-  script:
-    - docker-compose -p $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA-e2e -f tests/e2e/docker-compose.yml build
-    - docker-compose -p $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA-e2e -f tests/e2e/docker-compose.yml run tester
-  after_script:
-    - docker-compose -p $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA-e2e -f tests/e2e/docker-compose.yml logs
-    - docker-compose -p $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA-e2e -f tests/e2e/docker-compose.yml down --volumes --remove-orphans
+#e2e:
+#  extends:
+#    - .job_defaults
+#  stage: test
+#  image:
+#    name: docker/compose:1.29.2
+#    entrypoint: [""]
+#  before_script:
+#    - export IMAGE_TAG=$CI_COMMIT_SHORT_SHA
+#  script:
+#    - docker-compose -p $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA-e2e -f tests/e2e/docker-compose.yml build
+#    - docker-compose -p $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA-e2e -f tests/e2e/docker-compose.yml run tester
+#  after_script:
+#    - docker-compose -p $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA-e2e -f tests/e2e/docker-compose.yml logs
+#    - docker-compose -p $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA-e2e -f tests/e2e/docker-compose.yml down --volumes --remove-orphans
 
 push to miracum registry and sign:
   stage: release
