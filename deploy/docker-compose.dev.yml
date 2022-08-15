@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   fhir:
-    image: docker.io/hapiproject/hapi:v5.6.0-distroless
+    image: docker.io/hapiproject/hapi:v6.0.1@sha256:63c98d8be3dadc77b47dca3115490f22bf99512f363f779f7bbcb42f569aeac3
     environment:
       HAPI_FHIR_VALIDATION_REQUESTS_ENABLED: "true"
       HAPI_FHIR_SUBSCRIPTION_RESTHOOK_ENABLED: "true"
@@ -14,12 +14,12 @@ services:
       - "127.0.0.1:8082:8080"
 
   omopdb:
-    image: quay.io/miracum/omop:test-data-v3
+    image: quay.io/miracum/omop:test-data-v3@sha256:34919d66facaff8b1e56d8cb3cd9ac649ca6420aa86740ae9e32dff1b2b6eb26
     ports:
       - "127.0.0.1:25432:5432"
 
   ohdsi-webapi:
-    image: docker.io/ohdsi/webapi:2.10.1
+    image: docker.io/ohdsi/webapi:2.11.1@sha256:9bcb5003e6504669b53c94f3e0b4aa6ad9b5c78741f772ca402579632ce64fb3
     ports:
       - "127.0.0.1:8083:8080"
     restart: on-failure
@@ -55,7 +55,7 @@ services:
       - omopdb
 
   ohdsi-atlas:
-    image: docker.io/ohdsi/atlas:2.10.1
+    image: docker.io/ohdsi/atlas:2.11.1@sha256:36df31ecd1c92f2f2d66535ff759e7626545179696a3f291f35dc75c14017564
     ports:
       - "127.0.0.1:8084:8080"
     environment:
@@ -64,7 +64,7 @@ services:
       - ./config-local.js:/usr/share/nginx/html/atlas/js/config-local.js
 
   list:
-    image: ghcr.io/miracum/recruit/list:v2.15.0
+    image: ghcr.io/miracum/recruit/list:v2.15.5@sha256:1d076650cbf2f364235e49203a98015d35443d72e74f462085ea3bcedd25cb4c
     ports:
       - "127.0.0.1:8085:8080"
     environment:
@@ -74,7 +74,7 @@ services:
       OTEL_EXPORTER_JAEGER_AGENT_HOST: "jaeger"
 
   jaeger:
-    image: jaegertracing/all-in-one:1.30
+    image: docker.io/jaegertracing/all-in-one:1.37@sha256:60ab2e6b0682f79a4e42b2bd2526ac4de80a3a7a1ef136c71dc0cb85e9c50f46
     ports:
       - "127.0.0.1:16686:16686"
       - "127.0.0.1:6831:6831/udp"
