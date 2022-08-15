@@ -4,10 +4,9 @@
     "config:base",
     "group:allNonMajor",
     "schedule:weekly",
-    ":disableDependencyDashboard"
+    ":disableDependencyDashboard",
+    "docker:pinDigests"
   ],
   "assigneesFromCodeOwners": true,
-  // by default, renovate ignores anything in the /tests/ dir
-  // which isn't greate because it includes our e2e test setup
   "ignorePaths": []
 }

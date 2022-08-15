@@ -42,7 +42,7 @@ public class VisitToEncounterMapper {
   private final Coding impCoding;
   private final FhirSystems fhirSystems;
   private final Map<Integer, Coding> visitConceptToEncounterClassMap;
-  private final Slugify slugify = new Slugify();
+  private final Slugify slugify = Slugify.builder().build();
 
   public VisitToEncounterMapper(FhirSystems fhirSystems) {
     this.fhirSystems = fhirSystems;
